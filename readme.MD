@@ -1,7 +1,6 @@
 # Glacier Daily Update Emails
 
 This program collects data from a wide variety of sources, sanitizes/organizes it, makes it available to Drip email custom dynamic content module, then sends the email out to a list of subscribers.
-Test to see if my pull requests are automating a 2nd time.
 
 ## Modules
 
