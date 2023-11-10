@@ -2,7 +2,6 @@
 
 This program collects data from a wide variety of sources, sanitizes/organizes it, makes it available to Drip email custom dynamic content module, then sends the email out to a list of subscribers.
 
-
 ## Modules
 
 The program is divided into 10 modules, plus a few scripts in the main folder.
