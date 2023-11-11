@@ -5,7 +5,6 @@ from ftplib import FTP
 import base64
 import concurrent.futures
 from datetime import datetime
-from dotenv import load_dotenv
 
 from activities.events import events_today
 from peak.peak import peak
@@ -19,7 +18,6 @@ from product_otd.product import get_product
 from notices.notices import get_notices
 from drip.html_friendly import html_safe
 
-load_dotenv("email.env")
 
 def gen_data():
     with concurrent.futures.ThreadPoolExecutor() as executor:

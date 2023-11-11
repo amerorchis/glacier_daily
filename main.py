@@ -1,10 +1,11 @@
+import os
+from dotenv import load_dotenv
+load_dotenv("email.env")
+
 from drip.get_subs import get_subs, send_in_drip
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 from generate_and_upload import serve_api
-import os
-from dotenv import load_dotenv
 
-load_dotenv("email.env")
 
 def main(tag = 'Glacier Daily Update'):
     sleep_to_sunrise() # Sleep until sunrise timelapse is finished.
