@@ -9,3 +9,4 @@ Pillow
 protobuf
 Requests
 urllib3
+python-dotenv

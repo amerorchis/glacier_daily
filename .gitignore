@@ -6,3 +6,4 @@ email_html/email_template_**
 notices/sheets-api-389117-34906b5fba7f.json
 old
 server/email.json
+email.env
