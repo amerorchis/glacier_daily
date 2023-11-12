@@ -118,4 +118,6 @@ def process_video():
     return vid, frame
 
 if __name__ == '__main__':
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     print(process_video())

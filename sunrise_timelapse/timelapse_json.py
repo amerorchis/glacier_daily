@@ -42,9 +42,9 @@ def gen_json(files):
 
 def send_timelapse_data(data):
     
-    username = os.environ.get('webcam_ftp_user')
-    password = os.environ.get('webcam_ftp_pword')
-    server = 'ftp.glacier.org'
+    username = os.environ["webcam_ftp_user"]
+    password = os.environ["webcam_ftp_pword"]
+    server = os.environ["timelapse_server"]
 
     try:
         ftp = FTP(server)

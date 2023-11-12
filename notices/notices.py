@@ -32,5 +32,7 @@ def get_notices():
     return '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     print(get_notices())
     

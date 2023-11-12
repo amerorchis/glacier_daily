@@ -29,4 +29,7 @@ def get_flickr():
     return save_loc, title, link
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     print(get_flickr())
+    

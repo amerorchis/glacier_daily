@@ -34,5 +34,7 @@ if __name__ == "__main__":
 
     elif environ == "xterm-256color":
         print('Test')
-        #main('Test Glacier Daily Update')
-        #main()
+        # main('Test Glacier Daily Update')
+        # main()
+        # serve_api()
+        
