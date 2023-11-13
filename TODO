@@ -1,0 +1,21 @@
+High:
+Sign up form with dates
+Web version
+    View in browser link
+Change drip operation to bulk operation
+Finish Readme
+Comment code
+
+Medium:
+Web only update with argparse
+Support seasons
+    Hide activities when not relevant
+    Preset seasonal banners
+Include peak photos
+Proper alt text
+Clear files after 6 months
+
+Low:
+Refactor FTP
+Refactor image scaling
+Figure out roads
