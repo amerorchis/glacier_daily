@@ -1,33 +1,25 @@
+from drip.subscriber_list import subscriber_list
+from drip.scheduled_subs import update_scheduled_subs
+
 import requests
 import os
 import json
 
-def get_subs(tag = 'Glacier Daily Update'):
 
-    drip_token = os.environ['DRIP_TOKEN']
-    account_id = os.environ['DRIP_ACCOUNT']
-    api_key = drip_token
-    url = f"https://api.getdrip.com/v2/{account_id}/subscribers"
+def get_subs(tag):
+    updates = update_scheduled_subs()
+    subs =  subscriber_list(tag)
 
-    headers = {
-        "Authorization": "Bearer " + api_key,
-        "Content-Type": "application/vnd.api+json"
-    }
+    # Update subscriber list based on changes today (drip updates aren't fast enough)
+    for i in updates['start']:
+        if i not in subs:
+            subs.append(i)
 
-    params = {
-        "status": "active",
-        "tags":tag
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-        data = response.json()
-        return [data['subscribers'][i]['email'] for i in range(len(data['subscribers']))]
-        # Handle `data` JSON response
-    except requests.exceptions.RequestException as e:
-        # Handle errors
-        print("Error:", e)
+    for i in updates['end']:
+        if i in subs:
+            subs.remove(i)
+    
+    return subs
 
 
 def send_in_drip(email, campaign_id='169298893'):
@@ -57,4 +49,4 @@ def send_in_drip(email, campaign_id='169298893'):
         print(f"Failed to subscribe {email} to the campaign. Error message:", r["errors"][0]["code"], ' - ', r["errors"][0]["message"])
 
 if __name__ == "__main__":
-    send_in_drip('')
+    print(get_subs('Glacier Daily Update'))

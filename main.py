@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv("email.env")
 
-from drip.get_subs import get_subs, send_in_drip
+from drip.drip_actions import get_subs, send_in_drip
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 from generate_and_upload import serve_api
 
