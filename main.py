@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv("email.env")
 
-from drip.drip_actions import get_subs, send_in_drip
+from drip.drip_actions import get_subs, bulk_workflow_trigger
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 from generate_and_upload import serve_api
 
@@ -20,11 +20,7 @@ def main(tag = 'Glacier Daily Update'):
     serve_api()
 
     # Send the email to each subscriber using Drip API.
-    for recipient in subscribers:
-        try:
-            send_in_drip(recipient)
-        except Exception as e:
-            print(f'Error in sending to {recipient}: {e}')
+    bulk_workflow_trigger(subscribers)
 
 if __name__ == "__main__":
     environ = os.environ.get('TERM')

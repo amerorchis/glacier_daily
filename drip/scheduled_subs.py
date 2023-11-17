@@ -1,5 +1,9 @@
-from drip.subscriber_list import subscriber_list
-from drip.update_subscriber import update_subscriber
+try:
+    from drip.subscriber_list import subscriber_list
+    from drip.update_subscriber import update_subscriber
+except ModuleNotFoundError:
+    from subscriber_list import subscriber_list
+    from update_subscriber import update_subscriber  
 from datetime import datetime, timedelta
 
 
