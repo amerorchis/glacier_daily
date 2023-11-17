@@ -13,8 +13,6 @@ def sunrise_timelapse_complete_time():
 
     now = datetime.now(tz=ZoneInfo('America/Denver'))
 
-    now -= timedelta(hours=7)
-
     # Sunrise time minus now plus 50 minutes
     timelapse_ready_in = s[f"sunrise"] - now + timedelta(minutes=50)
 
