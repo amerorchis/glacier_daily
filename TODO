@@ -7,11 +7,12 @@ Finish Readme
 Comment code
 
 Medium:
-Web only update with argparse
+X - Web only update with argparse
+Separate daily and more frequent modules
 Support seasons
     Hide activities when not relevant
     Preset seasonal banners
-Include peak photos
+X - Include peak photos
 Proper alt text
 Clear files after 6 months
 
@@ -19,3 +20,9 @@ Low:
 Refactor FTP
 Refactor image scaling
 Figure out roads
+Stream files instead of writing them
+Aurora alerts (NASA API)
+
+Web Version:
+Prettier banners
+Navigation links

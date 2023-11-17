@@ -102,11 +102,13 @@
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td>
-                                                                <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/learn/nature/mountains.htm">
-                                                                    <img src="https://glacier.org/daily/peak.jpg" width="255" height="150" alt="Peak" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                <a style="display:block; margin:0 0 14px;" href="{{ my.daily_update.peak_image | base64_decode }}">
+                                                                    <img src="{{ my.daily_update.peak_image | base64_decode }}" width="255" height="150" alt="Peak" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                    <a href="https://www.nps.gov/glac/learn/nature/mountains.htm" style="color:#6c7e44; text-decoration:none;">Glacier Peak of the Day</a></p>
-                                                                <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.peak | base64_decode }}</p>
+                                                                    <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#6c7e44; text-decoration:none;">Glacier Peak of the Day</a></p>
+                                                                <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.peak | base64_decode }}
+                                                                <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#333333; font-style: italic;">
+                                                                    <br>(Full size peak image.)</a></p>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                         </tr>
@@ -158,7 +160,7 @@
                                                                 <!-- end json-->
                                                                 <p style="margin:0; color:#333333; font-size:11px; line-height:18px;">
                                                                     {{ inline_postal_address }}<br>
-                                                                    Website: <a href="http://glacier.org/" style="color:#6d7e44; text-decoration:none; font-weight:bold;">glacier.org</a><br>
+                                                                    Website: <a href="http://glacier.org/" style="color:#6d7e44; text-decoration:none; font-weight:bold;">glacier.org</a>&nbsp;|&nbsp;<a href="https://glacier.org/daily-update-web" style="color:#6d7e44; text-decoration:none; font-weight:bold;">View in browser</a><br>
                                                                     <a href="http://api.glacier.org/dripactions?action=stopdaily&email={{ subscriber.email }}" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Stop Glacier Daily Updates&nbsp;</a>
                                                                     |
                                                                     <a href="http://api.glacier.org/dripactions?action=untilspring&email={{ subscriber.email }}" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Opt Out Until Next Spring&nbsp;</a>

@@ -30,34 +30,27 @@ This is a very simple module that randomly selects a Glacier peak from a csv fil
 Product of the day interacts with the BigCommerce store API. If we change the location of the online store, this module will need to be replaced.  
 
 ### sunrise_timelapse
-The Activities module 
 
 ### trails_and_cgs
-The Activities module 
 
 ### weather
-The Activities module 
 
 ## Associated Files
 
-All your files and folders are presented as a tree in the file explorer. You can switch from one to another by clicking a file in the tree.
 
 ### email_html
-The Activities module 
 
 ### email_images
-The Activities module 
 
 ### server
-The Activities module 
 
 ## API Connection
 
-You can rename the current file by clicking the file name in the navigation bar or by clicking the **Rename** button in the file explorer.
 
 ## Interaction with Drip
 
-You can delete the current file by clicking the **Remove** button in the file explorer. The file will be moved into the **Trash** folder and automatically deleted after 7 days of inactivity.
+## Interaction with glacier.org
+
 
 ## Author
 

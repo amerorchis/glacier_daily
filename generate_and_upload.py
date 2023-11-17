@@ -35,6 +35,7 @@ def gen_data():
         potd_title, potd_image, potd_link, potd_desc = product_future.result()
         weather = weather_future.result()
         image_otd, image_otd_title, image_otd_link = image_future.result()
+        peak_name, peak_img = peak_future.result()
         
     drip_template_fields = {
         'date': datetime.now().strftime('%Y-%m-%d'),
@@ -46,7 +47,8 @@ def gen_data():
         'trails':trails_future.result(),
         'campgrounds':cg_future.result(),
         'notices':notices_futures.result(),
-        'peak':peak_future.result(),
+        'peak': peak_name,
+        'peak_image': peak_img,
         'product_link': potd_link,
         'product_image': potd_image,
         'product_title':potd_title,

@@ -9,6 +9,9 @@ import requests
 from io import BytesIO
 from ftplib import FTP
 
+from dotenv import load_dotenv
+load_dotenv("email.env")
+
 username = os.environ['FTP_USERNAME']
 password = os.environ['FTP_PASSWORD']
 server = 'ftp.glacier.org'
@@ -134,6 +137,4 @@ def get_product():
     return product_data['name'], image_url, product_data['product_link'], product_data['desc']
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    load_dotenv("email.env")
     print(get_product())
