@@ -67,16 +67,16 @@ def gen_data():
     return drip_template_fields
 
 
-def send_to_server(data):
+def send_to_server(data, type):
 
     data = {i: base64.b64encode(data[i].encode('utf-8')).decode('utf-8') for i in data.keys()}
 
     data['date'] = datetime.now().strftime('%Y-%m-%d')
 
-    with open("server/email.json", "w") as f:
+    with open(f"server/{type}.json", "w") as f:
         f.write(json.dumps(data))
     
-    file_path = f'email.json'
+    file_path = f'{type}.json'
     directory = 'api'
 
     # Connect to the FTP server
@@ -89,7 +89,7 @@ def send_to_server(data):
 
     try:
         # Open the local file in binary mode
-        with open('server/email.json', 'rb') as f:
+        with open(f'server/{type}.json', 'rb') as f:
             # Upload the file to the FTP server
             ftp.storbinary('STOR ' + file_path, f)
 
@@ -102,9 +102,9 @@ def send_to_server(data):
 
     return f'https://glacier.org/daily/{directory}/{file_path}'
 
-def serve_api():
+def serve_api(type="email"):
     data = gen_data()
-    send_to_server(data)
+    send_to_server(data, type)
 
 if __name__ == "__main__":
     serve_api()
