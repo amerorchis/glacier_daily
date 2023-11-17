@@ -7,6 +7,7 @@ from pathlib import Path
 try:
     from sunrise_timelapse.timelapse_json import *
     from sunrise_timelapse.ftp import upload_sunrise
+    from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
 except ModuleNotFoundError:
     from ftp import upload_sunrise
     from timelapse_json import *
@@ -90,32 +91,38 @@ def made_today(video):
         print('No video at given path.')
 
 def process_video():
-    # Make sure there is a video and it was made today before proceeding.
-    new_style = Path('/home/pi/Modules/timelapse/images/Compilation/videos/sunrise_timelapse.mp4')
-    old_style = Path('/home/pi/Documents/sunrise_timelapse/sunrise_timelapse.mp4')
 
-    if made_today(new_style):
-        video_path = new_style
-    elif made_today(old_style):
-        video_path = old_style
-        print('Using old video.')
+    if sunrise_timelapse_complete_time() > 0:
+        return '', ''
+    
     else:
-        print('No video from today.')
-        return None, None
 
-    find_frame(video_path)
-    vid, frame, files = upload_sunrise(video_path)
+        # Make sure there is a video and it was made today before proceeding.
+        new_style = Path('/home/pi/Modules/timelapse/images/Compilation/videos/sunrise_timelapse.mp4')
+        old_style = Path('/home/pi/Documents/sunrise_timelapse/sunrise_timelapse.mp4')
 
-    try:
-        data = gen_json(files)
-        uploaded = send_timelapse_data(data)
-        if uploaded:
-            vid = uploaded
-    except Exception as e:
-        print(e)
-        pass
+        if made_today(new_style):
+            video_path = new_style
+        elif made_today(old_style):
+            video_path = old_style
+            print('Using old video.')
+        else:
+            print('No video from today.')
+            return None, None
 
-    return vid, frame
+        find_frame(video_path)
+        vid, frame, files = upload_sunrise(video_path)
+
+        try:
+            data = gen_json(files)
+            uploaded = send_timelapse_data(data)
+            if uploaded:
+                vid = uploaded
+        except Exception as e:
+            print(e)
+            pass
+
+        return vid, frame
 
 if __name__ == '__main__':
     from dotenv import load_dotenv
