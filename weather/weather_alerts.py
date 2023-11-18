@@ -95,3 +95,4 @@ def weather_alerts():
 
 if __name__ == "__main__":
     print(weather_alerts())
+    # aurora alerts source: Aurora alerts at https://services.swpc.noaa.gov/json/planetary_k_index_1m.json
