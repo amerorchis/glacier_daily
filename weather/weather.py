@@ -72,12 +72,16 @@ class WeatherContent:
             aqi_fut = executor.submit(self.aqi)
             weather_fut = executor.submit(self.thread_weather)
             alerts_fut = executor.submit(weather_alerts)
+            aurora_fut = executor.submit(aurora_forecast)
 
             self.message1 = length_fut.result()
             self.message2 = aqi_fut.result()
             alerts = alerts_fut.result()
+            aurora = aurora_fut.result()
             done = weather_fut.done()
-            
+
+            if aurora:
+                self.message2 += aurora
             if alerts:
                 self.message2 += alerts
 
@@ -144,10 +148,10 @@ def weather_data():
 
 
 if __name__ == "__main__":
-    from weather_alerts import weather_alerts
+    from weather_alerts import weather_alerts, aurora_forecast
     from weather_aqi import get_air_quality
-    print(weather_data().results)
+    print(weather_data().message2)
     
 else:
-    from weather.weather_alerts import weather_alerts
+    from weather.weather_alerts import weather_alerts, aurora_forecast
     from weather.weather_aqi import get_air_quality

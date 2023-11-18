@@ -2,7 +2,7 @@ import json
 from time import sleep
 import requests
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def handle_duplicates(alerts):
     # print(len(alerts))
@@ -93,6 +93,32 @@ def weather_alerts():
     else:
         return ""
 
+def aurora_forecast():
+    url = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
+    r = requests.get(url)
+    forecast = json.loads(r.content)
+    alertable = list()
+    two_days = datetime.now() + timedelta(hours=48)
+
+    for i in forecast:
+        time = datetime.fromisoformat(i['time_tag'])
+        kp = float(i['estimated_kp'])
+        if time <= two_days and kp >= 4:
+            alertable.append((time, i['estimated_kp']))
+
+    if alertable:
+        soonest = min(alertable, key=lambda x: x[0])[0]
+        soonest = soonest.strftime("%I:%M %p on %m/%d")
+
+        most_intense = max(alertable, key=lambda x: x[1])
+        intense_time = most_intense[0].strftime("%I:%M %p on %m/%d")
+
+        msg = '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'
+        return msg + f"Aurora is forecasted to be visibile! It will start at {soonest}, and peak at {intense_time} with an intensity of {most_intense[1]:.1f} KP-index.</p>"
+
+    else:
+        return ''
+
 if __name__ == "__main__":
-    print(weather_alerts())
-    # aurora alerts source: Aurora alerts at https://services.swpc.noaa.gov/json/planetary_k_index_1m.json
+    #print(weather_alerts())
+    print(aurora_forecast())
