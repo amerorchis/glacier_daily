@@ -113,8 +113,8 @@ def aurora_forecast():
         most_intense = max(alertable, key=lambda x: x[1])
         intense_time = most_intense[0].strftime("%I:%M %p on %m/%d")
 
-        msg = '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'
-        return msg + f"Aurora is forecasted to be visibile! It will start at {soonest}, and peak at {intense_time} with an intensity of {most_intense[1]:.1f} KP-index.</p>"
+        msg = '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The aurora is forecasted to be visibile by the NOAA Space Weather Prediction Center! '
+        return msg + f"It will start at {soonest}, and peak at {intense_time} with an intensity of {most_intense[1]:.1f} KP-index.</p>"
 
     else:
         return ''
