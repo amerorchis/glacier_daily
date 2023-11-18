@@ -57,7 +57,7 @@ def peak_sat(peak: dict) -> str:
     
     else:
         print('Peak sat image failed.')
-        return ''
+        return 'https://glacier.org/daily/peak.jpg'
 
 if __name__ == "__main__":
     peak_sat({'name': 'Long Knife Peak', 'elevation': '9910', 'lat': '48.99815', 'lon': '-114.21147'})
