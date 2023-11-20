@@ -9,6 +9,7 @@ Comment code
 Medium:
 X - Web only update with argparse
 Separate daily and more frequent modules
+    Full item desc for web
 Support seasons
     Hide activities when not relevant
     Preset seasonal banners
