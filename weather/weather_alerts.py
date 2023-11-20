@@ -81,7 +81,7 @@ def weather_alerts():
         except:
             pass
 
-        message = '<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;"><a href="weather.gov" style="color:#6c7e44; text-decoration:none;">Alert from the National Weather Service</a></p>'
+        message = '<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;"><a href="https://weather.gov" style="color:#6c7e44; text-decoration:none;">Alert from the National Weather Service</a></p>'
         message += '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
         
         if len(alert_text) > 1:
