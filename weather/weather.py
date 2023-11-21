@@ -20,7 +20,7 @@ class WeatherThread(threading.Thread):
         self.message = self.weather_cond(self.site)
     
     def sanitize_cond(self, cond):
-        cond = cond.split(' then ')[0].lower().replace('thunderstorms', 't-storms').replace('and','&').replace('likely','').replace('chance','').replace('  ',' ')
+        cond = cond.split(' then ')[0].lower().replace('thunderstorms', 't-storms').replace('and','&').replace('likely','').replace('chance','').replace('  ',' ').replace('areas of', '')
         cond = cond[1:] if cond[0] == ' ' else cond
         cond = cond[:-1] if cond[-1] == ' ' else cond
         return cond

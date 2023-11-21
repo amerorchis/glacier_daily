@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Redirect /glacier_daily or /glacier_daily/ to /glacier_daily.php
+RewriteRule ^glacier_daily/?$ glacier_daily.php [L]
+
+# Redirect /daily_web or /daily_web/ to /daily_web.php
+RewriteRule ^daily_web/?$ daily_web.php [L]
