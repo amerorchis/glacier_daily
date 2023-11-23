@@ -8,3 +8,4 @@ old
 server/**.json
 email.env
 **.DS_Store
+.cache.sqlite

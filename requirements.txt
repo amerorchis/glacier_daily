@@ -10,3 +10,5 @@ protobuf
 Requests
 urllib3
 python-dotenv
+requests-cache
+retry-requests
