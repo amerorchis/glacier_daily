@@ -25,7 +25,8 @@ if (isset($data['date']) && $data['date'] === date('Y-m-d')) {
   echo $jsonData;
 } else {
   // Return an error message
-  $errorMessage = array('error' => 'Data not available for today, data is from ' . $data[date] . ' not from ' . date('Y-m-d'));
+  http_response_code(404);
+  $errorMessage = array('error' => 'Data not available for today, data is from ' . $data[date] . ' not from ' . date('Y-m-d') . '. (Dates in Mountain Time.)');
   echo json_encode($errorMessage);
 }
 ?>
