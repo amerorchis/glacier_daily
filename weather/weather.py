@@ -1,11 +1,13 @@
 import concurrent.futures
 
 try:
-    from weather_alerts import weather_alerts, aurora_forecast
+    from weather_alerts import weather_alerts
+    from night_sky import aurora_forecast
     from weather_aqi import get_air_quality
     from new_forecast import get_forecast
 except ModuleNotFoundError:
-    from weather.weather_alerts import weather_alerts, aurora_forecast
+    from weather.weather_alerts import weather_alerts
+    from weather.night_sky import aurora_forecast
     from weather.weather_aqi import get_air_quality
     from weather.new_forecast import get_forecast
 
@@ -58,5 +60,4 @@ def weather_data():
 
 
 if __name__ == "__main__":
-    print(weather_data().message1)
-
+    print(weather_data().message2)
