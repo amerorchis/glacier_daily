@@ -54,27 +54,29 @@ def clear_night(aur_start, aur_end):
                 'desc':cover})
     
     clear = [i for i in dark if i['num'] == 0]
+    str = ''
 
-    if clear:
-        start = clear[0]['time']
-        end = clear[0]['time']
-        for item in clear:
-            curr = item['time']
-            diff = curr - end
+    if dark:
+        if clear:
+            start = clear[0]['time']
+            end = clear[0]['time']
+            for item in clear:
+                curr = item['time']
+                diff = curr - end
 
-            if diff > timedelta(hours=1):
-                break
-            else:
-                end = item['time']
+                if diff > timedelta(hours=1):
+                    break
+                else:
+                    end = item['time']
 
-        start = start.strftime("%-I%p").lower()
-        end = end.strftime("%-I%p").lower()
-        str = f"and the skies will be clear from {start} to {end}! <strong>It's a great night to see the northern lights!</strong>"
+            start = start.strftime("%-I%p").lower()
+            end = end.strftime("%-I%p").lower()
+            str = f"and the skies will be clear from {start} to {end}! <strong>It's a great night to see the northern lights!</strong>"
 
-    else:
-        clearest = min(dark, key=lambda x: x['num'])
-        conj = 'and' if clearest['desc'] == 'low' else 'but'
-        str = f'{conj} there will be {clearest["desc"]} cloud cover.'
+        else:
+            clearest = min(dark, key=lambda x: x['num'])
+            conj = 'and' if clearest['desc'] == 'low' else 'but'
+            str = f'{conj} there will be {clearest["desc"]} cloud cover.'
 
     return str
 
@@ -127,8 +129,9 @@ def aurora_forecast():
 
         skies = clear_night(start, end)
 
-        return f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The aurora is forecasted for tonight with a max KP of {max_kp} {skies}</p>'
-    
+        if skies:
+            return f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The aurora is forecasted for tonight with a max KP of {max_kp} {skies}</p>'
+
     return ''
 
 
