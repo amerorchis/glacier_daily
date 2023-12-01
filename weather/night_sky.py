@@ -126,6 +126,7 @@ def aurora_forecast():
         start = min(kp, key=lambda x: x[0])[0]
         end = max(kp, key=lambda x: x[0])[0]
         max_kp = max(kp, key=lambda x: x[1])[1]
+        max_kp = f'<strong>{max_kp}</strong>' if max_kp > 5.5 else max_kp
 
         skies = clear_night(start, end)
 
