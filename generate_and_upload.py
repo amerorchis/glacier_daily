@@ -44,6 +44,7 @@ def gen_data():
         'weather1':weather.message1,
         'weather_image': weather_image(weather.results),
         'weather2':weather.message2,
+        'season':weather.season,
         'trails':trails_future.result(),
         'campgrounds':cg_future.result(),
         'notices':notices_futures.result(),

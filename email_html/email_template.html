@@ -38,7 +38,7 @@
                                                 <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                             <td colspan="3" rowspan="3" bgcolor="#FFFFFF" style="padding:0 0 30px;">
                                                 <!-- begin content -->
-                                                <img src="https://glacier.org/daily/title_card_fall.jpg" width="600" height="400" alt="What you need to know" style="display:block; border:0; margin:0 0 44px; background:#eeeeee;">
+                                                <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/title_card.jpg" width="600" height="400" alt="What you need to know" style="display:block; border:0; margin:0 0 44px; background:#eeeeee;">
                                                 <p style="margin:0 30px 33px;; text-align:center; text-transform:uppercase; font-size:24px; line-height:30px; font-weight:bold; color:#484a42;">
                                                     WHAT YOU NEED TO KNOW<br>FOR {{ my.daily_update.today | base64_decode }}
                                                 </p>
@@ -49,7 +49,7 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
-                                                                    <img src="https://glacier.org/daily/activities_fall.jpg" width="540" height="160" alt="Events" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg" width="540" height="160" alt="Events" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm" style="color:#6c7e44; text-decoration:none;">Park Activities Today</a></p>
                                                                 <div>{{ my.daily_update.events | base64_decode }}</div>
@@ -60,7 +60,7 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.weather.gov/">
-                                                                    <img src="https://glacier.org/daily/weather_fall.jpg" width="540" height="160" alt="Weather" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/weather.jpg" width="540" height="160" alt="Weather" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.weather.gov/" style="color:#6c7e44; text-decoration:none;">Weather</a></p>
                                                                 <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.weather1 | base64_decode }}</p>
@@ -78,7 +78,7 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm">
-                                                                    <img src="https://glacier.org/daily/trails&cgs_fall.jpg" width="540" height="160" alt="Trails" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&cgs.jpg" width="540" height="160" alt="Trails" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm" style="color:#6c7e44; text-decoration:none;">Trail Closures</a></p>
                                                                 <p style="margin:0 0 2px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.trails | base64_decode }}</p>
@@ -95,7 +95,7 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td>
                                                                 <a style="display:block; margin:0 0 14px;" href="https://glacier.org">
-                                                                    <img src="https://glacier.org/daily/notices_fall.jpg" width="255" height="150" alt="Daily Notices" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/notices.jpg" width="255" height="150" alt="Daily Notices" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://glacier.org" style="color:#6c7e44; text-decoration:none;">Notices</a></p>
                                                                 <div>{{ my.daily_update.notices | base64_decode }}</div>

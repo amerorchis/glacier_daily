@@ -4,6 +4,11 @@ from ftplib import FTP
 from pathlib import Path
 import os
 
+try:
+    from weather.season import get_season
+except ModuleNotFoundError:
+    from season import get_season
+
 username = os.environ['FTP_USERNAME']
 password = os.environ['FTP_PASSWORD']
 server = 'ftp.glacier.org'
@@ -36,7 +41,7 @@ def weather_image(results):
     dimensions = {"West Glacier":(292.1848, 462.5), "Polebridge":(165.3, 190), "St. Mary":(591,303), "Two Medicine":(623,524), "Logan Pass":(423.52,336), "Many Glacier":(460.1623,185)}
     
     # Open the image
-    image_path = 'email_images/base/park_map.png'
+    image_path = f'email_images/base/park_map_{get_season()}.png'
     image = Image.open(image_path)
 
     # Create a drawing object

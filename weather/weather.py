@@ -5,11 +5,13 @@ try:
     from night_sky import aurora_forecast
     from weather_aqi import get_air_quality
     from new_forecast import get_forecast
+    from season import get_season
 except ModuleNotFoundError:
     from weather.weather_alerts import weather_alerts
     from weather.night_sky import aurora_forecast
     from weather.weather_aqi import get_air_quality
     from weather.new_forecast import get_forecast
+    from weather.season import get_season
 
     
 class WeatherContent:
@@ -24,9 +26,11 @@ class WeatherContent:
             weather_fut = executor.submit(get_forecast)
             alerts_fut = executor.submit(weather_alerts)
             aurora_fut = executor.submit(aurora_forecast)
+            season_fut = executor.submit(get_season)
 
             self.results, self.message1 = weather_fut.result()
             self.message2 = aqi_fut.result()
+            self.season = season_fut.result()
             alerts = alerts_fut.result()
             aurora = aurora_fut.result()
 
