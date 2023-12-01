@@ -52,9 +52,12 @@ def events_today(now = datetime.now()):
             message += f"{i['string']}\n"
         return message + '</ul>'
     
-    elif datetime(year, 9, 20, 1, 30) < now < datetime(year, 12, 31, 23, 30) or datetime(1, 1, 1, 1, 30)< datetime(1, 4, 1, 1, 30):
+    elif datetime(year, 9, 20, 1, 30) < now < datetime(year, 12, 6, 23, 30):
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
-    
+
+    elif datetime(year, 12, 6, 1, 30) < now < datetime(year, 12, 31, 23, 30) or datetime(1, 1, 1, 1, 30)< datetime(1, 4, 1, 1, 30):
+        return ''
+
     elif datetime(year, 4, 1, 1, 30) < now < datetime(year, 6, 1, 1, 30):
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
     

@@ -45,7 +45,7 @@
                                                 <!-- begin articles -->
                                                 <table cellpadding="0" cellspacing="0" border="0" width="100%">
                                                     <tbody>
-                                                        <tr valign="top">
+                                                        {% if my.daily_update.events != "" %}<tr valign="top">
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
@@ -55,7 +55,7 @@
                                                                 <div>{{ my.daily_update.events | base64_decode }}</div>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
-                                                        </tr>
+                                                        </tr>{% endif %}
                                                         <tr valign="top">
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
