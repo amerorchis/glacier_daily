@@ -32,5 +32,5 @@ if __name__ == "__main__":
         print('Test')
         # main('Test Glacier Daily Update')
         # main()
-        # serve_api()
+        serve_api()
         

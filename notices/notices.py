@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 try:
     from notices.retry import retry
 except ModuleNotFoundError:
-    from retry import retry
+    import sys
+    sys.path.append('../glacier_daily')
+    from shared.retry import retry
 
 
 default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Notices could not be retrieved.</p>'
