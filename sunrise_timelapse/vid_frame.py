@@ -9,54 +9,76 @@ try:
     from sunrise_timelapse.ftp import upload_sunrise
     from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
 except ModuleNotFoundError:
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     from ftp import upload_sunrise
     from timelapse_json import *
+    from sleep_to_sunrise import sunrise_timelapse_complete_time
 
     
 def find_frame(video_path):
     # Open the video file
     video = cv2.VideoCapture(str(video_path))
+    max_red_ret = None
     max_red_frame = None
     max_red_pixels = 0
+    frames_count = 0
 
-    while True:
-        # Read a frame from the video
-        ret, frame = video.read()
-        if not ret:
-            break
+    if video.isOpened():
+        while True:
+            # Read a frame from the video
+            ret, frame = video.read()
 
-        # Convert the frame to the HSV color space
-        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            if frames_count == 0:
+                max_red_frame = frame
+                max_red_ret = ret
 
-        # Define the lower and upper bounds for the red color range
-        lower_red = np.array([0, 50, 50])
-        upper_red = np.array([10, 255, 255])
+            frames_count += 1
 
-        # Create a mask for pixels within the red color range
-        mask1 = cv2.inRange(hsv_frame, lower_red, upper_red)
+            if not ret:
+                break
 
-        # Redefine the upper bound for the red color range
-        lower_red = np.array([170, 50, 50])
-        upper_red = np.array([180, 255, 255])
+            # Convert the frame to the HSV color space
+            hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Create a mask for pixels within the red color range (wrapping around in the hue channel)
-        mask2 = cv2.inRange(hsv_frame, lower_red, upper_red)
+            # Define the lower and upper bounds for the red color range
+            lower_red = np.array([0, 50, 50])
+            upper_red = np.array([10, 255, 255])
 
-        # Combine the masks
-        mask = cv2.bitwise_or(mask1, mask2)
+            # Create a mask for pixels within the red color range
+            mask1 = cv2.inRange(hsv_frame, lower_red, upper_red)
 
-        # Count the number of red pixels in the frame
-        red_pixels = cv2.countNonZero(mask)
+            # Redefine the upper bound for the red color range
+            lower_red = np.array([170, 50, 50])
+            upper_red = np.array([180, 255, 255])
 
-        # Update the maximum red frame and pixel count if necessary
-        if red_pixels > max_red_pixels:
-            max_red_frame = frame
-            max_red_pixels = red_pixels
+            # Create a mask for pixels within the red color range (wrapping around in the hue channel)
+            mask2 = cv2.inRange(hsv_frame, lower_red, upper_red)
 
-    # Release the video file
-    cv2.imwrite('email_images/today/sunrise_frame.jpg', max_red_frame)
-    video.release()
-    play_button()
+            # Combine the masks
+            mask = cv2.bitwise_or(mask1, mask2)
+
+            # Count the number of red pixels in the frame
+            red_pixels = cv2.countNonZero(mask)
+
+            # Update the maximum red frame and pixel count if necessary
+            if red_pixels > max_red_pixels:
+                max_red_frame = frame
+                max_red_ret = ret
+                max_red_pixels = red_pixels
+
+        if max_red_ret:
+            # Release the video file
+            cv2.imwrite('email_images/today/sunrise_frame.jpg', max_red_frame)
+            video.release()
+            play_button()
+            return True
+
+        else:
+            print(f'frame not found, {max_red_ret} - {max_red_frame}')
+
+    return False
+        
 
 def play_button():
     # Open the timelapse frame
@@ -110,21 +132,23 @@ def process_video():
             print('No video from today.')
             return None, None
 
-        find_frame(video_path)
-        vid, frame, files = upload_sunrise(video_path)
+        frame_found = find_frame(video_path)
 
-        try:
-            data = gen_json(files)
-            uploaded = send_timelapse_data(data)
-            if uploaded:
-                vid = uploaded
-        except Exception as e:
-            print(e)
-            pass
+        if frame_found:
+            vid, frame, files = upload_sunrise(video_path)
+
+            try:
+                data = gen_json(files)
+                uploaded = send_timelapse_data(data)
+                if uploaded:
+                    vid = uploaded
+            except Exception as e:
+                print(e)
+                pass
+        else:
+            return '', ''
 
         return vid, frame
 
 if __name__ == '__main__':
-    from dotenv import load_dotenv
-    load_dotenv("email.env")
     print(process_video())
