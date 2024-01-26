@@ -1,5 +1,8 @@
 from math import radians, sin, cos, sqrt, atan2
-from places import places
+try:
+    from roads.places import places
+except ModuleNotFoundError:
+    from places import places
 
 class Road:
     def __init__(self, name: str, orientation: str = 'EW'):
@@ -103,5 +106,4 @@ class Road:
                 self.closure_str = f'{self.name} is closed from {self.south_loc} to {self.north_loc}.'
         
         return self.closure_str
-    
     

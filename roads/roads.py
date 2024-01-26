@@ -1,12 +1,19 @@
 import requests
 import json
 import urllib3
-from Road import Road
+try:
+    from roads.Road import Road
+except ModuleNotFoundError:
+    from Road import Road
+urllib3.disable_warnings()
 
 def closed_roads():
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27'
     r = requests.get(url, verify=False)
     status = json.loads(r.text)
+    if not status.get('features'):
+        return ''
+    
     roads_json = status['features']
 
     roads = {'Going-to-the-Sun Road': Road('Going-to-the-Sun Road'),
@@ -15,7 +22,7 @@ def closed_roads():
              'Many Glacier Road': Road('Many Glacier Road'),
              'Bowman Lake Road': Road('Bowman Lake Road'),
              'Kintla Road': Road('Kintla Road', 'NS')}
-
+    
     for i in roads_json:
         road_name = i['properties']['rdname']
         coordinates = i['geometry']['coordinates'] if len(i['geometry']['coordinates']) > 1 else i['geometry']['coordinates'][0]
@@ -63,7 +70,7 @@ def closed_roads():
             message += f"<li>{i}</li>\n"
         return message + "</ul>"
     else:
-        return ""
+        return '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">There are no closures on major roads today!</p>'
 
 
 def get_road_status() -> str:
@@ -75,6 +82,5 @@ def get_road_status() -> str:
 
 
 if __name__ == "__main__":
-    urllib3.disable_warnings()
     print(get_road_status())
 
