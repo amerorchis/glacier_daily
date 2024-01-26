@@ -8,6 +8,7 @@ from datetime import datetime
 
 from activities.events import events_today
 from peak.peak import peak
+from roads.roads import get_road_status
 from trails_and_cgs.trails import closed_trails
 from trails_and_cgs.frontcountry_cgs import campground_alerts
 from weather.weather import weather_data
@@ -24,6 +25,7 @@ def gen_data():
         weather_future = executor.submit(weather_data)
         trails_future = executor.submit(closed_trails)
         cg_future = executor.submit(campground_alerts)
+        roads_future = executor.submit(get_road_status)
         events_future = executor.submit(events_today)
         image_future = executor.submit(resize_full)
         peak_future = executor.submit(peak)
@@ -47,6 +49,7 @@ def gen_data():
         'season':weather.season,
         'trails':trails_future.result(),
         'campgrounds':cg_future.result(),
+        'roads':roads_future.result(),
         'notices':notices_futures.result(),
         'peak': peak_name,
         'peak_image': peak_img,
