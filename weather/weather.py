@@ -40,8 +40,8 @@ class WeatherContent:
                 self.message2 += alerts
 
     def aqi(self) -> str:
-        aqi_num = get_air_quality(59936)
-        if aqi_num:
+        aqi_num = get_air_quality()
+        if isinstance(aqi_num, int) and aqi_num > -1:
             if aqi_num <= 50:
                 quality = 'good.'
             elif 50 < aqi_num <= 100:
