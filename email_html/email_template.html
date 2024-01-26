@@ -78,16 +78,20 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm">
-                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&cgs.jpg" width="540" height="160" alt="Trails" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&roads&cgs.jpg" width="540" height="160" alt="Trails" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm" style="color:#6c7e44; text-decoration:none;">Trail Closures</a></p>
-                                                                <p style="margin:0 0 2px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.trails | base64_decode }}</p>
+                                                                <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.trails | base64_decode }}</p>
+                                                                {% if my.daily_update.roads != "" %}<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                    <a href="https://www.nps.gov/glac/planyourvisit/directions.htm" style="color:#6c7e44; text-decoration:none;">Road Closures</a></p>
+                                                                <div>{{ my.daily_update.roads | base64_decode }}</div>
+                                                                {% endif %}
                                                                 {% if my.daily_update.campgrounds != "" %}<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm" style="color:#6c7e44; text-decoration:none;">Frontcountry Campground Status</a></p>
                                                                 <div>{{ my.daily_update.campgrounds | base64_decode }}</div>
-                                                                {% endif %}<p style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
-                                                                    Trail and campground conditions can change throughout the day, check the 
-                                                                    <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm" style="color:#333333;">NPS website</a> for the latest.</p>
+                                                                {% endif %}
+                                                                <p style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
+                                                                    Trail, road, and campground conditions can change throughout the day, check the <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm" style="color:#333333;">NPS website</a> for the latest.</p>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                         </tr>
