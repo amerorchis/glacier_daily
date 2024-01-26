@@ -1,5 +1,7 @@
 import requests
 import json
+import urllib3
+urllib3.disable_warnings()
 
 def campground_alerts():
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds'

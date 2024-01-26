@@ -10,7 +10,6 @@ def remove_duplicate_trails(trail_list):
         name = item['properties']['name']
         coordinates = item['geometry']['coordinates']
         length = sum(len(coords) for coords in coordinates)
-        # print(name, length)
 
         if name in name_lengths:
             if length > name_lengths[name]:
