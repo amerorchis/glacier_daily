@@ -12,10 +12,10 @@ def handle_duplicates(alerts):
         matches = re.match(r'(.+) issued (.*?)\sM[DS]T', text, re.DOTALL)
         if matches:
             headlines.append((
-                matches.group(1),
-                datetime.strptime(f'{matches.group(2)} {datetime.now().year}', "%B %d at %I:%M%p %Y"),
-                text,
-                index))
+                matches.group(1), # Type of alert
+                datetime.strptime(f'{matches.group(2)} {datetime.now().year}', "%B %d at %I:%M%p %Y"), # Time issued
+                text, # Content of alert
+                index)) # Index in list
     
     while headlines:
         alert = headlines.pop()
@@ -23,6 +23,7 @@ def handle_duplicates(alerts):
         date = alert[1]
         index = alert[3]
 
+        # For each headline, check against other headlines for the same type of alert and keep only the later issued one.
         for i in headlines:
             check_name = i[0]
             check_date = i[1]
@@ -35,6 +36,7 @@ def handle_duplicates(alerts):
                     to_remove.append(index)
                     # print(f'Deleting {name} at {date}')
 
+    # Remove each item that is duplicate
     to_remove = list(set(to_remove))
     to_remove.sort()
     while to_remove:
@@ -78,20 +80,21 @@ def weather_alerts():
     if alert_text:
         try:
             alert_text = handle_duplicates(alert_text)
-        except:
+            message = '<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;"><a href="https://weather.gov" style="color:#6c7e44; text-decoration:none;">Alert from the National Weather Service</a></p>'
+            message += '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
+            
+            if len(alert_text) > 1:
+                message = message.replace('Alert', 'Alerts')
+
+            for i in alert_text:
+                message += f"<li>{i}</li>\n"
+            return message + "</ul>"
+        
+        except Exception as e:
+            print(e)
             pass
 
-        message = '<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;"><a href="https://weather.gov" style="color:#6c7e44; text-decoration:none;">Alert from the National Weather Service</a></p>'
-        message += '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
-        
-        if len(alert_text) > 1:
-            message = message.replace('Alert', 'Alerts')
-
-        for i in alert_text:
-            message += f"<li>{i}</li>\n"
-        return message + "</ul>"
-    else:
-        return ""
+    return ""
 
 if __name__ == "__main__":
     print(weather_alerts())
