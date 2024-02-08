@@ -19,6 +19,7 @@ places = {
         (48.484638, -113.36904) : 'Two Medicine Lake*',
         (48.50516, -113.329091) : 'the Park Boundary*',
         (48.49612, -113.34811) : 'Running Eagle Falls',
+        (48.50495, -113.32998) : 'the entrance station'
     },
     'Many Glacier Road' : {
         (48.797482, -113.676452) : 'the Swiftcurrent Trailhead*',
@@ -38,4 +39,9 @@ places = {
         (48.84176, -114.34430) : 'Big Prairie',
         (48.81254, -114.32426) : 'Big Prairie',
     },
+    'Cut Bank Road' : {
+        (48.61017, -113.36781) : 'the park boundary*',
+        (48.60157, -113.38362) : 'the campground*',
+        (48.60581, -113.37711) : 'the ranger station',
+    }
 }

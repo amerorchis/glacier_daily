@@ -21,10 +21,12 @@ def closed_roads():
              'Two Medicine Road': Road('Two Medicine Road'),
              'Many Glacier Road': Road('Many Glacier Road'),
              'Bowman Lake Road': Road('Bowman Lake Road'),
-             'Kintla Road': Road('Kintla Road', 'NS')}
+             'Kintla Road': Road('Kintla Road', 'NS'),
+             'Cut Bank Creek Road': Road('Cut Bank Road')}
     
+    road_names = set([x['properties']['rdname'] for x in roads_json])
     for i in roads_json:
-        road_name = i['properties']['rdname']
+        road_name = i['properties']['rdname'].replace('to Running Eagle', 'Road') # Fix the weird way Two Med is shown sometimes
         coordinates = i['geometry']['coordinates'] if len(i['geometry']['coordinates']) > 1 else i['geometry']['coordinates'][0]
 
         x = {
@@ -38,7 +40,7 @@ def closed_roads():
         if road_name in roads:
             roads[road_name].set_coord(x['start'])
             roads[road_name].set_coord(x['last'])
-        elif road_name == 'Inside North Fork Road':
+        elif road_name == 'Inside North Fork Road': # Handle weird naming for Kintla Road
             if x['start'][1] > 48.786:
                 roads['Kintla Road'].set_coord(x['start'])
             if x['last'][1] > 48.786:
