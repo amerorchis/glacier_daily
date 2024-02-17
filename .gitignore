@@ -9,3 +9,5 @@ server/**.json
 email.env
 **.DS_Store
 .cache.sqlite
+.vscode/settings.json
+activities/gnpc.json

@@ -7,6 +7,7 @@ import concurrent.futures
 from datetime import datetime
 
 from activities.events import events_today
+from activities.gnpc_events import get_gnpc_events
 from peak.peak import peak
 from roads.roads import get_road_status
 from trails_and_cgs.trails import closed_trails
@@ -42,21 +43,21 @@ def gen_data():
     drip_template_fields = {
         'date': datetime.now().strftime('%Y-%m-%d'),
         'today': datetime.now().strftime("%B %-d, %Y"),
-        'events':events_future.result(),
+        'events': events_future.result(),
         'weather1':weather.message1,
         'weather_image': weather_image(weather.results),
-        'weather2':weather.message2,
-        'season':weather.season,
-        'trails':trails_future.result(),
-        'campgrounds':cg_future.result(),
-        'roads':roads_future.result(),
-        'notices':notices_futures.result(),
+        'weather2': weather.message2,
+        'season': weather.season,
+        'trails': trails_future.result(),
+        'campgrounds': cg_future.result(),
+        'roads': roads_future.result(),
+        'notices': notices_futures.result(),
         'peak': peak_name,
         'peak_image': peak_img,
         'product_link': potd_link,
         'product_image': potd_image,
-        'product_title':potd_title,
-        'product_desc':potd_desc,
+        'product_title': potd_title,
+        'product_desc': potd_desc,
         'image_otd': image_otd,
         'image_otd_title': image_otd_title,
         'image_otd_link': image_otd_link,
@@ -78,6 +79,7 @@ def send_to_server(data, type):
     data = {i: base64.b64encode(data[i].encode('utf-8')).decode('utf-8') for i in data.keys()}
 
     data['date'] = datetime.now().strftime('%Y-%m-%d')
+    data['gnpc-events'] = get_gnpc_events()
 
     with open(f"server/{type}.json", "w") as f:
         f.write(json.dumps(data))
