@@ -111,8 +111,13 @@
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#6c7e44; text-decoration:none;">Glacier Peak of the Day</a></p>
                                                                 <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.peak | base64_decode }}
-                                                                <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#333333; font-style: italic;">
-                                                                    <br>(Full size peak image.)</a></p>
+                                                                
+                                                                    <br>(
+                                                                        <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#333333; font-style: italic;">
+                                                                        Full size peak image</a>,
+                                                                        <a href="{{ my.daily_update.peak_map | base64_decode }}" style="color:#333333; font-style: italic;">
+                                                                        peak location on map</a>
+                                                                        </a>)</p>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                         </tr>
