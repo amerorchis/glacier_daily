@@ -4,7 +4,6 @@ import os
 from ftplib import FTP
 import base64
 import concurrent.futures
-from datetime import datetime
 
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
@@ -22,6 +21,11 @@ from drip.html_friendly import html_safe
 
 
 def gen_data():
+    """
+    Use threads to gather the data from every module, then store it in a dictionary.
+    Make sure text is all HTML safe, then return it.
+    """
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
         weather_future = executor.submit(weather_data)
         trails_future = executor.submit(closed_trails)
@@ -38,8 +42,8 @@ def gen_data():
         potd_title, potd_image, potd_link, potd_desc = product_future.result()
         weather = weather_future.result()
         image_otd, image_otd_title, image_otd_link = image_future.result()
-        peak_name, peak_img = peak_future.result()
-        
+        peak_name, peak_img, peak_map = peak_future.result()
+
     drip_template_fields = {
         'date': datetime.now().strftime('%Y-%m-%d'),
         'today': datetime.now().strftime("%B %-d, %Y"),
@@ -54,6 +58,7 @@ def gen_data():
         'notices': notices_futures.result(),
         'peak': peak_name,
         'peak_image': peak_img,
+        'peak_map': peak_map,
         'product_link': potd_link,
         'product_image': potd_image,
         'product_title': potd_title,
@@ -64,9 +69,9 @@ def gen_data():
         'sunrise_vid': sunrise_vid,
         'sunrise_still': sunrise_still,
     }
-    
+
     for key, value in drip_template_fields.items():
-        if value == None:
+        if value is None:
             drip_template_fields[key] = ""
         else:
             drip_template_fields[key] = html_safe(value)
@@ -74,17 +79,21 @@ def gen_data():
     return drip_template_fields
 
 
-def send_to_server(data, type):
+def send_to_server(data: dict, doctype: str) -> str:
+    """
+    Encode data in base64, add the date, then upload it to glacier.org using FTP.
+    :return A string of the URL it was updated too.
+    """
 
     data = {i: base64.b64encode(data[i].encode('utf-8')).decode('utf-8') for i in data.keys()}
 
     data['date'] = datetime.now().strftime('%Y-%m-%d')
     data['gnpc-events'] = get_gnpc_events()
 
-    with open(f"server/{type}.json", "w") as f:
+    with open(f"server/{doctype}.json", "w") as f:
         f.write(json.dumps(data))
-    
-    file_path = f'{type}.json'
+
+    file_path = f'{doctype}.json'
     directory = 'api'
 
     # Connect to the FTP server
@@ -97,22 +106,26 @@ def send_to_server(data, type):
 
     try:
         # Open the local file in binary mode
-        with open(f'server/{type}.json', 'rb') as f:
+        with open(f'server/{doctype}.json', 'rb') as f:
             # Upload the file to the FTP server
             ftp.storbinary('STOR ' + file_path, f)
 
     except:
         print('Failed upload JSON file.')
-        pass
 
     # Close the FTP connection
     ftp.quit()
 
     return f'https://glacier.org/daily/{directory}/{file_path}'
 
-def serve_api(type="email"):
+
+def serve_api(doctype: str="email"):
+    """
+    Get the data, then upload it to server for API.
+    """
     data = gen_data()
-    send_to_server(data, type)
+    send_to_server(data, doctype)
+
 
 if __name__ == "__main__":
     serve_api()
