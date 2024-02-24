@@ -78,6 +78,10 @@ def weather_alerts():
     alert_text = [f'{i["headline"]}: {i["description"]}'.replace(r'\n','') for i in local_alerts]
 
     if alert_text:
+        # !!! Temporary measure to limit length of this section. Deal with permanently later.
+        if len(alert_text) > 2:
+            alert_text = alert_text[:2]
+
         try:
             alert_text = handle_duplicates(alert_text)
             message = '<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;"><a href="https://weather.gov" style="color:#6c7e44; text-decoration:none;">Alert from the National Weather Service</a></p>'
