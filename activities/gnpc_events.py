@@ -17,7 +17,7 @@ def scrape_events_from_web():
 
         if r.status_code != 200:
             return ''
-        
+
         soup = BeautifulSoup(r.content, 'html.parser')
         rows = soup.find_all('div','et_pb_row')
 
@@ -26,9 +26,9 @@ def scrape_events_from_web():
         event_type = 'Glacier Conversation:' if event == 'glacier-conversations' else 'Glacier Book Club:'
         for i in rows:
             title = f'{event_type} {i.find("h4").text}'
-            pic = i.find('img')['src']
+            thumb = i.find('div', 'thumbs')
+            pic = thumb.get_text() if thumb else i.find('img')['src']
             paragraphs = i.find_all('p')
-    
             paragraphs = [p.text for p in paragraphs][:-1]
 
             # Check if event has a time listed, which means it hasn't happened.
