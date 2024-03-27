@@ -38,7 +38,7 @@ def subscriber_list(tag = 'Glacier Daily Update') -> list:
             data = response.json()
             subs.extend([data['subscribers'][i] for i in range(len(data['subscribers']))])
 
-        # If we're getting a list of people to send to just grab emails, otherwise send all of their data.
+        # If we're getting a list of people to send to just grab emails, else send all of their data.
         if tag in ['Glacier Daily Update', 'Test Glacier Daily Update']:
             subs = [i['email'] for i in subs]
 

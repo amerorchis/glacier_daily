@@ -33,6 +33,9 @@ def end(subs: list):
 def update_scheduled_subs():
     scheduled = subscriber_list('Daily Start Set, Daily End Set')
 
+    if not scheduled:
+        return {'start' : [], 'end' : []}
+
     start_today = list()
     end_today = list()
     date_format = "%Y-%m-%d"
@@ -50,7 +53,7 @@ def update_scheduled_subs():
             if start_day < tomorrow:
                 start_today.append(email)
                 print(f'{email} is starting today!')
-        
+
         # If end date is yesterday or earlier, stop sending daily updates.
         if 'Daily End Set' in tags:
             end_day = i['custom_fields']['Daily_End']
@@ -58,7 +61,7 @@ def update_scheduled_subs():
             if end_day <= yesterday:
                 end_today.append(email)
                 print(f'{email} will no longer get daily updates :(')
-    
+
     start(start_today)
     end(end_today)
 

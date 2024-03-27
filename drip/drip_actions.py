@@ -22,7 +22,7 @@ def get_subs(tag):
     for i in updates['end']:
         if i in subs:
             subs.remove(i)
-    
+
     return subs
 
 def bulk_workflow_trigger(sub_list: list):
