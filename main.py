@@ -15,7 +15,7 @@ def main(tag = 'Glacier Daily Update'):
     # Retrieve subscribers from Drip.
     subscribers = get_subs(tag)
     print('Subscribers found')
-    
+
     # Generated data and upload to website.
     serve_api()
 
@@ -24,13 +24,12 @@ def main(tag = 'Glacier Daily Update'):
 
 if __name__ == "__main__":
     environ = os.environ.get('TERM')
-    
+
     if environ is None:
         main()
 
     elif environ == "xterm-256color":
         print('Test')
         # main('Test Glacier Daily Update')
-        # main()
+        main()
         serve_api()
-        
