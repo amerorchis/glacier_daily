@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.9
+
 from datetime import datetime
 import json
 import os
