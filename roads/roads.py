@@ -1,6 +1,11 @@
-import requests
+"""
+Get road status from NPS and format into HTML.
+"""
 import json
+
+import requests
 import urllib3
+
 try:
     from roads.Road import Road
 except ModuleNotFoundError:
@@ -8,12 +13,16 @@ except ModuleNotFoundError:
 urllib3.disable_warnings()
 
 def closed_roads():
-    url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27'
-    r = requests.get(url, verify=False)
+    """
+    Retrieve closed road info from NPS, convert coordinates to names and format for html.
+    """
+    url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
+        SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27'
+    r = requests.get(url, verify=False, timeout=5)
     status = json.loads(r.text)
     if not status.get('features'):
         return ''
-    
+
     roads_json = status['features']
 
     roads = {'Going-to-the-Sun Road': Road('Going-to-the-Sun Road'),
@@ -23,11 +32,12 @@ def closed_roads():
              'Bowman Lake Road': Road('Bowman Lake Road'),
              'Kintla Road': Road('Kintla Road', 'NS'),
              'Cut Bank Creek Road': Road('Cut Bank Road')}
-    
-    road_names = set([x['properties']['rdname'] for x in roads_json])
+
     for i in roads_json:
-        road_name = i['properties']['rdname'].replace('to Running Eagle', 'Road') # Fix the weird way Two Med is shown sometimes
-        coordinates = i['geometry']['coordinates'] if len(i['geometry']['coordinates']) > 1 else i['geometry']['coordinates'][0]
+        # Fix the weird way Two Med is shown sometimes
+        road_name = i['properties']['rdname'].replace('to Running Eagle', 'Road')
+        coordinates = i['geometry']['coordinates'] if len(i['geometry']['coordinates']) > 1 \
+            else i['geometry']['coordinates'][0]
 
         x = {
             'status': i['properties']['status'],
@@ -36,7 +46,7 @@ def closed_roads():
             'last': coordinates[-1],
             'length': len(coordinates)
             }
-        
+
         if road_name in roads:
             roads[road_name].set_coord(x['start'])
             roads[road_name].set_coord(x['last'])
@@ -48,34 +58,38 @@ def closed_roads():
 
     entirely_closed = []
     statuses = []
-    for i in roads:
-        road = roads[i]
+    for _, road in roads.items():
         road.closure_string()
 
         if road.entirely_closed:
             entirely_closed.append(road.name)
-        
+
         else:
             statuses.append(road.closure_str)
-    
+
     if len(entirely_closed) > 1:
         entirely_closed[-1] = f'and {entirely_closed[-1]}'
 
         statuses.append(f'{", ".join(entirely_closed)} are closed in their entirety.')
-    
+
     elif len(entirely_closed) == 1:
         statuses.append(f'{entirely_closed[0]} is closed in its entirety.')
 
     if statuses:
-        message = '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
+        message = '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px;'\
+            'line-height:18px; color:#333333;">\n'
         for i in statuses:
             message += f"<li>{i}</li>\n"
         return message + "</ul>"
-    else:
-        return '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">There are no closures on major roads today!</p>'
+
+    return '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'\
+    'There are no closures on major roads today!</p>'
 
 
 def get_road_status() -> str:
+    """
+    Wrap the closed roads function to catch errors and allow email to send if there is an issue.
+    """
     try:
         return closed_roads()
     except Exception as e:
@@ -84,5 +98,4 @@ def get_road_status() -> str:
 
 
 if __name__ == "__main__":
-    print(get_road_status())
-
+    print(closed_roads())

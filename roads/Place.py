@@ -1,64 +1,29 @@
-"""
-Custom class to define a road in the park.
-"""
 from math import radians, sin, cos, sqrt, atan2
 try:
     from roads.places import places
 except ModuleNotFoundError:
     from places import places
 
-class Road:
-    """
-    Define a road, and its closed status/location.
-    """
-    place_type = 'roads'
+class Place:
+    place_type = None
 
-    def __init__(self, name: str, orientation: str = 'EW'):
-        self.name = name
-        if orientation.upper() in ['NS','EW']:
-            self.orientation = orientation.upper()
-        else:
-            raise Exception('Road orientation must be NS or EW.')
-
-        self.locations = places[self.place_type][name]
+    def __init__(self, name: str):
+        self.name = name   
         self.closures_found = False
         self.entirely_closed = False
         self.closure_str = ''
 
-        self.north = None
+        self.locations = places[self.place_type]
+
+        self.north = []
         self.north_loc = None
-        self.east = None
+        self.east = []
         self.east_loc = None
-        self.south = None
+        self.south = []
         self.south_loc = None
-        self.west = None
+        self.west = []
         self.west_loc = None
-
-    def set_coord(self, coord):
-        if self.orientation == 'EW':
-            long = coord[0]
-
-            if not self.east or long > self.east[0]:
-                self.east = coord
-
-            if not self.west or long < self.west[0]:
-                self.west = coord
-
-        else:
-            lat = coord[1]
-
-            if not self.north or lat > self.north[1]:
-                self.north = coord
-
-            if not self.south or lat < self.south[1]:
-                self.south = coord
-
-    def get_coord(self):
-        if self.orientation == 'EW':
-            print(f'West: {self.west[1],self.west[0]}\nEast: {self.east[1],self.east[0]}')
-
-        else:
-            print(f'North: {self.north[1],self.north[0]}\nSouth: {self.south[1],self.south[0]}')
+        self.orientation = None
 
     def dist(self, lat1, lon1, lat2, lon2):
         # Convert latitude and longitude from degrees to radians
@@ -89,9 +54,9 @@ class Road:
         for direction, coords in [('north', self.north), ('south', self.south), ('east', self.east), ('west', self.west)]:
             if coords:
                 self.find_min_distance(direction, coords[::-1])
-
+        
         self.closures_found = True
-
+    
     def closure_string(self):
 
         if not self.closures_found:
@@ -101,7 +66,7 @@ class Road:
             if '*' in self.west_loc and '*' in self.east_loc:
                 self.entirely_closed = True
                 self.closure_str = f'{self.name} is closed in its entirety.'
-
+            
             else:
                 self.west_loc = self.west_loc.replace('*','')
                 self.east_loc = self.east_loc.replace('*','')
@@ -116,5 +81,6 @@ class Road:
                 self.south_loc = self.south_loc.replace('*','')
                 self.north_loc = self.north_loc.replace('*','')
                 self.closure_str = f'{self.name} is closed from {self.south_loc} to {self.north_loc}.'
-
+        
         return self.closure_str
+    

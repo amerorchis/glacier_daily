@@ -1,4 +1,8 @@
-places = {
+"""
+Dictionaries of locations that are commonly accessed by road modules.
+"""
+
+roads = {
     'Going-to-the-Sun Road' : {
         (48.61703, -113.875531) : 'Lake McDonald Lodge',
         (48.749905, -113.44709) : 'the foot of St. Mary Lake',
@@ -44,4 +48,19 @@ places = {
         (48.60157, -113.38362) : 'the campground*',
         (48.60581, -113.37711) : 'the ranger station',
     }
+}
+
+hiker_biker = {
+    (48.64601, -113.84608) : 'Moose Country',
+    (48.67968, -113.81944) : 'Avalanche',
+    (48.69523, -113.81716) : 'Red Rock Point',
+    (48.72470, -113.76506) : 'Logan Creek',
+    (48.74058, -113.76986) : 'Packer\'s Roost',
+    (48.75494, -113.80047) : 'The Loop',
+    (48.73928, -113.74776) : 'Bird Woman Falls Overlook',
+}
+
+places = {
+    'roads': roads,
+    'hiker_biker': hiker_biker
 }

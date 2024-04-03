@@ -11,6 +11,7 @@ from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
 from peak.peak import peak
 from roads.roads import get_road_status
+from roads.hiker_biker import get_hiker_biker_status
 from trails_and_cgs.trails import closed_trails
 from trails_and_cgs.frontcountry_cgs import campground_alerts
 from weather.weather import weather_data
@@ -33,6 +34,7 @@ def gen_data():
         trails_future = executor.submit(closed_trails)
         cg_future = executor.submit(campground_alerts)
         roads_future = executor.submit(get_road_status)
+        hiker_biker_future = executor.submit(get_hiker_biker_status)
         events_future = executor.submit(events_today)
         image_future = executor.submit(resize_full)
         peak_future = executor.submit(peak)
@@ -57,6 +59,7 @@ def gen_data():
         'trails': trails_future.result(),
         'campgrounds': cg_future.result(),
         'roads': roads_future.result(),
+        'hikerbiker': hiker_biker_future.result(),
         'notices': notices_futures.result(),
         'peak': peak_name,
         'peak_image': peak_img,
@@ -131,4 +134,3 @@ def serve_api(doctype: str="email"):
 
 if __name__ == "__main__":
     serve_api()
-    
