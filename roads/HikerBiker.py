@@ -52,17 +52,17 @@ class HikerBiker(Place):
         We need to check if we are measuring mileage from the east or west closure of the road.
         """
         if side == 'logan':
-            return ', 32 mi. up'
+            return ', 32 miles up'
 
         if side == 'west':
             self.west = gtsr.west
             self.closure_spot()
-            return f', {self.mile_marker - self.west_loc[1]:.1f} mi. up'
+            return f', {self.mile_marker - self.west_loc[1]:.1f} miles up'
 
         if side == 'east':
             self.east = gtsr.east
             self.closure_spot()
-            return f', {self.east_loc[1] - self.mile_marker:.1f} mi. up'
+            return f', {self.east_loc[1] - self.mile_marker:.1f} miles up'
 
         return ''
 

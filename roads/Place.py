@@ -21,14 +21,14 @@ class Place:
         self.places = places
         self.locations = []
         self.north = []
-        self.north_loc = None
+        self.north_loc = (None, None)
         self.east = []
-        self.east_loc = None
+        self.east_loc = ()
         self.south = []
-        self.south_loc = None
+        self.south_loc = ()
         self.west = []
-        self.west_loc = None
-        self.orientation = None
+        self.west_loc = ()
+        self.orientation = ''
 
     def dist(self, lat1, lon1, lat2, lon2):
         """
