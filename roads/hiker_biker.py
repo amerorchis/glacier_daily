@@ -31,8 +31,8 @@ def hiker_biker():
         if i['geometry']:
             coord = tuple(i['geometry']['coordinates'])
 
-        closure_type = i['properties']['name'].replace('Hazard Closure', \
-                                                       'Hazard Closure (in effect at all times):')\
+        closure_type = i['properties']['name']\
+        .replace('Hazard Closure', 'Hazard Closure (in effect at all times):')\
         .replace('Road Crew Closure', 'Road Crew Closure (in effect during work hours):')\
         .replace('Hiker/Biker ', '')
 
