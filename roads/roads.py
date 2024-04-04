@@ -2,7 +2,9 @@
 Get road status from NPS and format into HTML.
 """
 import json
-
+import sys
+import traceback
+from typing import List
 import requests
 import urllib3
 
@@ -12,14 +14,16 @@ except ModuleNotFoundError:
     from Road import Road
 urllib3.disable_warnings()
 
-def closed_roads():
+def closed_roads() -> List[Road]:
     """
-    Retrieve closed road info from NPS, convert coordinates to names and format for html.
+    Retrieve closed road info from NPS and convert coordinates to names.
     """
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
         SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27'
     r = requests.get(url, verify=False, timeout=5)
+    r.raise_for_status()
     status = json.loads(r.text)
+
     if not status.get('features'):
         return ''
 
@@ -56,6 +60,12 @@ def closed_roads():
             if x['last'][1] > 48.786:
                 roads['Kintla Road'].set_coord(x['last'])
 
+    return roads
+
+def format_road_closures(roads: List[Road]) -> str:
+    """
+    Take list of Road objects and turn into html formatted string.
+    """
     entirely_closed = []
     statuses = []
     for _, road in roads.items():
@@ -65,7 +75,7 @@ def closed_roads():
             entirely_closed.append(road.name)
 
         else:
-            statuses.append(road.closure_str)
+            statuses.append(str(road))
 
     if len(entirely_closed) > 1:
         entirely_closed[-1] = f'and {entirely_closed[-1]}'
@@ -91,11 +101,10 @@ def get_road_status() -> str:
     Wrap the closed roads function to catch errors and allow email to send if there is an issue.
     """
     try:
-        return closed_roads()
-    except Exception as e:
-        print(e)
+        return format_road_closures(closed_roads())
+    except requests.exceptions.HTTPError:
+        print(traceback.format_exc(), file=sys.stderr)
         return ''
 
-
 if __name__ == "__main__":
-    print(closed_roads())
+    print(get_road_status())
