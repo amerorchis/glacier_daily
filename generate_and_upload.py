@@ -1,7 +1,11 @@
 #!/usr/bin/env python3.9
-
+"""
+Generate all of the data with a ThreadPoolExecutor, then upload it to the glacier.org
+server with FTP.
+"""
 from datetime import datetime
 import json
+import sys
 import os
 from ftplib import FTP
 import base64
@@ -95,7 +99,7 @@ def send_to_server(data: dict, doctype: str) -> str:
     data['date'] = datetime.now().strftime('%Y-%m-%d')
     data['gnpc-events'] = get_gnpc_events()
 
-    with open(f"server/{doctype}.json", "w") as f:
+    with open(f"server/{doctype}.json", "w", encoding="utf-8") as f:
         f.write(json.dumps(data))
 
     file_path = f'{doctype}.json'
@@ -115,8 +119,8 @@ def send_to_server(data: dict, doctype: str) -> str:
             # Upload the file to the FTP server
             ftp.storbinary('STOR ' + file_path, f)
 
-    except:
-        print('Failed upload JSON file.')
+    except Exception:
+        print('Failed upload JSON file.', file=sys.stderr)
 
     # Close the FTP connection
     ftp.quit()
