@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 import cv2
 from pathlib import Path
+import sys
 try:
     from sunrise_timelapse.timelapse_json import *
     from sunrise_timelapse.ftp import upload_sunrise
@@ -129,7 +130,7 @@ def process_video():
             video_path = old_style
             print('Using old video.')
         else:
-            print('No video from today.')
+            print('No video from today.', file=sys.stderr)
             return None, None
 
         frame_found = find_frame(video_path)
