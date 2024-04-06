@@ -41,6 +41,8 @@ class Road(Place):
 
             if not self.south or lat < self.south[1]:
                 self.south = coord
+        
+        self.coords_set = True
 
     def get_coord(self):
         """

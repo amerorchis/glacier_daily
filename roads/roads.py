@@ -60,7 +60,9 @@ def closed_roads() -> List[Road]:
             if x['last'][1] > 48.786:
                 roads['Kintla Road'].set_coord(x['last'])
 
-    return roads
+    # Return dictionary of roads that have a closure found.
+    return {key:value for (key, value) in roads.items() if value}
+
 
 def format_road_closures(roads: List[Road]) -> str:
     """

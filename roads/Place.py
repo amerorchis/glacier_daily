@@ -17,6 +17,7 @@ class Place:
         self.name = name
         self.closures_found = False
         self.entirely_closed = False
+        self.coords_set = False
         self.closure_str = ''
         self.places = places
         self.locations = []
@@ -78,3 +79,9 @@ class Place:
         Overload the string method with our closure string.
         """
         return self.closure_str
+
+    def __bool__(self):
+        """
+        Check if any closures have been listed.
+        """
+        return self.coords_set
