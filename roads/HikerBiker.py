@@ -57,12 +57,12 @@ class HikerBiker(Place):
         if side == 'west':
             self.west = gtsr.west
             self.closure_spot()
-            return f', {self.mile_marker - self.west_loc[1]:.1f} miles up'
+            return f', {self.mile_marker - self.west_loc[1]:.1f} miles up from the gate at {self.west_loc[0]}.'
 
         if side == 'east':
             self.east = gtsr.east
             self.closure_spot()
-            return f', {self.east_loc[1] - self.mile_marker:.1f} miles up'
+            return f', {self.east_loc[1] - self.mile_marker:.1f} miles up from the gate at {self.east_loc[0]}.'
 
         return ''
 
