@@ -23,15 +23,25 @@ def hiker_biker():
     # Find GTSR road closure info.
     gtsr = closed_roads().get('Going-to-the-Sun Road', '')
 
-    url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="\
-        "SELECT%20*%20FROM%20glac_hiker_biker_closures%20WHERE%20status%20=%20%27active%27"
-    r = requests.get(url, verify=False, timeout=5)
-    r.raise_for_status()
-    data = json.loads(r.text).get('features', '')
+    urls = ["https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="\
+        "SELECT%20*%20FROM%20glac_hiker_biker_closures%20WHERE%20status%20=%20%27active%27",
+        "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="\
+        "SELECT%20*%20FROM%20winter_rec_closure%20WHERE%20status%20=%20%27active%27"]
+
+    data = []
+
+    for url in urls:
+        r = requests.get(url, verify=False, timeout=5)
+        r.raise_for_status()
+        data.extend(json.loads(r.text).get('features', ''))
 
     # If there is no hiker/biker info or no GTSR closure return empty string.
     if not data or not gtsr:
         return ''
+
+    # Make sure this is the right type of closure.
+    data = [j for j in data if \
+            ("Avalanche" in j["properties"]["name"] or "Road Crew" in j["properties"]["name"])]
 
     statuses = []
     for i in data:
