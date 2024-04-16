@@ -1,28 +1,38 @@
-import random
-import requests
-import json
-import os
-import re
-from datetime import datetime, date
-from PIL import Image
-import requests
-from io import BytesIO
-from ftplib import FTP
+"""
+Select a product at random, find its image, resize and upload the image, 
+then return a description, link to product, and link to photo.
+"""
 
+import sys
+import json
+import traceback
+import os
+import random
+from re import sub
+from datetime import datetime
+from ftplib import FTP
+from io import BytesIO
+
+import requests
 from dotenv import load_dotenv
+from PIL import Image
+
 load_dotenv("email.env")
 
 username = os.environ['FTP_USERNAME']
 password = os.environ['FTP_PASSWORD']
-server = 'ftp.glacier.org'
+SERVER = os.environ['FTP_SERVER']
 
 def upload_potd():
+    """
+    Upload the product image to the glacier.org ftp server.
+    """
     today = datetime.now()
     file_path = f'{today.month}_{today.day}_{today.year}_product_otd.jpg'
     directory = 'product'
 
     # Connect to the FTP server
-    ftp = FTP(server)
+    ftp = FTP(SERVER)
     ftp.login(username, password)
     ftp.cwd(directory)
 
@@ -32,9 +42,10 @@ def upload_potd():
             # Upload the file to the FTP server
             ftp.storbinary('STOR ' + file_path, f)
 
-    except:
-        print('Failed upload product image')
-        pass
+    except Exception:
+        print('Failed upload product image', file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
+        return ''
 
     # Close the FTP connection
     ftp.quit()
@@ -42,8 +53,11 @@ def upload_potd():
     return f'https://glacier.org/daily/{directory}/{file_path}'
 
 def resize_image(url):
+    """
+    Put the image on a white matte, resized to fit email.
+    """
     # Fetch the image from the URL
-    response = requests.get(url)
+    response = requests.get(url, timeout=5)
     image = Image.open(BytesIO(response.content))
 
     # Calculate the new size while maintaining the aspect ratio
@@ -57,7 +71,7 @@ def resize_image(url):
 
     # Check if the new height exceeds the canvas height
     if new_height > (150 * scale_multiplier):
-        new_height = (150 * scale_multiplier)
+        new_height = 150 * scale_multiplier
         new_width = int(new_height * aspect_ratio)
 
     # Resize the image
@@ -77,63 +91,85 @@ def resize_image(url):
     canvas.save('email_images/today/product_otd.jpg')
 
 def get_product():
-    BC_token = os.environ['BC_TOKEN']
-    store_hash = os.environ['BC_STORE_HASH']
-    url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products?inventory_level:min=1&is_visible=true"
-    header = {"X-Auth-Token": BC_token,}
+    """
+    Grab a random product from the BigCommerce API.
+    """
 
-    r = requests.get(url=url, headers=header)
+    # Connect to API
+    bc_token = os.environ['BC_TOKEN']
+    store_hash = os.environ['BC_STORE_HASH']
+    url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products?"\
+        "inventory_level:min=1&is_visible=true"
+    header = {"X-Auth-Token": bc_token,}
+
+    # Figure out total number of products
+    r = requests.get(url=url, headers=header, timeout=12)
     products = json.loads(r.text)
     total_products = products['meta']['pagination']['total']
 
+    # Select one of these products
     random.seed(datetime.today().strftime("%Y:%m:%d"))
     product_otd = random.randrange(1, total_products + 1)
 
+    # Function to retrieve a product.
     def retrieve_potd(product_otd):
+        """
+        Retrieve a product at a given index, parse out a description and grab the image url.
+        """
+        # Calculate the page and index of the random product.
         product_page = product_otd // 50 + 1
-        product_on_page = product_otd % 50
+        product_index = product_otd % 50 - 1
 
-        new_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products?inventory_level:min=1&is_visible=true&page={product_page}"
-        product_index_on_page = product_on_page - 1
-        r = requests.get(url=new_url, headers=header)
+        # Retrieve item from response.
+        new_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products?"\
+            f"inventory_level:min=1&is_visible=true&page={product_page}"
+        r = requests.get(url=new_url, headers=header, timeout=12)
         products = json.loads(r.text)
-        item = products['data'][product_index_on_page]
+        item = products['data'][product_index]
         name = item['name']
 
-        if item['meta_description']:
-            pattern = r'(<(?!br\s*\/?)[^>]*>)|((<br\s*\/?>)\s*)+'
-            desc = re.sub(pattern, lambda m: m.group(1) if m.group(1) else '<br>', item['meta_description'])
-        else:
-            pattern = r'(<(?!br\s*\/?)[^>]*>)|((<br\s*\/?>)\s*)+'
-            desc = re.sub(pattern, lambda m: m.group(1) if m.group(1) else '<br>', item['description'])
-        desc = desc.replace('&nbsp;','') # remove non-breaking spaces
-        desc = re.sub(r'<p[^>]*>|<\/p>', '', desc) # remove paragraph tags
-        desc = re.sub(r'(?<=\w)(\.)', r'\1 ', desc) # add space after sentence
+        # Match instances of multiple line breaks and reduce them to a single <br>
+        desc = item['meta_description'] if item['meta_description'] else item['description']
+        pattern = r'(<(?!br\s*\/?)[^>]*>)|((<br\s*\/?>)\s*)+'
+        desc = sub(pattern,
+                      lambda m: m.group(1) if m.group(1) else '<br>',
+                      desc)
 
+        desc = desc.replace('&nbsp;','') # remove non-breaking spaces
+        desc = sub(r'<p[^>]*>|<\/p>', '', desc) # remove paragraph tags
+        desc = sub(r'(?<=\w)(\.)', r'\1 ', desc) # add space after sentence
+        desc = sub(r'<div[^>]*>|<\/div>', '', desc).strip() # remove div tags
+
+        # Truncate long descriptions
         if len(desc) > 150:
             index = desc.find(' ', 150)
             desc = desc[:index] + '...'
 
-        item_id = item['id']
+        # Get image url
         item_url = f"https://shop.glacier.org{item['custom_url']['url']}"
-        get_image_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products/{item_id}/images"
-        r = requests.get(url=get_image_url, headers=header)
+        get_image_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products/"\
+            f"{item['id']}/images"
+        r = requests.get(url=get_image_url, headers=header, timeout=12)
         image_url = json.loads(r.text)['data'][0]['url_standard']
-        # print(f'{name}: {desc} - {item_id}, {item_url} | {image_url}')
+
         return {'image_url':image_url, 'name':name, 'desc':desc, 'product_link':item_url}
-    
+
+    # Keep searching for products if they don't have images.
     while True:
         try:
             product_data = retrieve_potd(product_otd)
             if product_data['image_url']:
                 break
-        except Exception:
-            print('Product not found')
+            else:
+                raise ValueError('Product not found')
+
+        except ValueError:
             product_otd = random.randint(1, total_products)
-    
+
+    # Resize and upload the image retrieved
     resize_image(product_data['image_url'])
     image_url = upload_potd()
-    # print(product_data['name'], image_url, product_data['product_link'], product_data['desc'])
+
     return product_data['name'], image_url, product_data['product_link'], product_data['desc']
 
 if __name__ == "__main__":
