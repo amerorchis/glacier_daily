@@ -72,4 +72,9 @@ class HikerBiker(Place):
         """
         side = self.get_side()
         self.closure_loc()
+
+        side_name = ''
+        if side != 'logan':
+            side_name = 'West - ' if side == 'west' else 'East - '
+        self.closure_str = side_name + self.closure_str
         self.closure_str += self.closure_dist(side, gtsr)
