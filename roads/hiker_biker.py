@@ -47,8 +47,8 @@ def hiker_biker():
     for i in data:
         # Clean up naming conventions.
         closure_type = i['properties']['name']\
-        .replace('Hazard Closure', 'Hazard Closure (in effect at all times):')\
-        .replace('Road Crew Closure', 'Road Crew Closure (in effect during work hours):')\
+        .replace('Hazard Closure', 'Hazard Closure:')\
+        .replace('Road Crew Closure', 'Road Crew Closure:')\
         .replace('Hiker/Biker ', '')
 
         # If there are coordinates, generate a string with the name of the closure location.
@@ -65,11 +65,11 @@ def hiker_biker():
         return ''
 
     # Generate HTML for this section of the email.
-    message = '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px;'\
+    message = '<ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px;'\
         'line-height:18px; color:#333333;">\n'
     for i in statuses:
         message += f"<li>{i}</li>\n"
-    return message + "</ul>"
+    return message + "</ul>" + '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">Road Crew Closures are in effect during work hours, Avalanche Hazard Closures are in effect at all times.</p>'
 
 
 def get_hiker_biker_status() -> str:
