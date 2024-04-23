@@ -64,12 +64,22 @@ def hiker_biker():
     if not statuses or all('None listed' in item for item in statuses):
         return ''
 
+    # Sort by side (term between : and -)
+    try:
+        statuses.sort(key=lambda x: x.split(':')[1].split('-')[0], reverse=True)
+    except IndexError:
+        pass
+
     # Generate HTML for this section of the email.
     message = '<ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px;'\
         'line-height:18px; color:#333333;">\n'
     for i in statuses:
         message += f"<li>{i}</li>\n"
-    return message + "</ul>" + '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">Road Crew Closures are in effect during work hours, Avalanche Hazard Closures are in effect at all times.</p>'
+
+    style = 'margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;'
+    return message + "</ul>" + (f'<p style="{style}">'
+                                'Road Crew Closures are in effect during work hours, '
+                                'Avalanche Hazard Closures are in effect at all times.</p>')
 
 
 def get_hiker_biker_status() -> str:
