@@ -46,9 +46,9 @@ def closed_trails():
     for i in trails:
         name = i['name']
 
-        if i['status_reason']:
+        if i.get('status_reason'):
             reason = i['status_reason'].replace('CLOSED','closed').replace('  ', ' ')
-        elif i['trail_status_info']:
+        elif i.get('trail_status_info'):
             reason = i['trail_status_info'].replace('CLOSED','closed').replace('  ', ' ')
 
         location = i['location']

@@ -39,7 +39,7 @@ roads = {
         (48.786906, -114.28275) : 'the Polebridge Entrance Station*',
         (48.86518, -114.35921) : 'Round Prairie',
         (48.85974, -114.35400) : 'Round Prairie',
-        (48.83144, -114.33511) : 'Big Prairie',
+        (48.83144, -114.33511) : 'Doverspike Meadow',
         (48.84176, -114.34430) : 'Big Prairie',
         (48.81254, -114.32426) : 'Big Prairie',
     },
