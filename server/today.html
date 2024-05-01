@@ -18,9 +18,9 @@
                         <tr>
                             <td>
                                 <div>
-                                    {% if subscriber.email == 'for-web' %}
-                                    <strong>Last Updated: {{ my.daily_update.timestring }}. Check <a href="https://www.nps.gov/glac/index.htm">nps.gov/glac</a> for the latest.</strong>
-                                    {% endif %}
+                                    
+                                    <strong>Last Updated: 5/1/24 at 5:04PM MT. Check <a href="https://www.nps.gov/glac/index.htm">nps.gov/glac</a> for the latest.</strong>
+                                    
                                 <a href="http://glacier.org/" style="display:block; width:407px; height:100px; margin:0 0 0 10px;">
                                     <img src="https://www.dripuploads.com/uploads/image_upload/image/3049526/embeddable_9e5a933a-16c8-4a46-a560-16a94a8ea61b.png" width="407" height="100" alt="GNPC Logo" style="display:block; border:0; margin:0;">
                                 </a>
@@ -41,36 +41,61 @@
                                                 <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                             <td colspan="3" rowspan="3" bgcolor="#FFFFFF" style="padding:0 0 30px;">
                                                 <!-- begin content -->
-                                                <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/title_card.jpg" width="600" height="400" alt="What you need to know" style="display:block; border:0; margin:0 0 44px; background:#eeeeee;">
+                                                <img src="https://glacier.org/daily/summer/title_card.jpg" width="600" height="400" alt="What you need to know" style="display:block; border:0; margin:0 0 44px; background:#eeeeee;">
                                                 <p style="margin:0 30px 33px;; text-align:center; text-transform:uppercase; font-size:24px; line-height:30px; font-weight:bold; color:#484a42;">
-                                                    WHAT YOU NEED TO KNOW<br>FOR {{ my.daily_update.today | base64_decode }}
+                                                    WHAT YOU NEED TO KNOW<br>FOR May 1, 2024
                                                 </p>
                                                 <!-- begin articles -->
                                                 <table cellpadding="0" cellspacing="0" border="0" width="100%">
                                                     <tbody>
-                                                        {% if my.daily_update.events != "" %}<tr valign="top">
-                                                            <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
-                                                            <td colspan="3">
-                                                                <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
-                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg" width="540" height="160" alt="Events" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
-                                                                <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                    <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm" style="color:#6c7e44; text-decoration:none;">Park Activities Today</a></p>
-                                                                <div>{{ my.daily_update.events | base64_decode }}</div>
-                                                            </td>
-                                                            <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
-                                                        </tr>{% endif %}
+                                                        
                                                         <tr valign="top">
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.weather.gov/">
-                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/weather.jpg" width="540" height="160" alt="Weather" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/summer/weather.jpg" width="540" height="160" alt="Weather" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.weather.gov/" style="color:#6c7e44; text-decoration:none;">Weather</a></p>
-                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.weather1 | base64_decode }}</p>
+                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">Today, sunrise is at 6:14am and sunset is at 8:51pm. There will be 14 hours and 36 minutes of daylight.
+<br><br>Forecasts Around the Park:</p>
                                                                 <table style="margin: 0 auto; width: 405px;"><td>
-                                                                    <img src="{{ my.daily_update.weather_image | base64_decode }}" width="405" height="374" padding-left="70px" alt="Today's weather forecast in Glacier">
+                                                                    <img src="https://glacier.org/daily/weather/5_1_2024_today_park_map.png" width="405" height="374" padding-left="70px" alt="Today's weather forecast in Glacier">
                                                                 </td></table>
-                                                                <p style="margin:0 0 2px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.weather2 | base64_decode }}</p>
+                                                                <p style="margin:0 0 2px; font-size:12px; line-height:18px; color:#333333;"><p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;"><a href="https://weather.gov" style="color:#6c7e44; text-decoration:none;">Alerts from the National Weather Service</a></p><ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+<li>Winter Storm Warning issued May 1 at 2:33PM MDT until May 2 at 12:00PM MDT by NWS Great Falls MT: * WHAT...Heavy snow. Additional snow accumulations between 4 and 10
+inches, with higher amounts above pass level. Winds gusting as
+high as 40 mph.
+
+* WHERE...East Glacier Park Region Zone.
+
+* WHEN...Until noon MDT Thursday.
+
+* IMPACTS...Travel could be very difficult and tire chains may be
+required for some vehicles. Those in the backcountry should ensure
+they have appropriate knowledge and gear and may want to consider
+alternate plans. Areas of blowing snow could significantly reduce
+visibility.
+
+* ADDITIONAL DETAILS...The worst roadway impacts will occur during
+the overnight and morning hours. The heavy wet snow may cause
+isolated power outages.</li>
+<li>Winter Weather Advisory issued May 1 at 2:33PM MDT until May 2 at 12:00PM MDT by NWS Great Falls MT: * WHAT...Snow. Additional snow accumulations between 2 and 6 inches
+on the plains, with an additional 4 to 8 inches in the mountains
+of the Southern Rocky Mountain Front. Winds gusting as high as 45
+mph.
+
+* WHERE...Northern High Plains and Southern Rocky Mountain Front.
+
+* WHEN...Until noon MDT Thursday.
+
+* IMPACTS...Slush and or snow covered roads could cause difficult
+travel conditions. Areas of blowing snow could significantly
+reduce visibility.
+
+* ADDITIONAL DETAILS...The worst roadway impacts will occur during
+the overnight and morning hours. The heavy wet snow may cause
+isolated power outages.</li>
+</ul></p>
                                                                 <p style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
                                                                     Air quality data from   
                                                                     <a href="https://www.nps.gov/subjects/air/current-data.htm?site=glac&location=west-glacier-horse-stables&" style="color:#333333;">the National Park Service.</a></p>
@@ -81,22 +106,36 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td colspan="3">
                                                                 <a style="display:block; margin:0 0 14px;" href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm">
-                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&roads&cgs.jpg" width="540" height="160" alt="Trails" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/summer/trails&roads&cgs.jpg" width="540" height="160" alt="Trails" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm" style="color:#6c7e44; text-decoration:none;">Trail Closures</a></p>
-                                                                <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.trails | base64_decode }}</p>
-                                                                {% if my.daily_update.roads != "" %}<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;"><ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+<li>Grinnell Glacier: closed due to hazard snow - Josephine Lake to Glacier Overlook</li>
+<li>Highline: Use caution: Snow and ice still present, mostly near haystack saddle. - Logan Pass - Granite Park Chalet</li>
+</ul></p>
+                                                                <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/directions.htm" style="color:#6c7e44; text-decoration:none;">Road Closures</a></p>
-                                                                <div>{{ my.daily_update.roads | base64_decode }}</div>
-                                                                {% endif %}
-                                                                {% if my.daily_update.hikerbiker != "" %}{% if my.daily_update.hikerbiker %}<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                <div><ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px;line-height:18px; color:#333333;">
+<li>Going-to-the-Sun Road is closed from Lake McDonald Lodge to Rising Sun.</li>
+<li>Kintla Road is closed from Doverspike Meadow to the campground.</li>
+<li>Two Medicine Road, Bowman Lake Road, and Cut Bank Road are closed in their entirety.</li>
+</ul></div>
+                                                                
+                                                                <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/directions.htm" style="color:#6c7e44; text-decoration:none;">Going-to-the-Sun Road Hiker/Biker Closures</a></p>
-                                                                <div>{{ my.daily_update.hikerbiker | base64_decode }}</div>
-                                                                {% endif %}
-                                                                {% if my.daily_update.campgrounds != "" %}<p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                <div><ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px;line-height:18px; color:#333333;">
+<li>Road Crew Closure: West - The Loop, 13.5 miles from gate at Lake McDonald Lodge.</li>
+<li>Avalanche Hazard Closure: West - Road Camp, 16.3 miles from gate at Lake McDonald Lodge.</li>
+<li>Road Crew Closure: East - Grizzly Point, 6.0 miles from gate at Rising Sun.</li>
+<li>Avalanche Hazard Closure: East - Jackson Glacier Overlook, 7.0 miles from gate at Rising Sun.</li>
+</ul><p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">Road Crew Closures are in effect during work hours, Avalanche Hazard Closures are in effect at all times.</p></div>
+                                                                
+                                                                <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm" style="color:#6c7e44; text-decoration:none;">Campground Closures</a></p>
-                                                                <div>{{ my.daily_update.campgrounds | base64_decode }}</div>
-                                                                {% endif %}{% endif %}
+                                                                <div><ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+<li>Closed for the season: Avalanche Creek, Bowman Lake, Cut Bank, Fish Creek, Kintla Lake, Logging Creek, Many Glacier, Quartz Creek, Rising Sun, Sprague Creek, Two Medicine Lake</li>
+</ul></div>
+                                                                
                                                                 <p style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
                                                                     Trail, road, and campground conditions can change throughout the day, check the <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm" style="color:#333333;">NPS website</a> for the latest.</p>
                                                             </td>
@@ -106,20 +145,21 @@
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td>
                                                                 <a style="display:block; margin:0 0 14px;" href="https://glacier.org">
-                                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/notices.jpg" width="255" height="150" alt="Daily Notices" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <img src="https://glacier.org/daily/summer/notices.jpg" width="255" height="150" alt="Daily Notices" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                     <a href="https://glacier.org" style="color:#6c7e44; text-decoration:none;">Notices</a></p>
-                                                                <div>{{ my.daily_update.notices | base64_decode }}</div>
+                                                                <div><ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;"><li>Our next Glacier Book Club (5/29) will feature the book Ranger Confidential with author Andrea Lankford! Register at <a href="https://glacier.org/glacier-book-club/" style="color:#333333;">glacier.org/glacier-book-club</a>.</li>
+</ul></div>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td>
-                                                                <a style="display:block; margin:0 0 14px;" href="{{ my.daily_update.peak_image | base64_decode }}">
-                                                                    <img src="{{ my.daily_update.peak_image | base64_decode }}" width="255" height="150" alt="Peak" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                <a style="display:block; margin:0 0 14px;" href="https://glacier.org/daily/peak/5_1_2024_peak.jpg">
+                                                                    <img src="https://glacier.org/daily/peak/5_1_2024_peak.jpg" width="255" height="150" alt="Peak" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                    <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#6c7e44; text-decoration:none;">Glacier Peak of the Day</a></p>
-                                                                <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.peak | base64_decode }}
-                                                                    <br>(<a href="{{ my.daily_update.peak_image | base64_decode }}" style="color:#333333; font-style: italic;">Full size peak image</a>,
-                                                                        <a href="{{ my.daily_update.peak_map | base64_decode }}" style="color:#333333; font-style: italic;">
+                                                                    <a href="https://glacier.org/daily/peak/5_1_2024_peak.jpg" style="color:#6c7e44; text-decoration:none;">Glacier Peak of the Day</a></p>
+                                                                <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Blackfoot Mountain - 9574 ft.
+                                                                    <br>(<a href="https://glacier.org/daily/peak/5_1_2024_peak.jpg" style="color:#333333; font-style: italic;">Full size peak image</a>,
+                                                                        <a href="https://www.google.com/maps/place/48.58182N+113.66847W/@48.6266614,-114.0284462,97701m/data=!3m1!1e3!4m4!3m3!8m2!3d48.8361389!4d-113.6542778?entry=ttu" style="color:#333333; font-style: italic;">
                                                                         peak location on map</a>)</p>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
@@ -127,38 +167,25 @@
                                                         <tr valign="top">
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td>
-                                                                <a style="display:block; margin:0 0 14px;" href="{{ my.daily_update.product_link | base64_decode }}">
-                                                                    <img src="{{ my.daily_update.product_image | base64_decode }}" alt="Today's product of the day" width="255" height="150" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                <a style="display:block; margin:0 0 14px;" href="https://shop.glacier.org/hike-medallion-red-bus-12/">
+                                                                    <img src="https://glacier.org/daily/product/5_1_2024_product_otd.jpg" alt="Today's product of the day" width="255" height="150" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                    <a href="{{ my.daily_update.product_link | base64_decode }}" style="color:#6c7e44; text-decoration:none;">Product of the Day:<br>{{ my.daily_update.product_title | base64_decode }}</a></p>
-                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.product_desc | base64_decode }} <a href="{{ my.daily_update.product_link | base64_decode }}" style="color:#333333; font-style: italic;">
+                                                                    <a href="https://shop.glacier.org/hike-medallion-red-bus-12/" style="color:#6c7e44; text-decoration:none;">Product of the Day:<br>Red Bus Hiking Stick Medallion</a></p>
+                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">This hiking stick medallion features Glacier's historic Red Buses, with Clements Mountain in the background. <a href="https://shop.glacier.org/hike-medallion-red-bus-12/" style="color:#333333; font-style: italic;">
                                                                     (Product Link)</a>.</p>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td>
-                                                                <a style="display:block; margin:0 0 14px;" href="{{ my.daily_update.image_otd_link | base64_decode }}"
-                                                                ><img src="{{ my.daily_update.image_otd | base64_decode }}" alt="Today's picture of the day" width="255" height="150" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                <a style="display:block; margin:0 0 14px;" href="https://flickr.com/photos/glaciernps/49964910637"
+                                                                ><img src="https://glacier.org/daily/picture/5_1_2024_pic_otd.jpg" alt="Today's picture of the day" width="255" height="150" style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                 <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                    <a href="{{ my.daily_update.image_otd_link | base64_decode }}" style="color:#6c7e44; text-decoration:none;">Glacier Image of the Day</a></p>
-                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">{% if my.daily_update.image_otd_title != "" %}{{ my.daily_update.image_otd_title | base64_decode }}<br>{% endif %}Image courtesy of 
-                                                                    <a href="{{ my.daily_update.image_otd_link | base64_decode }}" style="color:#333333;">Glacier National Park.</a></p>
+                                                                    <a href="https://flickr.com/photos/glaciernps/49964910637" style="color:#6c7e44; text-decoration:none;">Glacier Image of the Day</a></p>
+                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">Logan Pass Star Party 2019<br>Image courtesy of 
+                                                                    <a href="https://flickr.com/photos/glaciernps/49964910637" style="color:#333333;">Glacier National Park.</a></p>
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                         </tr>
-                                                        {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
-                                                        <tr valign="top">
-                                                            <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
-                                                            <td colspan="3">
-                                                                <p style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:20px 0 5px; text-align: center">
-                                                                    <a href="{{ my.daily_update.sunrise_vid | base64_decode }}" style="color:#6c7e44; text-decoration:none;">This Morning's Sunrise</a></p>
-                                                                <table style="margin: 0 auto; width: 410px;"><td>
-                                                                    <a href="{{ my.daily_update.sunrise_vid | base64_decode }}"><img src="{{ my.daily_update.sunrise_still | base64_decode }}" width="410" height="230" alt="This morning's sunrise"></a>
-                                                                </td></table>
-                                                                <p style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333; text-align: center">Click to see a timelapse video of the sunrise.</p>
-                                                            </td>
-                                                            <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
-                                                        </tr>
-                                                        {% endif %}
+                                                        
                                                     </tbody>
                                                 </table>
                                                 <!-- /end articles -->
@@ -170,16 +197,16 @@
                                                             <td>
                                                                 <p style="margin:0 0 4px; font-weight:bold; color:#333333; font-size:14px; line-height:22px;">Glacier National Park Conservancy</p>
                                                                 <!-- end json-->
-                                                                {% if subscriber.email != 'for-web' %}
+                                                                
                                                                 <p style="margin:0; color:#333333; font-size:11px; line-height:18px;">
-                                                                    {{ inline_postal_address }}<br>
-                                                                    Website: <a href="http://glacier.org/" style="color:#6d7e44; text-decoration:none; font-weight:bold;">glacier.org</a>&nbsp;|&nbsp;<a href="https://glacier.org/glacier-daily-updates-signup/#iFrame1" style="color:#6d7e44; text-decoration:none; font-weight:bold;">View in browser</a><br>
-                                                                    <a href="http://api.glacier.org/dripactions?action=stopdaily&email={{ subscriber.email }}" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Stop Glacier Daily Updates&nbsp;</a>
+                                                                    <br>
+                                                                    Website: <a href="http://glacier.org/" style="color:#6d7e44; text-decoration:none; font-weight:bold;">glacier.org</a>&nbsp;|&nbsp;<a href="https://glacier.org/daily-update-web" style="color:#6d7e44; text-decoration:none; font-weight:bold;">View in browser</a><br>
+                                                                    <a href="http://api.glacier.org/dripactions?action=stopdaily&email=for-web" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Stop Glacier Daily Updates&nbsp;</a>
                                                                     |
-                                                                    <a href="http://api.glacier.org/dripactions?action=untilspring&email={{ subscriber.email }}" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Opt Out Until Next Spring&nbsp;</a>
-                                                                <br><a href="{{ unsubscribe_url }}" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Unsubscribe from all GNPC mailings</a>
+                                                                    <a href="http://api.glacier.org/dripactions?action=untilspring&email=for-web" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Opt Out Until Next Spring&nbsp;</a>
+                                                                <br><a href="" style="color:#6d7e44; text-decoration:none; font-weight:bold;">Unsubscribe from all GNPC mailings</a>
                                                                 </p>
-                                                                {% endif %}
+                                                                
                                                             </td>
                                                             <td width="30"><p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p></td>
                                                             <td width="120">
