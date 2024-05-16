@@ -11,3 +11,4 @@ email.env
 .cache.sqlite
 .vscode/settings.json
 activities/gnpc.json
+server/today.html

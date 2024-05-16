@@ -76,7 +76,7 @@ def find_frame(video_path):
             return True
 
         else:
-            print(f'frame not found, {max_red_ret} - {max_red_frame}')
+            print(f'frame not found, {max_red_ret} - {max_red_frame}', file=sys.stderr)
 
     return False
         
@@ -109,13 +109,14 @@ def made_today(video):
         if datetime.fromtimestamp(os.path.getctime(video)).date() == datetime.now().date():
             return True
         else:
-            print(f'Video made on {datetime.fromtimestamp(os.path.getctime(video)).date()}')
+            print(f'Video made on {datetime.fromtimestamp(os.path.getctime(video)).date()}', file=sys.stderr)
     else:
-        print('No video at given path.')
+        print('No video at given path.', file=sys.stderr)
 
 def process_video():
 
     if sunrise_timelapse_complete_time() > 0:
+        print('Too early for sunrise', file=sys.stderr)
         return '', ''
     
     else:
@@ -128,7 +129,7 @@ def process_video():
             video_path = new_style
         elif made_today(old_style):
             video_path = old_style
-            print('Using old video.')
+            print('Using old video.', file=sys.stderr)
         else:
             print('No video from today.', file=sys.stderr)
             return None, None
@@ -144,7 +145,7 @@ def process_video():
                 if uploaded:
                     vid = uploaded
             except Exception as e:
-                print(e)
+                print(e, file=sys.stderr)
                 pass
         else:
             return '', ''
