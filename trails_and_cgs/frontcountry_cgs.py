@@ -1,6 +1,7 @@
 import requests
 import json
 import urllib3
+from datetime import datetime
 urllib3.disable_warnings()
 
 def campground_alerts():
@@ -25,8 +26,8 @@ def campground_alerts():
                 season_closures.append(name)
             else:
                 closures.append(f'{name} CG: currently closed.')
-        
-        notice = f'{i["description"]}' if 'camping only' in i["description"].lower() or 'posted' in i["description"].lower() else None
+
+        notice = f'{i["description"]}' if i["description"] and ('camping only' in i["description"].lower() or 'posted' in i["description"].lower()) else None
         if notice:
             notice = notice.replace(' <br><br><a href="https://www.nps.gov/glac/planyourvisit/reservation-campgrounds.htm" target="_blank">Campground Details</a><br><br>', '')
             notice = notice.replace('<b>','').replace('</b>','')
@@ -37,9 +38,9 @@ def campground_alerts():
     statuses, closures, season_closures = set(statuses), set(closures), set(season_closures) # remove duplicates
     statuses, closures, season_closures = sorted(list(statuses)), sorted(list(closures)), sorted(list(season_closures)) # turn back into a list and sort
     statuses.extend(closures)
-    
+
     if season_closures:
-        seasonal = [f'Closed for the season: {", ".join(season_closures)}']
+        seasonal = [f'Closed for the season: {", ".join(season_closures)}'] if datetime.now().month > 8 else [f'Not yet open for the season: {", ".join(season_closures)}']
         statuses.extend(seasonal)
 
     if statuses:
