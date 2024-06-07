@@ -76,7 +76,8 @@ def format_road_closures(roads: List[Road]) -> str:
         if road.entirely_closed:
             entirely_closed.append(road.name)
 
-        else:
+        # Don't include if start and stop is same location.
+        elif not (road.orientation == 'EW' and (road.east_loc == road.west_loc)):
             statuses.append(str(road))
 
     if len(entirely_closed) > 1:
