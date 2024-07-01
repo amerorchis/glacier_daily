@@ -65,4 +65,6 @@ def events_today(now = datetime.now()):
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     print(events_today())
