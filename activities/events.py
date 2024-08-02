@@ -1,6 +1,7 @@
 import sys
 from datetime import datetime
 import requests
+from requests.exceptions import JSONDecodeError, ReadTimeout
 import os
 
 def time_sortable(time: str):
@@ -66,7 +67,7 @@ def events_today(now = datetime.now()):
         else:
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
 
-    except (requests.exceptions.JSONDecodeError, requests.exceptions.ReadTimeout) as e:
+    except (JSONDecodeError, ReadTimeout) as e:
         print(f'Failed retrieve events. {e}', file=sys.stderr)
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
 
