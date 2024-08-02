@@ -116,7 +116,7 @@ def made_today(video):
 def process_video():
 
     if sunrise_timelapse_complete_time() > 0:
-        print('Too early for sunrise', file=sys.stderr)
+        # print('Too early for sunrise', file=sys.stderr)
         return '', ''
     
     else:
