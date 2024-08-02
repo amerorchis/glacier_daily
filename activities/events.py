@@ -20,7 +20,7 @@ def events_today(now = datetime.now()):
         HEADERS = {"X-Api-Key":key}
 
         # Get response from API
-        r = requests.get(endpoint,headers=HEADERS, timeout=10)
+        r = requests.get(endpoint,headers=HEADERS, timeout=245)
         response = r.json()
         raw_events = response['data']
         pages = int(response['total']) // 10 + 1
