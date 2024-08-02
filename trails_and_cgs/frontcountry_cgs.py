@@ -40,7 +40,7 @@ def campground_alerts():
     statuses.extend(closures)
 
     if season_closures:
-        seasonal = [f'Closed for the season: {", ".join(season_closures)}'] if datetime.now().month > 8 else [f'Not yet open for the season: {", ".join(season_closures)}']
+        seasonal = [f'Closed for the season: {", ".join(season_closures)}'] if datetime.now().month >= 8 else [f'Not yet open for the season: {", ".join(season_closures)}']
         statuses.extend(seasonal)
 
     if statuses:
