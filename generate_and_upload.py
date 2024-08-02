@@ -101,7 +101,7 @@ def write_data_to_json(data: dict, doctype: str) -> str:
 
 def send_to_server(filepath: str, directory: str) -> str:
     """
-    Encode data in base64, add the date, then upload it to glacier.org using FTP.
+    Upload file to glacier.org using FTP.
     :return A string of the URL it was updated too.
     """
 
@@ -135,8 +135,10 @@ def serve_api():
     """
     data = gen_data()
     web = web_version(data)
+    printable = web_version(data, 'server/printable.html', 'printable.html')
     send_to_server(write_data_to_json(data, 'email.json'), 'api')
     send_to_server(web, 'email')
+    send_to_server(printable, 'printable')
 
 if __name__ == "__main__":
     serve_api()
