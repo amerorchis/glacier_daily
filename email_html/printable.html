@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">    
+    <meta http-equiv="Expires" content="0">
     <title>Glacier National Park Daily Update</title>
     <style>
         body {
@@ -87,7 +87,11 @@
         </a>
         <h1>Glacier National Park Daily Update</h1>
         <p></p>
-        <p><strong>Last Updated: {{ my.daily_update.timestring }}.<br>Sign up to receive this in your inbox daily at <a
+        <p><strong>Brought to you by the Glacier National Park Conservancy, the official official fundraising partner
+                for Glacier National Park, learn more at <a
+                    href="https://glacier.org/daily-updates">glacier.org</a>.<br>Last Updated: {{
+                my.daily_update.timestring
+                }}.<br>Sign up to receive this in your inbox daily at <a
                     href="https://glacier.org/daily-updates">glacier.org/daily-updates</a>.</strong></p>
     </div>
 
@@ -174,7 +178,8 @@
     {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
     <div class="section">
         <h2>This Morning's Sunrise</h2>
-        <a href="{{ my.daily_update.sunrise_vid | base64_decode }}"><img src="{{ my.daily_update.sunrise_still | base64_decode }}" alt="This morning's sunrise"></a>
+        <a href="{{ my.daily_update.sunrise_vid | base64_decode }}"><img
+                src="{{ my.daily_update.sunrise_still | base64_decode }}" alt="This morning's sunrise"></a>
         <p>Find the timelapse video at <a href="https://glacier.org/daily-updates">glacier.org/daily-updates</a>.</p>
     </div>
     {% endif %}
