@@ -1,5 +1,6 @@
 import requests
 import os
+import sys
 
 def subscriber_list(tag = 'Glacier Daily Update') -> list:
 
@@ -46,5 +47,5 @@ def subscriber_list(tag = 'Glacier Daily Update') -> list:
 
     except requests.exceptions.RequestException as e:
         # Handle errors
-        print("Error:", e)
-
+        print(f'Failed to retrieve subscribers with tag(s) {tag}. {e}', file=sys.stderr)
+        return []

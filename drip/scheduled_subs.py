@@ -70,4 +70,4 @@ def update_scheduled_subs():
 
 
 if __name__ == '__main__':
-    update_scheduled_subs()
+    print(update_scheduled_subs())
