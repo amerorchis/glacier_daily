@@ -19,6 +19,10 @@ def main(tag = 'Glacier Daily Update'):
     # Generated data and upload to website.
     serve_api()
 
+    # See if this fixes the issue with timelapse not showing.
+    from time import sleep
+    sleep(630)
+
     # Send the email to each subscriber using Drip API.
     bulk_workflow_trigger(subscribers)
 

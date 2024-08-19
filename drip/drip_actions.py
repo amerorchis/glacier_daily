@@ -8,7 +8,7 @@ except ModuleNotFoundError:
 import requests
 import os
 import json
-
+import sys
 
 def get_subs(tag):
     updates = update_scheduled_subs()
@@ -38,7 +38,7 @@ def bulk_workflow_trigger(sub_list: list):
     headers = {
         "Authorization": "Bearer " + api_key,
         "Content-Type": "application/vnd.api+json",
-        "User-Agent": "Glacier Daily API (www.glacier.org)"
+        "User-Agent": "Glacier Daily API (glacier.org)"
     }
 
     event = 'Glacier Daily Update trigger'
@@ -53,12 +53,12 @@ def bulk_workflow_trigger(sub_list: list):
                 "action": event,
             }
             subs_json.append(update)
-        
+
         data = {'batches': [{'events': subs_json}]}
 
         response = requests.post(url, headers=headers, data=json.dumps(data))
         r = response.json()
-        
+
         if response.status_code == 201:
             print(f'Drip: Bulk workflow add successful!')
         else:
@@ -88,11 +88,11 @@ def send_in_drip(email, campaign_id='169298893'):
 
     response = requests.post(url, headers=headers, data=json.dumps(data))
     r = response.json()
-    
+
     if response.status_code == 201:
         print(f'Drip: Email sent successfully to {email}!')
     else:
-        print(f"Failed to subscribe {email} to the campaign. Error message:", r["errors"][0]["code"], ' - ', r["errors"][0]["message"])
+        print(f"Failed to subscribe {email} to the campaign. Error message:", r["errors"][0]["code"], ' - ', r["errors"][0]["message"], file=sys.stderr)
 
 if __name__ == "__main__":
     print(get_subs('Glacier Daily Update'))
