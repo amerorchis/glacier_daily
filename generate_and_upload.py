@@ -92,6 +92,7 @@ def write_data_to_json(data: dict, doctype: str) -> str:
     data = {i: base64.b64encode(data[i].encode('utf-8')).decode('utf-8') for i in data.keys()}
 
     data['date'] = datetime.now().strftime('%Y-%m-%d')
+    data['time_generated'] = datetime.now().strftime('%-I:%M %p')
     data['gnpc-events'] = get_gnpc_events()
     filepath = f"server/{doctype}"
     with open(filepath, "w", encoding="utf-8") as f:
