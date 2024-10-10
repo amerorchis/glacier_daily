@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from datetime import datetime, date
 import requests
 from requests.exceptions import JSONDecodeError, ReadTimeout
 import os
@@ -10,7 +10,7 @@ def time_sortable(time: str):
     time_obj = datetime.strptime(time, time_format).time()
     return datetime.combine(today, time_obj)
 
-def events_today(now = datetime.now()):
+def events_today(now = date.today().strftime('%Y-%m-%d')):
     try:
         # Create the request
         endpoint = f"https://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"
@@ -32,6 +32,7 @@ def events_today(now = datetime.now()):
                 r = requests.get(new_endpoint, headers=HEADERS)
                 raw_events.extend(r.json()['data'])
 
+        now = datetime.now()
         if raw_events:
             events = []
             for i in range(len(raw_events)):
