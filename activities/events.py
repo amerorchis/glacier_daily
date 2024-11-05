@@ -13,7 +13,7 @@ def time_sortable(time: str):
 def events_today(now = date.today().strftime('%Y-%m-%d')):
     try:
         # Create the request
-        endpoint = f"https://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"
+        endpoint = f"http://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"
 
         # Add authentication request
         key = os.environ['NPS']
@@ -35,8 +35,7 @@ def events_today(now = date.today().strftime('%Y-%m-%d')):
         now = datetime.now()
         if raw_events:
             events = []
-            for i in range(len(raw_events)):
-                e = raw_events[i]
+            for i, e in enumerate(raw_events):
                 sortable = time_sortable(e["times"][0]["timestart"])
                 start = e["times"][0]["timestart"].replace(' ','').replace(':00','').lower()
                 start = start[1:] if start[0] == '0' else start
@@ -47,7 +46,7 @@ def events_today(now = date.today().strftime('%Y-%m-%d')):
                 deletions = ['Meet in front of the ', 'Meet in front of ', 'Meet on the shore of ','Meet in the lobby of the ', 'Meet in the ', 'Meet at the ', 'Meet at ']
                 for i in deletions:
                     loc = loc.replace(i, '')
-                link = f'https://www.nps.gov/planyourvisit/event-details.htm?id={e["id"]}'
+                link = f'http://www.nps.gov/planyourvisit/event-details.htm?id={e["id"]}'
                 events.append({'sortable':sortable, 'string':f'<li>{start}-{end}: {name}, {loc} <a href="{link}" style="font-size:10px; color:#333333; font-style: italic; text-decoration: underline;">(link)</a></li>'})
 
             events.sort(key=lambda x: x["sortable"])
