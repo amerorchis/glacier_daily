@@ -1,14 +1,18 @@
-import requests
 import json
-import urllib3
+import sys
+import traceback
 from datetime import datetime
+
+import requests
+import urllib3
+
 urllib3.disable_warnings()
 
 def campground_alerts():
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds'
     r = requests.get(url, verify=False)
     status = json.loads(r.text)
-    
+
     try:
         campgrounds = status['rows']
     except KeyError:
@@ -51,5 +55,15 @@ def campground_alerts():
     else:
         return ""
 
+def get_campground_status() -> str:
+    """
+    Wrap the closed campgrounds function to catch errors and allow email to send if there is an issue.
+    """
+    try:
+        return campground_alerts()
+    except requests.exceptions.HTTPError:
+        print(f'Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}', file=sys.stderr)
+        return ''
+
 if __name__ == "__main__":
-    print(campground_alerts())
+    print(get_campground_status())

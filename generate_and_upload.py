@@ -16,8 +16,8 @@ from activities.gnpc_events import get_gnpc_events
 from peak.peak import peak
 from roads.roads import get_road_status
 from roads.hiker_biker import get_hiker_biker_status
-from trails_and_cgs.trails import closed_trails
-from trails_and_cgs.frontcountry_cgs import campground_alerts
+from trails_and_cgs.trails import get_closed_trails
+from trails_and_cgs.frontcountry_cgs import get_campground_status
 from weather.weather import weather_data
 from weather.weather_img import weather_image
 from image_otd.image_otd import resize_full
@@ -36,8 +36,8 @@ def gen_data():
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         weather_future = executor.submit(weather_data)
-        trails_future = executor.submit(closed_trails)
-        cg_future = executor.submit(campground_alerts)
+        trails_future = executor.submit(get_closed_trails)
+        cg_future = executor.submit(get_campground_status)
         roads_future = executor.submit(get_road_status)
         hiker_biker_future = executor.submit(get_hiker_biker_status)
         events_future = executor.submit(events_today)

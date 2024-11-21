@@ -106,7 +106,7 @@ def get_road_status() -> str:
     try:
         return format_road_closures(closed_roads())
     except requests.exceptions.HTTPError:
-        print(traceback.format_exc(), file=sys.stderr)
+        print(f'Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}', file=sys.stderr)
         return ''
 
 if __name__ == "__main__":

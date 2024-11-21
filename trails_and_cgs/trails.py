@@ -1,3 +1,5 @@
+import traceback
+import sys
 import requests
 import urllib3
 import json
@@ -34,10 +36,10 @@ def closed_trails():
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27'
     r = requests.get(url, verify=False)
     status = json.loads(r.text)
-    
+
     try:
         trails = status['features']
-    except KeyError as k:
+    except KeyError:
         return 'The trail closures page on the park website is currently down.'
 
     trails = remove_duplicate_trails(trails)
@@ -57,8 +59,7 @@ def closed_trails():
 
     # If there are any duplicate listings where one has a reason and the other doesn't, remove the one with no reason
     to_delete = []
-    for i in range(len(closures)):
-        trail = closures[i]
+    for i, trail in enumerate(closures):
         name, reason = trail['name'], trail.get('reason')
         if name and not reason:
             other_listings = [index for index, item in enumerate(closures) if item.get('name') == name and index != i]
@@ -66,14 +67,14 @@ def closed_trails():
                 if closures[x]['reason']:
                     to_delete.append(i)
                     break
-    
+
     to_delete = set(to_delete)
     to_delete = list(to_delete)
     to_delete.sort(reverse=True)
     for i in to_delete:
         del closures[i]
 
-    closures.pop
+    closures.pop()
     closures = [i['msg'] for i in closures] # Extract messages from list
 
     if 'Swiftcurrent Pass: Closed Due To Bear Activity' in closures:
@@ -90,5 +91,15 @@ def closed_trails():
     else:
         return 'There are no trail closures in effect today!'
 
+def get_closed_trails() -> str:
+    """
+    Wrap the closed trails function to catch errors and allow email to send if there is an issue.
+    """
+    try:
+        return closed_trails()
+    except requests.exceptions.HTTPError:
+        print(f'Handled error with Trail Status, here is the traceback:\n{traceback.format_exc()}', file=sys.stderr)
+        return ''
+
 if __name__ == "__main__":
-    print(closed_trails())
+    print(get_closed_trails())

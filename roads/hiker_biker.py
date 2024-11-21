@@ -89,7 +89,7 @@ def get_hiker_biker_status() -> str:
     try:
         return hiker_biker()
     except requests.exceptions.HTTPError:
-        print(traceback.format_exc(), file=sys.stderr)
+        print(f'Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}', file=sys.stderr)
         return ''
 
 if __name__ == "__main__":
