@@ -27,7 +27,7 @@ def get_flickr():
         photos = flickr.photos.search(user_id=glaciernps_uid, per_page='1', page=potd_num)
 
     selected = photos['photos']['photo'][0]
-    
+
     server, id, secret, title = selected['server'], selected['id'], selected['secret'], selected['title']
     pic_url = f'https://live.staticflickr.com/{server}/{id}_{secret}_c.jpg'
     save_loc = Path('email_images/today/raw_image_otd.jpg')
@@ -39,4 +39,3 @@ def get_flickr():
 
 if __name__ == "__main__":
     print(get_flickr())
-    

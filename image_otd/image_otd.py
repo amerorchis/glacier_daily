@@ -1,11 +1,18 @@
 import os
+import sys
+
+from datetime import datetime
 from PIL import Image
 from ftplib import FTP
 from datetime import datetime
-try:
-    from image_otd.flickr import get_flickr
-except ModuleNotFoundError:
-    from flickr import get_flickr
+from dotenv import load_dotenv
+load_dotenv("email.env")
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from image_otd.flickr import get_flickr
+from shared.retrieve_from_json import retrieve_from_json
 
 username = os.environ['FTP_USERNAME']
 password = os.environ['FTP_PASSWORD']
@@ -14,7 +21,7 @@ server = 'ftp.glacier.org'
 def upload_pic_otd():
     today = datetime.now()
     file_path = f'{today.month}_{today.day}_{today.year}_pic_otd.jpg'
-    
+
     # Connect to the FTP server
     ftp = FTP(server)
     ftp.login(username, password)
@@ -37,6 +44,12 @@ def upload_pic_otd():
 
 
 def resize_full():
+    # Check if we already have today's image
+    already_retrieved, keys = retrieve_from_json(['image_otd', 'image_otd_title', 'image_otd_link'])
+    if already_retrieved:
+        return keys
+
+    # If no image exists for today, proceed with getting and resizing new image
     image_path, title, link = get_flickr()
     image = Image.open(image_path)
 
@@ -68,7 +81,7 @@ def resize_full():
 
     # Paste the resized image onto the canvas
     canvas.paste(resized_image, (x, y))
-    
+
     # Save the final image
     canvas.save('email_images/today/resized_image_otd.jpg')
 

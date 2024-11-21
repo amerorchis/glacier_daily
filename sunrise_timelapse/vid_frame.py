@@ -5,17 +5,17 @@ from datetime import datetime
 import cv2
 from pathlib import Path
 import sys
-try:
-    from sunrise_timelapse.timelapse_json import *
-    from sunrise_timelapse.ftp import upload_sunrise
-    from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
-except ModuleNotFoundError:
-    from dotenv import load_dotenv
-    load_dotenv("email.env")
-    from ftp import upload_sunrise
-    from timelapse_json import *
-    from sleep_to_sunrise import sunrise_timelapse_complete_time
 
+from dotenv import load_dotenv
+load_dotenv("email.env")
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from shared.retrieve_from_json import retrieve_from_json
+from sunrise_timelapse.timelapse_json import *
+from sunrise_timelapse.ftp import upload_sunrise
+from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
     
 def find_frame(video_path):
     # Open the video file
@@ -114,6 +114,11 @@ def made_today(video):
         print('No video at given path.', file=sys.stderr)
 
 def process_video():
+
+    # Check if we already have today's video
+    already_retrieved, keys = retrieve_from_json(['sunrise_vid', 'sunrise_still'])
+    if already_retrieved:
+        return keys
 
     if sunrise_timelapse_complete_time() > 0:
         # print('Too early for sunrise', file=sys.stderr)

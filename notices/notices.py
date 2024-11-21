@@ -1,13 +1,13 @@
+import sys
+import os
+
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
-try:
-    from notices.retry import retry
-except ModuleNotFoundError:
-    import sys
-    sys.path.append('../glacier_daily')
-    from shared.retry import retry
 
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from shared.retry import retry
 
 default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Notices could not be retrieved.</p>'
 
@@ -32,18 +32,16 @@ def get_notices():
         notices = [i[0:3] for i in values[1:] if i[0] and i[1] and i[2]] # Grab all notices that have a start and end date and content
         notices = [{'start':datetime.strptime(i[0], date_format), 'last':datetime.strptime(i[1], date_format) + timedelta(days=1), 'notice':i[2]} for i in notices] # create a dict for each one
         current_notices = [i['notice'] for i in notices if i['start'] < datetime.now() < i['last']] # isolate the content of the current notices
-        
+
         if current_notices:
             message = '<ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">'
-            for i in current_notices:
-                message += f"<li>{i}</li>\n"
+            message += '\n'.join(f'<li>{i}</li>' for i in current_notices)
             return message + "</ul>"
 
     return '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
-    
+
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv("email.env")
     print(get_notices())
-    

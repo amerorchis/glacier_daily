@@ -1,27 +1,27 @@
 import random
 from datetime import date
-try:
-    from peak.sat import peak_sat
-except ModuleNotFoundError:
-    from sat import peak_sat
+import sys
+import os
+import csv
 
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from peak.sat import peak_sat
+from shared.retrieve_from_json import retrieve_from_json
 
 def peak(test = False):
     """
     Select a random peak, and return the relevant information.
     """
 
-    # Grab list from CSV and turn into Python list
-    with open('peak/PeaksCSV.csv', 'r') as p:
-        data = p.readlines()
-    peaks = [i.split(',') for i in data[1:] if i]
-    for index, mt in enumerate(peaks):
-        peaks[index] = {
-            'name': mt[0],
-            'elevation': mt[3].strip(),
-            'lat': mt[1],
-            'lon': mt[2]
-        }
+    # Check if we already have today's peak
+    already_retrieved, keys = retrieve_from_json(['peak', 'peak_image', 'peak_map'])
+    if already_retrieved:
+        return keys
+
+    with open('peak/PeaksCSV.csv', 'r', encoding='utf-8') as p:
+        peaks = list(csv.DictReader(p))
 
     # Select a random one with current date as seed
     random.seed(date.today().strftime('%Y%m%d'))

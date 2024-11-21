@@ -19,6 +19,10 @@ from PIL import Image
 
 load_dotenv("email.env")
 
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from shared.retrieve_from_json import retrieve_from_json
+
 username = os.environ['FTP_USERNAME']
 password = os.environ['FTP_PASSWORD']
 SERVER = os.environ['FTP_SERVER']
@@ -94,6 +98,9 @@ def get_product():
     """
     Grab a random product from the BigCommerce API.
     """
+    already_retrieved, keys = retrieve_from_json(['product_title', 'product_image', 'product_link', 'product_desc'])
+    if already_retrieved:
+        return keys
 
     # Connect to API
     bc_token = os.environ['BC_TOKEN']
