@@ -1,5 +1,6 @@
-import requests
 from datetime import datetime
+import os
+import requests
 
 def get_sunset_hue():
     lat = "48.528556"
@@ -11,7 +12,7 @@ def get_sunset_hue():
 
     payload={}
     headers = {
-        "x-api-key": 'b497bdd5cc25c1059b9b35d0321be6d8'
+        "x-api-key": os.environ.get('SUNSETHUE_KEY')
     }
 
     response = requests.get(url, headers=headers, data=payload, timeout=10)
@@ -28,4 +29,6 @@ def get_sunset_hue():
     return f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The sunset is forecast to be {quality_text} this evening{"." if quality_text == "good" else "!"}</p>'
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     print(get_sunset_hue())
