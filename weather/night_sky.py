@@ -52,7 +52,7 @@ def clear_night(aur_start, aur_end):
                 'time':time,
                 'num':cloud,
                 'desc':cover})
-    
+
     clear = [i for i in dark if i['num'] == 0]
     str = ''
 
@@ -108,7 +108,6 @@ def aurora_forecast():
     eleven_pm = datetime(current_date.year, current_date.month, current_date.day, 23, 0, 0)  # 11:00 PM
     two_am = datetime(current_date.year, current_date.month, current_date.day, 2, 0, 0) + timedelta(days=1)  # 2:00 AM
     five_am = datetime(current_date.year, current_date.month, current_date.day, 5, 0, 0) + timedelta(days=1)  # 5:00 AM
-
 
     times = [five_pm, eight_pm, eleven_pm, two_am, five_am]
     kp = []

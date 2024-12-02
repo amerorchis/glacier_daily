@@ -20,7 +20,7 @@ def web_version(data, file_name = 'server/today.html', template_path = 'email_te
     env.filters['base64_decode'] = lambda x:x
     template = env.get_template(template_path)
 
-    # You have to wrap my in the double object so it uses the template the same way as Drip.
+    # You have to wrap 'my' in the double object so it uses the template the same way as Drip.
     # It's kind of hacky, but it works.
     content = template.render(my=myClass(DailyUpdate(data)), subscriber = Subscriber())
 
