@@ -2,15 +2,21 @@
 Generate a static image of peak of the day using Mapbox API and upload to website.
 """
 
+import sys
 import os
 from datetime import datetime
 from io import BytesIO
-from ftplib import FTP
 import requests
+
 from PIL import Image
 
 from dotenv import load_dotenv
 load_dotenv("email.env")
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from shared.ftp import upload_file
 
 
 def upload_peak() -> str:
@@ -18,27 +24,13 @@ def upload_peak() -> str:
     Upload the file from the today folder as the image with today's day as name,
     then return the URL.
     """
-    username = os.environ['FTP_USERNAME']
-    password = os.environ['FTP_PASSWORD']
-    server = 'ftp.glacier.org'
+
     today = datetime.now()
-    file_path = f'{today.month}_{today.day}_{today.year}_peak.jpg'
+    filename = f'{today.month}_{today.day}_{today.year}_peak.jpg'
+    file = 'email_images/today/peak.jpg'
     directory = 'peak'
-
-    # Connect to the FTP server
-    ftp = FTP(server)
-    ftp.login(username, password)
-    ftp.cwd(directory)
-
-    # Open the local file in binary mode
-    with open('email_images/today/peak.jpg', 'rb') as f:
-        # Upload the file to the FTP server
-        ftp.storbinary('STOR ' + file_path, f)
-
-    # Close the FTP connection
-    ftp.quit()
-
-    return f'https://glacier.org/daily/{directory}/{file_path}'
+    address, _ = upload_file(directory, filename, file)
+    return address
 
 def peak_sat(peak: dict) -> str:
     """

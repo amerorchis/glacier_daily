@@ -1,3 +1,7 @@
+"""
+Select a random peak, get an image of it, and return the info.
+"""
+
 import random
 from datetime import date
 import sys

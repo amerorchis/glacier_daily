@@ -1,8 +1,12 @@
+"""
+Get any values that have been retrieved already from today's JSON file.
+"""
+
 import json
 import base64
 from datetime import datetime
 
-def retrieve_from_json(keys_to_retrieve) -> tuple:
+def retrieve_from_json(keys_to_retrieve: list) -> tuple:
     """
     Check if we already have data from today in email.json
     Args:

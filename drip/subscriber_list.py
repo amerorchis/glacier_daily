@@ -1,9 +1,21 @@
+"""
+This module provides a function to retrieve a list of subscribers from the Drip email marketing platform.
+"""
+
 import requests
 import os
 import sys
 
 def subscriber_list(tag = 'Glacier Daily Update') -> list:
+    """
+    Retrieve a list of subscribers with a specific tag from Drip.
 
+    Args:
+        tag (str): The tag to filter subscribers by. Defaults to 'Glacier Daily Update'.
+
+    Returns:
+        list: A list of subscriber emails or subscriber data.
+    """
     drip_token = os.environ['DRIP_TOKEN']
     account_id = os.environ['DRIP_ACCOUNT']
     api_key = drip_token
@@ -19,7 +31,7 @@ def subscriber_list(tag = 'Glacier Daily Update') -> list:
 
     params = {
         "status": "active",
-        "tags":tag,
+        "tags": tag,
         "per_page": "1000",
         "page": page
     }

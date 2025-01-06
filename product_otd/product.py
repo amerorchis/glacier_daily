@@ -5,14 +5,12 @@ then return a description, link to product, and link to photo.
 
 import sys
 import json
-import traceback
 import os
 import random
+
 from re import sub
 from datetime import datetime
-from ftplib import FTP
 from io import BytesIO
-
 import requests
 from dotenv import load_dotenv
 from PIL import Image
@@ -21,40 +19,20 @@ load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
     sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-from shared.retrieve_from_json import retrieve_from_json
 
-username = os.environ['FTP_USERNAME']
-password = os.environ['FTP_PASSWORD']
-SERVER = os.environ['FTP_SERVER']
+from shared.retrieve_from_json import retrieve_from_json
+from shared.ftp import upload_file
 
 def upload_potd():
     """
     Upload the product image to the glacier.org ftp server.
     """
     today = datetime.now()
-    file_path = f'{today.month}_{today.day}_{today.year}_product_otd.jpg'
+    filename = f'{today.month}_{today.day}_{today.year}_product_otd.jpg'
+    file = 'email_images/today/product_otd.jpg'
     directory = 'product'
-
-    # Connect to the FTP server
-    ftp = FTP(SERVER)
-    ftp.login(username, password)
-    ftp.cwd(directory)
-
-    try:
-        # Open the local file in binary mode
-        with open('email_images/today/product_otd.jpg', 'rb') as f:
-            # Upload the file to the FTP server
-            ftp.storbinary('STOR ' + file_path, f)
-
-    except Exception:
-        print('Failed upload product image', file=sys.stderr)
-        print(traceback.format_exc(), file=sys.stderr)
-        return ''
-
-    # Close the FTP connection
-    ftp.quit()
-
-    return f'https://glacier.org/daily/{directory}/{file_path}'
+    address, _ = upload_file(directory, filename, file)
+    return address
 
 def resize_image(url):
     """

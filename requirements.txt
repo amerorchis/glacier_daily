@@ -11,3 +11,5 @@ Requests
 urllib3
 python-dotenv
 requests-cache
+pytz
+pytest

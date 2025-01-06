@@ -1,3 +1,7 @@
+"""
+This module interacts with the Flickr API to retrieve the image of the day.
+"""
+
 from flickrapi import FlickrAPI
 import random
 from datetime import datetime
@@ -14,6 +18,12 @@ flickr_secret = environ['flickr_secret']
 glaciernps_uid = environ['glaciernps_uid']
 
 def get_flickr():
+    """
+    Retrieve a random image from the Glacier National Park's Flickr account.
+
+    Returns:
+        tuple: A tuple containing the path to the saved image, the title of the image, and the link to the image on Flickr.
+    """
     flickr = FlickrAPI(flickr_key, flickr_secret, format='parsed-json')
     photos = flickr.photos.search(user_id=glaciernps_uid, per_page='1')
     total = photos['photos']['total']

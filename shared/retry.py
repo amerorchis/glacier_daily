@@ -1,3 +1,7 @@
+"""
+A decorator to retry an operation.
+"""
+
 from time import sleep
 
 def retry(times: int, exceptions: tuple, default: str = '', backoff: int = 15):

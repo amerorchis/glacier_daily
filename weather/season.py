@@ -1,6 +1,16 @@
+"""
+This module determines the current season based on the current month.
+"""
+
 from datetime import datetime
 
 def get_season() -> str:
+    """
+    Determine the current season based on the current month.
+    
+    Returns:
+        str: The current season ('summer', 'fall', or 'winter').
+    """
     month = datetime.now().month
 
     summer_months = [4,5,6,7,8]

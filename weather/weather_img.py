@@ -1,43 +1,49 @@
+"""
+This module handles the creation and uploading of weather images for the Glacier National Park.
+"""
+
+import os
+import sys
+
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
-from ftplib import FTP
 from pathlib import Path
-import os
+from typing import List, Tuple
 
 try:
     from weather.season import get_season
 except ModuleNotFoundError:
     from season import get_season
 
-username = os.environ['FTP_USERNAME']
-password = os.environ['FTP_PASSWORD']
-server = 'ftp.glacier.org'
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def upload_weather():
+from shared.ftp import upload_file
+
+def upload_weather() -> str:
+    """
+    Upload the product image to the glacier.org ftp server.
+    
+    Returns:
+        str: Address of the uploaded image.
+    """
     today = datetime.now()
-    file_path = f'{today.month}_{today.day}_{today.year}_today_park_map.png'
+    filename = f'{today.month}_{today.day}_{today.year}_today_park_map.png'
+    file = 'email_images/today/today_park_map.png'
+    directory = 'weather'
+    address, _ = upload_file(directory, filename, file)
+    return address
 
-    # Connect to the FTP server
-    ftp = FTP(server)
-    ftp.login(username, password)
-    ftp.cwd('weather')
-
-    try:
-        # Open the local file in binary mode
-        with open('email_images/today/today_park_map.png', 'rb') as f:
-            # Upload the file to the FTP server
-            ftp.storbinary('STOR ' + file_path, f)
-
-    except:
-        print('Failed upload weather image')
-        pass
-
-    # Close the FTP connection
-    ftp.quit()
-
-    return f'https://glacier.org/daily/weather/{file_path}'
-
-def weather_image(results):
+def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
+    """
+    Create a weather image based on the provided forecast results and upload it.
+    
+    Args:
+        results (List[Tuple[str, int, int, str]]): List of tuples containing location name, high temperature, low temperature, and weather condition.
+    
+    Returns:
+        str: Address of the uploaded image.
+    """
     dimensions = {"West Glacier":(292.1848, 462.5), "Polebridge":(165.3, 190), "St. Mary":(591,303), "Two Medicine":(623,524), "Logan Pass":(423.52,336), "Many Glacier":(460.1623,185)}
     
     # Open the image

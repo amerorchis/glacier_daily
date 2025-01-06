@@ -1,10 +1,13 @@
+"""
+This module handles the image of the day functionality.
+It includes functions to resize the image and upload it to a specified directory.
+"""
+
 import os
 import sys
+from datetime import datetime
 
-from datetime import datetime
 from PIL import Image
-from ftplib import FTP
-from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv("email.env")
 
@@ -13,37 +16,30 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
 
 from image_otd.flickr import get_flickr
 from shared.retrieve_from_json import retrieve_from_json
+from shared.ftp import upload_file
 
-username = os.environ['FTP_USERNAME']
-password = os.environ['FTP_PASSWORD']
-server = 'ftp.glacier.org'
 
 def upload_pic_otd():
+    """
+    Upload the picture of the day to the specified directory.
+
+    Returns:
+        str: The address where the image was uploaded.
+    """
     today = datetime.now()
-    file_path = f'{today.month}_{today.day}_{today.year}_pic_otd.jpg'
-
-    # Connect to the FTP server
-    ftp = FTP(server)
-    ftp.login(username, password)
-    ftp.cwd('picture')
-
-    try:
-        # Open the local file in binary mode
-        with open('email_images/today/resized_image_otd.jpg', 'rb') as f:
-            # Upload the file to the FTP server
-            ftp.storbinary('STOR ' + file_path, f)
-
-    except:
-        print('Failed upload of Image of the Day')
-        pass
-
-    # Close the FTP connection
-    ftp.quit()
-
-    return f'https://glacier.org/daily/picture/{file_path}'
-
+    filename = f'{today.month}_{today.day}_{today.year}_pic_otd.jpg'
+    file = 'email_images/today/resized_image_otd.jpg'
+    directory = 'picture'
+    address, _ = upload_file(directory, filename, file)
+    return address
 
 def resize_full():
+    """
+    Resize the image of the day to the desired dimensions and upload it.
+
+    Returns:
+        tuple: A tuple containing the upload address, title, and link of the image.
+    """
     # Check if we already have today's image
     already_retrieved, keys = retrieve_from_json(['image_otd', 'image_otd_title', 'image_otd_link'])
     if already_retrieved:

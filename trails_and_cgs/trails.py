@@ -1,3 +1,8 @@
+"""
+This module provides functionality to fetch and process trail closure information
+from the Glacier National Park website.
+"""
+
 import traceback
 import sys
 import requests
@@ -6,7 +11,16 @@ import json
 
 urllib3.disable_warnings()
 
-def remove_duplicate_trails(trail_list):
+def remove_duplicate_trails(trail_list: list) -> list:
+    """
+    Remove duplicate trails from the list, keeping the trail with the most coordinates.
+
+    Args:
+        trail_list (list): List of trail dictionaries.
+
+    Returns:
+        list: Filtered list of trail properties dictionaries.
+    """
     name_lengths = {}
     for item in trail_list:
         name = item['properties']['name']
@@ -32,7 +46,13 @@ def remove_duplicate_trails(trail_list):
 
     return filtered_list
 
-def closed_trails():
+def closed_trails() -> str:
+    """
+    Fetch and process the list of closed trails from the Glacier National Park website.
+
+    Returns:
+        str: HTML formatted string of closed trails or a message indicating no closures.
+    """
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27'
     r = requests.get(url, verify=False)
     status = json.loads(r.text)
@@ -94,6 +114,9 @@ def closed_trails():
 def get_closed_trails() -> str:
     """
     Wrap the closed trails function to catch errors and allow email to send if there is an issue.
+
+    Returns:
+        str: HTML formatted string of closed trails or an empty string if an error occurs.
     """
     try:
         return closed_trails()

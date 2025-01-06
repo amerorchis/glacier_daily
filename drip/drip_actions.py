@@ -1,3 +1,7 @@
+"""
+This module provides functions to interact with the Drip email marketing platform, including retrieving subscribers and triggering workflows.
+"""
+
 try:
     from drip.subscriber_list import subscriber_list
     from drip.scheduled_subs import update_scheduled_subs
@@ -11,8 +15,17 @@ import json
 import sys
 
 def get_subs(tag):
+    """
+    Retrieve and update the list of subscribers with a specific tag.
+
+    Args:
+        tag (str): The tag to filter subscribers by.
+
+    Returns:
+        list: A list of subscriber emails.
+    """
     updates = update_scheduled_subs()
-    subs =  subscriber_list(tag)
+    subs = subscriber_list(tag)
 
     # Update subscriber list based on changes today (drip updates aren't fast enough)
     for i in updates['start']:
@@ -27,9 +40,14 @@ def get_subs(tag):
 
 def bulk_workflow_trigger(sub_list: list):
     """
-    Bulk action increases capacity from 3,600/hour to 50,000/hour.
-    """
+    Trigger a bulk workflow action in Drip to increase capacity from 3,600/hour to 50,000/hour.
 
+    Args:
+        sub_list (list): A list of subscriber emails.
+
+    Returns:
+        None
+    """
     drip_token = os.environ['DRIP_TOKEN']
     account_id = os.environ['DRIP_ACCOUNT']
     api_key = drip_token
@@ -64,11 +82,16 @@ def bulk_workflow_trigger(sub_list: list):
         else:
             print(f"Failed to add subscribers to the campaign. Error message:", r["errors"][0]["code"], ' - ', r["errors"][0]["message"])
 
-
-
 def send_in_drip(email, campaign_id='169298893'):
     """
-    Sends the email to 1 person, use bulk_workflow_trigger instead to send to everyone.
+    Send an email to a single subscriber using Drip.
+
+    Args:
+        email (str): The subscriber's email address.
+        campaign_id (str): The campaign ID. Defaults to '169298893'.
+
+    Returns:
+        None
     """
     drip_token = os.environ['DRIP_TOKEN']
     account_id = os.environ['DRIP_ACCOUNT']

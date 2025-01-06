@@ -1,14 +1,27 @@
+"""
+This module fetches the Air Quality Index (AQI) for West Glacier from the National Park Service.
+"""
+
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 from contextlib import contextmanager
 
 @contextmanager
 def suppress_insecure_request_warning():
+    """
+    Context manager to suppress insecure request warnings.
+    """
     # Disable the warning
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     yield
 
-def get_air_quality():
+def get_air_quality() -> int:
+    """
+    Fetch the current Air Quality Index (AQI) for West Glacier.
+    
+    Returns:
+        int: The current AQI value or -99 if unavailable.
+    """
     try:
         with suppress_insecure_request_warning():
 

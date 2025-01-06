@@ -5,12 +5,10 @@ server with FTP.
 """
 from datetime import datetime
 import json
-import sys
-import os
-from ftplib import FTP
 import base64
 import concurrent.futures
 
+from shared.ftp import upload_file
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
 from peak.peak import peak
@@ -89,6 +87,9 @@ def gen_data():
     return drip_template_fields
 
 def write_data_to_json(data: dict, doctype: str) -> str:
+    """
+    Make a JSON file with the data, then return the filepath.
+    """
     data = {i: base64.b64encode(data[i].encode('utf-8')).decode('utf-8') for i in data.keys()}
 
     data['date'] = datetime.now().strftime('%Y-%m-%d')
@@ -100,35 +101,14 @@ def write_data_to_json(data: dict, doctype: str) -> str:
 
     return filepath
 
-def send_to_server(filepath: str, directory: str) -> str:
+def send_to_server(file: str, directory: str) -> None:
     """
     Upload file to glacier.org using FTP.
-    :return A string of the URL it was updated too.
+    :return None.
     """
 
-    # Connect to the FTP server
-    username = os.environ['FTP_USERNAME']
-    password = os.environ['FTP_PASSWORD']
-    server = 'ftp.glacier.org'
-    ftp = FTP(server)
-    ftp.login(username, password)
-    ftp.cwd(directory)
-
-    filename = filepath.split('/')[-1]
-    try:
-        # Open the local file in binary mode
-        with open(filepath, 'rb') as f:
-            # Upload the file to the FTP server
-            ftp.storbinary('STOR ' + filename, f)
-
-    except Exception as e:
-        print(f'Failed upload {filepath} file. {e}', file=sys.stderr)
-
-    # Close the FTP connection
-    ftp.quit()
-
-    return f'https://glacier.org/daily/{directory}/{filename}'
-
+    filename = file.split('/')[-1]
+    upload_file(directory, filename, file)
 
 def serve_api():
     """

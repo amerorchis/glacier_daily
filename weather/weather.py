@@ -1,7 +1,11 @@
+"""
+This module fetches and processes various weather-related data including forecasts, air quality index (AQI), weather alerts, aurora forecasts, seasonal information, and sunset hues.
+"""
+
 import os
 import sys
 import concurrent.futures
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
     sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +18,7 @@ from weather.season import get_season
 from weather.sunset_hue import get_sunset_hue
 
 class WeatherContent:
-    AQI_CATEGORIES = [
+    AQI_CATEGORIES: List[Tuple[int, str]] = [
         (50, 'good.'),
         (100, 'moderate.'),
         (150, 'unhealthy for sensitive groups. Children, older adults, active people, and people with heart or lung disease (such as asthma) should reduce prolonged or heavy exertion outdoors.'),
@@ -24,7 +28,10 @@ class WeatherContent:
     ]
 
     def __init__(self):
-        self.results: Optional[List] = None
+        """
+        Initialize WeatherContent instance and fetch weather data.
+        """
+        self.results: Optional[List[Tuple[str, int, int, str]]] = None
         self.message1: str = ""
         self.message2: str = ""
         self.season: Optional[str] = None

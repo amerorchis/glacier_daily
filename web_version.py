@@ -1,30 +1,52 @@
+"""
+This module generates a daily update for Glacier National Park and saves it as an HTML file.
+"""
+
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
-
+from typing import Dict
 
 class DailyUpdate:
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, str]):
+        """
+        Initialize the DailyUpdate with data.
+
+        :param data: Dictionary containing the daily update data.
+        """
         for k, v in data.items():
             setattr(self, k, v)
         self.timestring = datetime.now().strftime('%-m/%-d/%-y at %-I:%M%p MT')
 
 class myClass:
     def __init__(self, glacier: DailyUpdate):
+        """
+        Initialize myClass with a DailyUpdate instance.
+
+        :param glacier: An instance of DailyUpdate.
+        """
         self.daily_update = glacier
 
 class Subscriber:
     email = 'for-web'
 
-def web_version(data, file_name = 'server/today.html', template_path = 'email_template.html'):
+def web_version(data: Dict[str, str], file_name: str = 'server/today.html', template_path: str = 'email_template.html') -> str:
+    """
+    Generate the web version of the daily update and save it as an HTML file.
+
+    :param data: Dictionary containing the daily update data.
+    :param file_name: The name of the file to save the HTML content.
+    :param template_path: The path to the HTML template.
+    :return: The name of the file where the HTML content is saved.
+    """
     env = Environment(loader=FileSystemLoader("email_html/"))
-    env.filters['base64_decode'] = lambda x:x
+    env.filters['base64_decode'] = lambda x: x
     template = env.get_template(template_path)
 
     # You have to wrap 'my' in the double object so it uses the template the same way as Drip.
     # It's kind of hacky, but it works.
-    content = template.render(my=myClass(DailyUpdate(data)), subscriber = Subscriber())
+    content = template.render(my=myClass(DailyUpdate(data)), subscriber=Subscriber())
 
-    if 'printable' in file_name: # Remove some styling from print version
+    if 'printable' in file_name:  # Remove some styling from print version
         content = content.replace('font-size:12px;', '').replace('line-height:18px;', '')
 
     with open(file_name, 'w', encoding='utf-8') as email:

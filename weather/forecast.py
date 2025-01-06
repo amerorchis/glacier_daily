@@ -1,12 +1,23 @@
+"""
+This module fetches weather forecasts for various locations in Glacier National Park using the Open-Meteo API.
+"""
+
 import requests_cache
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 import json
 from datetime import datetime
 from math import floor
+from typing import List, Tuple
 
 
-def get_forecast():
+def get_forecast() -> Tuple[List[Tuple[str, int, int, str]], str]:
+    """
+    Fetch weather forecasts for various locations in Glacier National Park.
+    
+    Returns:
+        Tuple[List[Tuple[str, int, int, str]], str]: A tuple containing a list of forecast results and a string describing the daylight duration.
+    """
     # Setup the Open-Meteo API client with cache and retry on error
     cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
     retry_strategy = Retry(total=5, backoff_factor=0.2)
@@ -82,4 +93,3 @@ def get_forecast():
 if __name__ == "__main__":
     results, length_str = get_forecast()
     print(results, length_str)
-    
