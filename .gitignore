@@ -16,6 +16,7 @@ server/today.html
 server/printable.html
 server/today.html
 .vscode
-test
+test_files
 .venv
 TODO.md
+test

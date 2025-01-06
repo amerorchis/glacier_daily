@@ -15,7 +15,7 @@ from generate_and_upload import serve_api
 import argparse
 from typing import List
 
-def main(tag: str = 'Glacier Daily Update') -> None:
+def main(tag: str = 'Glacier Daily Update', test: bool = False) -> None:
     """
     Main function to perform the Glacier Daily Update.
 
@@ -33,7 +33,7 @@ def main(tag: str = 'Glacier Daily Update') -> None:
 
     # See if this fixes the issue with timelapse not showing.
     from time import sleep
-    sleep(630)
+    sleep(630 if not test else 0)
 
     # Send the email to each subscriber using Drip API.
     bulk_workflow_trigger(subscribers)
@@ -49,4 +49,5 @@ if __name__ == "__main__":
     if environ is None:
         main()
     elif environ == "xterm-256color":
-        main(args.tag)
+        print(args.tag)
+        main(args.tag, test=True)
