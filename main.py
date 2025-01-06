@@ -7,6 +7,7 @@ load_dotenv("email.env")
 from drip.drip_actions import get_subs, bulk_workflow_trigger
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 from generate_and_upload import serve_api
+import argparse
 
 
 def main(tag = 'Glacier Daily Update'):
@@ -27,13 +28,14 @@ def main(tag = 'Glacier Daily Update'):
     bulk_workflow_trigger(subscribers)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Run Glacier Daily Update')
+    parser.add_argument('--tag', type=str, default='Glacier Daily Update',
+                       help='Tag to filter subscribers (default: Glacier Daily Update)')
+    args = parser.parse_args()
+
     environ = os.environ.get('TERM')
 
     if environ is None:
         main()
-
     elif environ == "xterm-256color":
-        # print('Test')
-        # main('Test Glacier Daily Update')
-        main()
-        # serve_api()
+        main(args.tag)
