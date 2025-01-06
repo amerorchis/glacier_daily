@@ -1,10 +1,11 @@
-from PIL import Image
-import numpy as np
 import os
 from datetime import datetime
-import cv2
 from pathlib import Path
 import sys
+
+import cv2
+from PIL import Image
+import numpy as np
 
 from dotenv import load_dotenv
 load_dotenv("email.env")
@@ -13,10 +14,10 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
     sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 from shared.retrieve_from_json import retrieve_from_json
+from shared.ftp import upload_file
 from sunrise_timelapse.timelapse_json import *
-from sunrise_timelapse.ftp import upload_sunrise
 from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
-    
+
 def find_frame(video_path):
     # Open the video file
     video = cv2.VideoCapture(str(video_path))
@@ -123,12 +124,13 @@ def process_video():
     if sunrise_timelapse_complete_time() > 0:
         # print('Too early for sunrise', file=sys.stderr)
         return '', ''
-    
+
     else:
 
         # Make sure there is a video and it was made today before proceeding.
         new_style = Path('/home/pi/Modules/timelapse/images/Compilation/videos/sunrise_timelapse.mp4')
         old_style = Path('/home/pi/Documents/sunrise_timelapse/sunrise_timelapse.mp4')
+        old_style = Path('test/smv_sunrise_timelapse.mp4') # Test
 
         if made_today(new_style):
             video_path = new_style
@@ -142,16 +144,21 @@ def process_video():
         frame_found = find_frame(video_path)
 
         if frame_found:
-            vid, frame, files = upload_sunrise(video_path)
+            today = datetime.now()
+            filename_vid = f'{today.month}_{today.day}_{today.year}_sunrise_timelapse.mp4'
+            frame_path = 'email_images/today/sunrise_frame.jpg'
+            filename_frame = f'{today.month}_{today.day}_{today.year}_sunrise.jpg'
+
+            vid, vid_files = upload_file('sunrise_vid', filename_vid, video_path)
+            frame, _ = upload_file('sunrise_still', filename_frame, frame_path)
 
             try:
-                data = gen_json(files)
+                data = gen_json(vid_files)
                 uploaded = send_timelapse_data(data)
                 if uploaded:
                     vid = uploaded
             except Exception as e:
                 print(e, file=sys.stderr)
-                pass
         else:
             return '', ''
 
