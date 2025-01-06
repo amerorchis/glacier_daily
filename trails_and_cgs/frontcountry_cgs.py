@@ -1,3 +1,8 @@
+"""
+This module fetches and processes the status of front country campgrounds in Glacier National Park.
+It retrieves data from the NPS API, processes it to identify closures and alerts, and formats the information for display.
+"""
+
 import json
 import sys
 import traceback
@@ -9,6 +14,12 @@ import urllib3
 urllib3.disable_warnings()
 
 def campground_alerts():
+    """
+    Fetches the status of front country campgrounds from the NPS API and processes the data to identify closures and alerts.
+
+    Returns:
+        str: A formatted HTML string containing the status of campgrounds, or an error message if the data is unavailable.
+    """
     url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds'
     r = requests.get(url, verify=False)
     status = json.loads(r.text)
@@ -58,6 +69,9 @@ def campground_alerts():
 def get_campground_status() -> str:
     """
     Wrap the closed campgrounds function to catch errors and allow email to send if there is an issue.
+
+    Returns:
+        str: The status of campgrounds or an empty string if an error occurs.
     """
     try:
         return campground_alerts()

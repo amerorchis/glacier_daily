@@ -3,9 +3,18 @@ from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 import json
 from datetime import datetime, timedelta
+from typing import List, Dict
 
+def judge_cover(cloud: int) -> str:
+    """
+    Determines the cloud cover description based on the cloud cover percentage.
 
-def judge_cover(cloud: int):
+    Args:
+        cloud (int): The cloud cover percentage.
+
+    Returns:
+        str: A description of the cloud cover.
+    """
     if cloud == 0:
         return "no"
     elif cloud <= 25:
@@ -15,11 +24,19 @@ def judge_cover(cloud: int):
     else:
         return "high"
 
+def clear_night(aur_start: datetime, aur_end: datetime) -> str:
+    """
+    Determines the clear night sky forecast for aurora viewing.
 
-def clear_night(aur_start, aur_end):
+    Args:
+        aur_start (datetime): The start time for aurora viewing.
+        aur_end (datetime): The end time for aurora viewing.
 
+    Returns:
+        str: A formatted HTML string describing the clear night sky forecast, or an empty string if the forecast is not favorable.
+    """
     # Setup the Open-Meteo API client with cache and retry on error
-    cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
+    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
     retry_strategy = Retry(total=5, backoff_factor=0.2)
 
     # Create an HTTPAdapter with the retry strategy
@@ -42,16 +59,17 @@ def clear_night(aur_start, aur_end):
     hours = hourly['time']
     clouds = hourly['cloud_cover']
 
-    dark = list()
+    dark: List[Dict[str, any]] = []
     for hour, cloud in zip(hours, clouds):
         time = datetime.fromisoformat(hour)
 
         if start < time < end:
             cover = judge_cover(cloud)
             dark.append({
-                'time':time,
-                'num':cloud,
-                'desc':cover})
+                'time': time,
+                'num': cloud,
+                'desc': cover
+            })
 
     clear = [i for i in dark if i['num'] == 0]
     str = ''
@@ -80,9 +98,14 @@ def clear_night(aur_start, aur_end):
 
     return str
 
+def aurora_forecast() -> str:
+    """
+    Fetches the aurora forecast and determines the best time for viewing based on cloud cover.
 
-def aurora_forecast():
-    cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
+    Returns:
+        str: A formatted HTML string describing the aurora forecast, or an empty string if the forecast is not favorable.
+    """
+    cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
     retry_strategy = Retry(total=5, backoff_factor=0.2)
 
     # Create an HTTPAdapter with the retry strategy
@@ -133,7 +156,6 @@ def aurora_forecast():
             return f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The aurora is forecasted for tonight with a max KP of {max_kp} {skies}</p>'
 
     return ''
-
 
 if __name__ == "__main__":
     print(aurora_forecast())

@@ -1,9 +1,19 @@
+"""
+This module provides FTP functionalities including deleting old files and uploading new files.
+"""
+
 from ftplib import FTP
 import os
 from datetime import datetime, timedelta
 import ftplib
 
-def delete_on_first(ftp: FTP):
+def delete_on_first(ftp: FTP) -> None:
+    """
+    Deletes files on the FTP server that are older than 6 months if the current date is the first of the month.
+
+    Args:
+        ftp (FTP): An instance of the FTP class connected to the server.
+    """
     current_date = datetime.now()
 
     if current_date.day == 1:
@@ -24,8 +34,18 @@ def delete_on_first(ftp: FTP):
             if file_modification_date < six_months_ago:
                 ftp.delete(file)
 
-def upload_file(directory, filename, file):
+def upload_file(directory: str, filename: str, file: str) -> tuple[str, list[str]]:
+    """
+    Uploads a file to the specified directory on the FTP server and deletes old files if necessary.
 
+    Args:
+        directory (str): The directory on the FTP server where the file will be uploaded.
+        filename (str): The name of the file to be uploaded.
+        file (str): The local path to the file to be uploaded.
+
+    Returns:
+        tuple: A tuple containing the URL of the uploaded file and a list of files in the directory.
+    """
     username = os.environ['FTP_USERNAME']
     password = os.environ['FTP_PASSWORD']
     server = 'ftp.glacier.org'

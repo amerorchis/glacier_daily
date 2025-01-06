@@ -1,3 +1,8 @@
+"""
+This module handles the image of the day functionality.
+It includes functions to resize the image and upload it to a specified directory.
+"""
+
 import os
 import sys
 from datetime import datetime
@@ -15,6 +20,12 @@ from shared.ftp import upload_file
 
 
 def upload_pic_otd():
+    """
+    Upload the picture of the day to the specified directory.
+
+    Returns:
+        str: The address where the image was uploaded.
+    """
     today = datetime.now()
     filename = f'{today.month}_{today.day}_{today.year}_pic_otd.jpg'
     file = 'email_images/today/resized_image_otd.jpg'
@@ -23,6 +34,12 @@ def upload_pic_otd():
     return address
 
 def resize_full():
+    """
+    Resize the image of the day to the desired dimensions and upload it.
+
+    Returns:
+        tuple: A tuple containing the upload address, title, and link of the image.
+    """
     # Check if we already have today's image
     already_retrieved, keys = retrieve_from_json(['image_otd', 'image_otd_title', 'image_otd_link'])
     if already_retrieved:

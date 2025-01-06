@@ -1,3 +1,7 @@
+"""
+Select the best thumbnail frame from the timelapse video.
+"""
+
 import os
 from datetime import datetime
 from pathlib import Path
@@ -18,7 +22,16 @@ from shared.ftp import upload_file
 from sunrise_timelapse.timelapse_json import *
 from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
 
-def find_frame(video_path):
+def find_frame(video_path: Path) -> bool:
+    """
+    Find the frame with the most red pixels in a video and save it as an image.
+
+    Args:
+        video_path (Path): Path to the video file.
+
+    Returns:
+        bool: True if the frame was found and saved, False otherwise.
+    """
     # Open the video file
     video = cv2.VideoCapture(str(video_path))
     max_red_ret = None
@@ -82,7 +95,10 @@ def find_frame(video_path):
     return False
         
 
-def play_button():
+def play_button() -> None:
+    """
+    Overlay a play button image onto the saved frame image.
+    """
     # Open the timelapse frame
     background = Image.open("email_images/today/sunrise_frame.jpg")
 
@@ -105,7 +121,16 @@ def play_button():
     composite.save("email_images/today/sunrise_frame.jpg")
 
 
-def made_today(video):
+def made_today(video: Path) -> bool:
+    """
+    Check if the video was created today.
+
+    Args:
+        video (Path): Path to the video file.
+
+    Returns:
+        bool: True if the video was created today, False otherwise.
+    """
     if os.path.exists(video):
         if datetime.fromtimestamp(os.path.getctime(video)).date() == datetime.now().date():
             return True
@@ -114,8 +139,13 @@ def made_today(video):
     else:
         print('No video at given path.', file=sys.stderr)
 
-def process_video():
+def process_video() -> Tuple[Union[str, None], Union[str, None]]:
+    """
+    Process the sunrise timelapse video and upload the frame and video.
 
+    Returns:
+        Tuple[Union[str, None], Union[str, None]]: URLs of the uploaded video and frame, or None if not processed.
+    """
     # Check if we already have today's video
     already_retrieved, keys = retrieve_from_json(['sunrise_vid', 'sunrise_still'])
     if already_retrieved:
@@ -130,7 +160,6 @@ def process_video():
         # Make sure there is a video and it was made today before proceeding.
         new_style = Path('/home/pi/Modules/timelapse/images/Compilation/videos/sunrise_timelapse.mp4')
         old_style = Path('/home/pi/Documents/sunrise_timelapse/sunrise_timelapse.mp4')
-        old_style = Path('test/smv_sunrise_timelapse.mp4') # Test
 
         if made_today(new_style):
             video_path = new_style

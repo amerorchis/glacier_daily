@@ -1,3 +1,8 @@
+"""
+This module handles the scheduling of subscriber updates for the Glacier Daily service.
+It includes functions to start and end subscriptions based on predefined tags and custom fields.
+"""
+
 try:
     from drip.subscriber_list import subscriber_list
     from drip.update_subscriber import update_subscriber
@@ -8,6 +13,12 @@ from datetime import datetime, timedelta
 
 
 def start(subs: list):
+    """
+    Start the daily updates for the given list of subscribers.
+
+    Args:
+        subs (list): List of subscriber emails to start daily updates for.
+    """
     for email in subs:
         updates = {
             'email': email,
@@ -20,6 +31,12 @@ def start(subs: list):
 
 
 def end(subs: list):
+    """
+    End the daily updates for the given list of subscribers.
+
+    Args:
+        subs (list): List of subscriber emails to end daily updates for.
+    """
     for email in subs:
         updates = {
             'email': email,
@@ -31,6 +48,12 @@ def end(subs: list):
 
 
 def update_scheduled_subs():
+    """
+    Update the scheduled subscribers by checking their start and end dates.
+
+    Returns:
+        dict: A dictionary with lists of emails that are starting and ending updates today.
+    """
     scheduled = subscriber_list('Daily Start Set, Daily End Set')
 
     if not scheduled:

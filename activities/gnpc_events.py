@@ -1,15 +1,16 @@
 """
 This module retrieves information about GNPC events by scraping the GNPC website.
 """
-
+import sys
+import os
 from typing import List, Dict
 import requests
 from bs4 import BeautifulSoup
 
-try:
-    from gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
-except ModuleNotFoundError:
-    from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 
 def get_gnpc_events() -> List[Dict[str, str]]:
     """

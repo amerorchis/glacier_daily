@@ -87,6 +87,9 @@ def gen_data():
     return drip_template_fields
 
 def write_data_to_json(data: dict, doctype: str) -> str:
+    """
+    Make a JSON file with the data, then return the filepath.
+    """
     data = {i: base64.b64encode(data[i].encode('utf-8')).decode('utf-8') for i in data.keys()}
 
     data['date'] = datetime.now().strftime('%Y-%m-%d')

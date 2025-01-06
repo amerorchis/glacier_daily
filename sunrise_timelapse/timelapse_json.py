@@ -1,3 +1,7 @@
+"""
+This module handles the generation of JSON data for sunrise timelapse videos and the uploading of this data to an FTP server.
+"""
+
 import json
 import socket
 from datetime import datetime
@@ -5,11 +9,28 @@ from ftplib import FTP
 from time import sleep
 import io
 import os
+from typing import List, Tuple, Union
 
+def gen_json(files: List[str]) -> str:
+    """
+    Generate a JSON string containing metadata for sunrise timelapse videos.
 
-def gen_json(files):
+    Args:
+        files (List[str]): List of filenames for the timelapse videos.
 
-    def get_date_from_file_name(file_name):
+    Returns:
+        str: JSON string containing metadata for the timelapse videos.
+    """
+    def get_date_from_file_name(file_name: str) -> Tuple[int, int, int]:
+        """
+        Extract the date from a filename.
+
+        Args:
+            file_name (str): Filename in the format 'month_day_year.mp4'.
+
+        Returns:
+            Tuple[int, int, int]: A tuple containing the year, month, and day.
+        """
         # Split the file name by underscores to extract the date parts
         parts = file_name.split('_')
 
@@ -40,8 +61,16 @@ def gen_json(files):
 
     return json.dumps(timelapses)
 
-def send_timelapse_data(data):
+def send_timelapse_data(data: str) -> Union[str, bool]:
+    """
+    Upload the JSON data to an FTP server and return the URL of the latest timelapse video.
 
+    Args:
+        data (str): JSON string containing metadata for the timelapse videos.
+
+    Returns:
+        Union[str, bool]: URL of the latest timelapse video if successful, False otherwise.
+    """
     username = os.environ["webcam_ftp_user"]
     password = os.environ["webcam_ftp_pword"]
     server = os.environ["timelapse_server"]

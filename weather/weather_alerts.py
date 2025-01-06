@@ -1,10 +1,24 @@
+"""
+This module fetches and processes weather alerts from the National Weather Service for Glacier National Park.
+"""
+
 import json
 from time import sleep
 import requests
 import re
 from datetime import datetime, timedelta
+from typing import List, Dict
 
-def handle_duplicates(alerts):
+def handle_duplicates(alerts: List[str]) -> List[str]:
+    """
+    Remove duplicate alerts, keeping only the latest issued alert for each type.
+    
+    Args:
+        alerts (List[str]): List of alert strings.
+    
+    Returns:
+        List[str]: List of unique alert strings.
+    """
     # print(len(alerts))
     headlines = []
     to_remove = []
@@ -46,7 +60,13 @@ def handle_duplicates(alerts):
     return alerts
 
 
-def weather_alerts():
+def weather_alerts() -> str:
+    """
+    Fetch and format weather alerts for Glacier National Park.
+    
+    Returns:
+        str: Formatted weather alerts as HTML string.
+    """
     zones = ['https://api.weather.gov/zones/forecast/MTZ301',
              'https://api.weather.gov/zones/forecast/MTZ302',
              'https://api.weather.gov/zones/county/MTC029',

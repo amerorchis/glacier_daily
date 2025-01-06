@@ -1,5 +1,10 @@
 #!/usr/bin/env python3.9
 
+"""
+This script performs the Glacier Daily Update by retrieving subscribers,
+generating data, uploading it to a website, and sending emails to subscribers.
+"""
+
 import os
 from dotenv import load_dotenv
 load_dotenv("email.env")
@@ -8,13 +13,19 @@ from drip.drip_actions import get_subs, bulk_workflow_trigger
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 from generate_and_upload import serve_api
 import argparse
+from typing import List
 
+def main(tag: str = 'Glacier Daily Update') -> None:
+    """
+    Main function to perform the Glacier Daily Update.
 
-def main(tag = 'Glacier Daily Update'):
-    sleep_to_sunrise() # Sleep until sunrise timelapse is finished.
+    Args:
+        tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
+    """
+    sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
 
     # Retrieve subscribers from Drip.
-    subscribers = get_subs(tag)
+    subscribers: List[str] = get_subs(tag)
     print('Subscribers found')
 
     # Generated data and upload to website.

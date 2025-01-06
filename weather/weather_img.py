@@ -1,9 +1,14 @@
+"""
+This module handles the creation and uploading of weather images for the Glacier National Park.
+"""
+
 import os
 import sys
 
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 from pathlib import Path
+from typing import List, Tuple
 
 try:
     from weather.season import get_season
@@ -15,9 +20,12 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
 
 from shared.ftp import upload_file
 
-def upload_weather():
+def upload_weather() -> str:
     """
     Upload the product image to the glacier.org ftp server.
+    
+    Returns:
+        str: Address of the uploaded image.
     """
     today = datetime.now()
     filename = f'{today.month}_{today.day}_{today.year}_today_park_map.png'
@@ -26,7 +34,16 @@ def upload_weather():
     address, _ = upload_file(directory, filename, file)
     return address
 
-def weather_image(results):
+def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
+    """
+    Create a weather image based on the provided forecast results and upload it.
+    
+    Args:
+        results (List[Tuple[str, int, int, str]]): List of tuples containing location name, high temperature, low temperature, and weather condition.
+    
+    Returns:
+        str: Address of the uploaded image.
+    """
     dimensions = {"West Glacier":(292.1848, 462.5), "Polebridge":(165.3, 190), "St. Mary":(591,303), "Two Medicine":(623,524), "Logan Pass":(423.52,336), "Many Glacier":(460.1623,185)}
     
     # Open the image

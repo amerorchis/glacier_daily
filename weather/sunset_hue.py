@@ -2,7 +2,13 @@ from datetime import datetime
 import os
 import requests
 
-def get_sunset_hue():
+def get_sunset_hue() -> str:
+    """
+    Fetches the sunset hue forecast for a specific location and date.
+
+    Returns:
+        str: A formatted HTML string describing the sunset hue forecast, or an empty string if the forecast is not favorable.
+    """
     lat = "48.528556"
     long = "-113.991674"
     date = datetime.today().strftime('%Y-%m-%d')
@@ -10,7 +16,7 @@ def get_sunset_hue():
 
     url = f"https://api.sunsethue.com/event?latitude={lat}&longitude={long}&date={date}&type={forecast_type}"
 
-    payload={}
+    payload = {}
     headers = {
         "x-api-key": os.environ.get('SUNSETHUE_KEY')
     }

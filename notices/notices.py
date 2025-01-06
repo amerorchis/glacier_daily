@@ -1,3 +1,7 @@
+"""
+This module retrieves notices from a Google Sheets document and formats them for display.
+"""
+
 import sys
 import os
 
@@ -13,6 +17,12 @@ default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#3
 
 @retry(3, (gspread.exceptions.APIError), default, 3)
 def get_notices():
+    """
+    Retrieves notices from a Google Sheets document and formats them as an HTML list.
+
+    Returns:
+        str: An HTML string containing the current notices or a default message if no notices are found.
+    """
     # Load credentials
     scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     credentials = Credentials.from_service_account_file('notices/sheets-api-389117-34906b5fba7f.json', scopes=scopes)
@@ -42,6 +52,9 @@ def get_notices():
 
 
 if __name__ == "__main__":
+    """
+    Loads environment variables and prints the current notices.
+    """
     from dotenv import load_dotenv
     load_dotenv("email.env")
     print(get_notices())
