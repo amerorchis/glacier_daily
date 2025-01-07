@@ -1,62 +1,173 @@
 # Glacier Daily Update Emails
 
-This program collects data from a wide variety of sources, sanitizes/organizes it, makes it available to Drip email custom dynamic content module, then sends the email out to a list of subscribers.
+A comprehensive system that automatically generates and distributes daily email updates about conditions at Glacier National Park. The system aggregates data from multiple sources, processes it, and delivers personalized updates to subscribers through the Drip email platform.
 
-## Modules
+## Features
 
-The program is divided into 10 modules, plus a few scripts in the main folder.
+- Real-time park conditions and updates
+- Weather forecasts and alerts
+- Trail and road status tracking
+- Daily featured peak with satellite imagery
+- Sunrise timelapse videos
+- Park ranger activity schedules
+- Featured product and image of the day
+- Automated email delivery
 
-### main
-The main module has the `main.py` script that controls the overall flow of the program (retrieving subscribers, generating and uploading data, sending emails). It has a test mode that only sends the email to people with the test tag.
+## Prerequisites
 
-The main folder also contains the `generate_and_upload.py` script that does the heavy lifting of threading all of the data retrieval processes, creating a JSON file to upload and using FTP to put that JSON on the server where Drip can access it. When the data is collected from the various functions and put into a JSON format, it is all encoded using base64. This is because HTML contains characters that have special meaning in JSON format, so to create valid JSON and not mangle the HTML, everything needs to be encoded.
+- Python 3.9 or higher
+- Access to required API keys (see Configuration section)
+- FTP access to glacier.org
+- Drip email marketing account
 
-### activities
-The activities module retrieves and formats the ranger activities that are happening that day. The data is from the "events" endpoint of the official NPS API. Much of the module is dedicated to condensing the information so that it is readable but not too long.
+## Installation
 
-### drip
-The drip module is dedicated to interacting with the Drip email API. It has a function to retrieve a list of subscribers that have the tag "Glacier Daily Update" (if not in test mode). Then, after the content is uploaded, the `send_in_drip` function is called that subscribes each user to the Glacier Daily Update workflow using a bulk action. It also checks which people have opted in and out of Daily Updates for that day, adding and removing tags.
+1. Clone the repository:
 
-### image_otd
-This module randomly takes a GlacierNPS Flickr photo, then resizes it to the correct shape/size for the email. The module accesses the Flickr API.
+```bash
+git clone [repository-url]
+cd glacier-daily-update
+```
 
-### notices
-`notices` uses the Google Sheets API to retrieve a list of announcements, and the start and end dates for when they should be included. It then sorts out and formats the ones that are meant to run the current day. The notices are the only data source that requires manual updating, since it is just a Google sheet things can be added to. 
+2. Install required dependencies:
 
-### peak
-This module randomly selects a Glacier peak from a CSV file. It grabs a satellite image of that peak from Mapbox.
+```bash
+pip install -r requirements.txt
+```
 
-### product_otd
-Product of the day interacts with the BigCommerce store API. If we change the location of the online store, this module will need to be replaced.  
+3. Set up environment variables in `email.env`:
 
-### sunrise_timelapse
-The `sunrise_timelapse` module retrieves the latest sunrise timelapse video from the webcam FTP server and prepares it for inclusion in the email, including selecting the most colorful frame to use as a thumbnail.
+```
+NPS=your_nps_api_key
+DRIP_TOKEN=your_drip_token
+DRIP_ACCOUNT=your_drip_account_id
+flickr_key=your_flickr_key
+flickr_secret=your_flickr_secret
+glaciernps_uid=your_glaciernps_user_id
+MAPBOX_TOKEN=your_mapbox_token
+BC_TOKEN=your_bigcommerce_token
+BC_STORE_HASH=your_store_hash
+FTP_USERNAME=your_ftp_username
+FTP_PASSWORD=your_ftp_password
+```
 
-### trails_and_cgs
-The `trails_and_cgs` module retrieves the current status of trails and campgrounds from the NPS API and formats it for inclusion in the email.
+## Usage
 
-### weather
-The `weather` module retrieves the current weather forecast from the OpenMateo API and formats it for inclusion in the email. It creates a map of the park with weather data, gets air quality information, NWS alerts, aurora forecasts, and sunset color forecasts.
+### Standard Operation
 
-## Associated Files
+Run the main script to generate and send daily updates:
 
-### email_html
-Contains the HTML templates used for generating the email content.
+```bash
+python main.py
+```
 
-### email_images
-Contains the images used in the emails. The `today` subdirectory is created dynamically if it doesn't exist.
+### Test Mode
 
-### server
-Contains scripts and configurations for the FTP server used to upload the generated JSON files and images.
+To run in test mode (sends only to test subscribers):
 
-## API Connection
-The program connects to various APIs including the NPS API, Drip API, Google Sheets API, BigCommerce API, Flickr API, Mapbox API, and the OpenMateo API to retrieve and format the data needed for the daily update emails.
+```bash
+python main.py --tag "Test Glacier Daily Update"
+```
 
-## Interaction with Drip
-The program interacts with the Drip email marketing platform to retrieve subscribers and send the daily update emails. It uses the Drip API to manage subscribers and workflows.
+## Architecture
 
-## Interaction with glacier.org
-The program uploads the generated JSON files and images to the FTP server at glacier.org, where they can be accessed by the Drip email platform.
+### Core Modules
 
-## Author
-Glacier Daily Update Emails was made by Andrew Smith in 2023 for the Glacier National Park Conservancy.
+- **activities/**: Manages ranger activities and events
+
+  - Fetches from NPS API
+  - Processes GNPC events and conversations
+  - Formats event schedules
+- **weather/**: Comprehensive weather information
+
+  - Forecasts from Open-Meteo API
+  - Air quality monitoring
+  - Aurora forecasts
+  - Weather alerts from NWS
+  - Interactive park weather map generation
+- **roads/**: Road status tracking
+
+  - Real-time closure information
+  - Hiker/biker access updates
+  - Location-based status reporting
+- **trails_and_cgs/**: Trail and campground monitoring
+
+  - Trail closure tracking
+  - Campground availability
+  - Condition reports
+- **drip/**: Email delivery system
+
+  - Subscriber management
+  - Email template handling
+  - Delivery scheduling
+  - Subscription updates
+
+### Supporting Modules
+
+- **image_otd/**: Daily image selection and processing
+
+  - Integration with Flickr API
+  - Image resizing and optimization
+- **peak/**: Daily peak feature
+
+  - Random peak selection
+  - Satellite imagery from Mapbox
+  - Location mapping
+- **product_otd/**: Daily product showcase
+
+  - BigCommerce integration
+  - Product information formatting
+- **sunrise_timelapse/**: Sunrise video processing
+
+  - Timelapse compilation
+  - Thumbnail generation
+  - FTP upload management
+- **shared/**: Utility functions
+
+  - FTP operations
+  - JSON handling
+  - Retry mechanisms
+
+## Data Flow
+
+1. Data Collection:
+
+   - Multiple API endpoints queried concurrently
+   - Real-time information gathered
+   - Images and videos processed
+2. Data Processing:
+
+   - Information formatted for email
+   - Images resized and optimized
+   - Content sanitized and validated
+3. Distribution:
+
+   - Content uploaded to FTP server
+   - JSON data prepared for Drip
+   - Emails triggered through Drip API
+
+## Maintenance
+
+### Daily Operations
+
+- Script runs automatically via cron job
+- Logs available in standard output
+- Error handling with retry mechanisms
+
+### Troubleshooting
+
+- Check API status and rate limits
+- Verify FTP server connectivity
+- Monitor Drip delivery statistics
+- Review error logs for failed operations
+
+### Common Issues
+
+- API timeout resolution
+- FTP upload retry handling
+- Image processing error recovery
+- Subscriber list synchronization
+
+## Credits
+
+Developed by Andrew Smith (2023) for the Glacier National Park Conservancy.
