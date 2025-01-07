@@ -20,6 +20,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install -r requirements.txt
+      - name: Create directory
+        run: |
+          mkdir -p email_images/today/
       - name: Run tests
         env:
           NPS: ${{ secrets.NPS }}
