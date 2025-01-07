@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import requests
 
-def get_sunset_hue() -> str:
+def get_sunset_hue(test: bool = False) -> str:
     """
     Fetches the sunset hue forecast for a specific location and date.
 
@@ -29,7 +29,11 @@ def get_sunset_hue() -> str:
         return ''
 
     quality, quality_text, cloud_cover = r.get('data').get('quality', 0), r.get('data').get('quality_text', '').lower(), r.get('data').get('cloud_cover', 0)
-    if quality < 0.41 or cloud_cover > 0.4:
+
+    if test:
+        print(quality, quality_text, cloud_cover)
+
+    if quality < 0.41 or cloud_cover > 0.7:
         return ''
 
     return f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The sunset is forecast to be {quality_text} this evening{"." if quality_text == "good" else "!"}</p>'
@@ -37,4 +41,4 @@ def get_sunset_hue() -> str:
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv("email.env")
-    print(get_sunset_hue())
+    print(get_sunset_hue(True))
