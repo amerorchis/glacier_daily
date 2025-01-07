@@ -10,17 +10,37 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-        pip install -r requirements.txt
-        pip install -e .
-    - name: Run tests
-      run: |
-        pytest
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install -r requirements.txt
+      - name: Run tests
+        env:
+          NPS: ${{ secrets.NPS }}
+          DRIP_TOKEN: ${{ secrets.DRIP_TOKEN }}
+          DRIP_ACCOUNT: ${{ secrets.DRIP_ACCOUNT }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          ALERTS_PWD: ${{ secrets.ALERTS_PWD }}
+          BC_TOKEN: ${{ secrets.BC_TOKEN }}
+          BC_STORE_HASH: ${{ secrets.BC_STORE_HASH }}
+          flickr_key: ${{ secrets.flickr_key }}
+          flickr_secret: ${{ secrets.flickr_secret }}
+          glaciernps_uid: ${{ secrets.glaciernps_uid }}
+          webcam_ftp_user: ${{ secrets.webcam_ftp_user }}
+          webcam_ftp_pword: ${{ secrets.webcam_ftp_pword }}
+          timelapse_server: ${{ secrets.timelapse_server }}
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+          MAPBOX_ACCOUNT: ${{ secrets.MAPBOX_ACCOUNT }}
+          MAPBOX_STYLE: ${{ secrets.MAPBOX_STYLE }}
+          SUNSETHUE_KEY: ${{ secrets.SUNSETHUE_KEY }}
+          TEST_SECRET: ${{ secrets.TEST_SECRET }}
+        run: |
+          PYTHONPATH=$PYTHONPATH:$(pwd) pytest
