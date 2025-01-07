@@ -1,4 +1,6 @@
 **/__pycache__/
+.**
+!.github
 working
 email_images/base/OpenSans-Regular.ttf
 email_images/today/**
@@ -8,14 +10,10 @@ old
 server/**.json
 **.env
 **.DS_Store
-.cache.sqlite
-.vscode/settings.json
 activities/gnpc.json
 server/today.html
 server/today.html
 server/printable.html
 server/today.html
-.vscode
 test_files
-.venv
 TODO.md

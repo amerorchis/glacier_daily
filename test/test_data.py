@@ -2,10 +2,6 @@
 Module for testing the data generation function.
 """
 
-import os
-
-print(os.environ.get('TEST_SECRET'))
-
 import pytest
 from generate_and_upload import gen_data
 
