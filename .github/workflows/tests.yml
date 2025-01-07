@@ -27,6 +27,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y fonts-open-sans
+      - name: Create service account file
+        run: |
+          mkdir -p notices
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 -d > notices/sheets-api-389117-34906b5fba7f.json
       - name: Run tests
         env:
           NPS: ${{ secrets.NPS }}
