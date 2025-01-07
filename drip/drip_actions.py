@@ -13,7 +13,7 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
 from drip.subscriber_list import subscriber_list
 from drip.scheduled_subs import update_scheduled_subs
 
-def get_subs(tag):
+def get_subs(tag: str) -> list:
     """
     Retrieve and update the list of subscribers with a specific tag.
 
@@ -37,7 +37,7 @@ def get_subs(tag):
 
     return subs
 
-def bulk_workflow_trigger(sub_list: list):
+def bulk_workflow_trigger(sub_list: list) -> None:
     """
     Trigger a bulk workflow action in Drip to increase capacity from 3,600/hour to 50,000/hour.
 
@@ -81,7 +81,7 @@ def bulk_workflow_trigger(sub_list: list):
         else:
             print(f"Failed to add subscribers to the campaign. Error message:", r["errors"][0]["code"], ' - ', r["errors"][0]["message"])
 
-def send_in_drip(email, campaign_id='169298893'):
+def send_in_drip(email: str, campaign_id: str = '169298893') -> None:
     """
     Send an email to a single subscriber using Drip.
 
