@@ -14,7 +14,7 @@ class HikerBiker(Place):
     """
     place_type = 'hiker_biker'
 
-    def __init__(self, name: str, coords: tuple, gtsr: Road):
+    def __init__(self, name: str, coords: tuple, gtsr: Road) -> None:
         super().__init__(name)
         self.locations = self.places[self.place_type]
         self.north = coords
@@ -37,7 +37,7 @@ class HikerBiker(Place):
         else:
             return 'logan'
 
-    def closure_loc(self):
+    def closure_loc(self) -> None:
         """
         Find the name of the location of the hiker/biker closure.
         """
@@ -46,7 +46,7 @@ class HikerBiker(Place):
         self.closure_spot()
         self.closure_str, self.mile_marker = self.north_loc
 
-    def closure_dist(self, side, gtsr: Road) -> str:
+    def closure_dist(self, side: str, gtsr: Road) -> str:
         """
         Use GTSR closure data to see how many miles up the road the hiker biker spot is.
         We need to check if we are measuring mileage from the east or west closure of the road.
@@ -66,7 +66,7 @@ class HikerBiker(Place):
 
         return ''
 
-    def gen_str(self, gtsr):
+    def gen_str(self, gtsr: Road) -> None:
         """
         Generate the string version of the closure.
         """

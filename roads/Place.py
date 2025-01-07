@@ -1,11 +1,15 @@
 """
 A super class for Roads and Hiker/Biker that finds the nearest named location from coordinates.
 """
+import sys
+import os
+from typing import Tuple
 from math import radians, sin, cos, sqrt, atan2
-try:
-    from roads.places import places
-except ModuleNotFoundError:
-    from places import places
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from roads.places import places
+
 
 class Place:
     """
@@ -13,7 +17,7 @@ class Place:
     """
     place_type = None
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
         self.closures_found = False
         self.entirely_closed = False
@@ -31,7 +35,7 @@ class Place:
         self.west_loc = ()
         self.orientation = ''
 
-    def dist(self, lat1, lon1, lat2, lon2):
+    def dist(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """
         Find Euclidean distance between 2 sets of gps coordinates.
         """
@@ -48,7 +52,7 @@ class Place:
         R = 6371.0
         return R * c
 
-    def find_min_distance(self, direction, coords):
+    def find_min_distance(self, direction: str, coords: Tuple[float, float]) -> None:
         """
         Locates the named place that has the minimum distance from the given coordinates.
         """
@@ -63,7 +67,7 @@ class Place:
                             f'{coords[0]}, {coords[1]} (name of location not found).')
                 min_dist = distance
 
-    def closure_spot(self):
+    def closure_spot(self) -> None:
         """
         Get the closure spot for any direction that has coordinates given.
         """
@@ -74,13 +78,13 @@ class Place:
 
         self.closures_found = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Overload the string method with our closure string.
         """
         return self.closure_str
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """
         Check if any closures have been listed.
         """

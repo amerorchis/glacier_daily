@@ -27,24 +27,25 @@ def get_air_quality() -> int:
 
             response = requests.get(
                 'https://www.nps.gov/featurecontent/ard/currentdata/json/glac.json',
-                verify=False
+                verify=False,
+                timeout=60
             )
 
             data = response.json()['locations']
 
             west_glacier = next((place for place in data if 'West Glacier' in place['name']), None)
             if west_glacier:
-                    aqi = west_glacier['particulatesPA']['nowCastPM']['currentAQIVal']
-                    return aqi if aqi != -99 else ''
+                aqi = west_glacier['particulatesPA']['nowCastPM']['currentAQIVal']
+                return aqi if aqi != -99 else ''
 
+        return ''
+
+    except requests.exceptions.JSONDecodeError:
+        print('JSON decoding error')
         return ''
 
     except requests.exceptions.RequestException as e:
         print(f'Request error: {e}')
-        return ''
-
-    except requests.exceptions.JSONDecodeError as j:
-        print('JSON decoding error')
         return ''
 
 if __name__ == "__main__":

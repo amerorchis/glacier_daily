@@ -16,7 +16,7 @@ except ModuleNotFoundError:
     from HikerBiker import HikerBiker
 urllib3.disable_warnings()
 
-def hiker_biker():
+def hiker_biker() -> str:
     """"
     Retrieve and format hiker biker closure locations.
     """

@@ -8,6 +8,7 @@ from datetime import datetime
 from urllib.request import urlretrieve
 from pathlib import Path
 from os import environ
+from typing import Tuple
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
@@ -17,7 +18,7 @@ flickr_key = environ['flickr_key']
 flickr_secret = environ['flickr_secret']
 glaciernps_uid = environ['glaciernps_uid']
 
-def get_flickr():
+def get_flickr() -> Tuple[Path, str, str]:
     """
     Retrieve a random image from the Glacier National Park's Flickr account.
 
