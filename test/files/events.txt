@@ -1,0 +1,37 @@
+
+            <style>
+                ul.events-list {
+                    margin: 0 0 25px;
+                    padding-left: 20px;
+                    padding-top: 0px;
+                    font-size: 12px;
+                    line-height: 18px;
+                    color: #333333;
+                }
+                ul.events-list li a {
+                    font-size: 10px;
+                    color: #333333;
+                    font-style: italic;
+                    text-decoration: underline;
+                }
+            </style>
+            <ul class="events-list">
+<li>8:30am-10:45am: Creekside Stroll, Apgar VC flagpole <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B338904C-EA62-2DB0-FDE4C05B7B04A373">(link)</a></li>
+<li>8:30am-3:30pm: Iceberg Lake Hike, Swiftcurrent Motor Inn <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B01C7AEE-9AD0-D24D-AFFEF032F7E44C24">(link)</a></li>
+<li>9am-12pm: Redrock Falls Hike, Swiftcurrent Motor Inn <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=AF2DD162-E6B8-2E88-7FFA481DD0F8120C">(link)</a></li>
+<li>10am-10:15am: Wildlife Encounters Talk, Apgar VC Plaza <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B3540E01-05A9-423B-252BD62BE832BCBC">(link)</a></li>
+<li>1:30pm-2pm: Amazing Animals Talk, Apgar Nature Center  <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B35BBBDF-017A-72E7-A3F4B626516F0DD2">(link)</a></li>
+<li>1:30pm-2pm: Where Have All the Glaciers Gone?, Many Glacier Hotel Lobby <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=AF80322F-AD7A-19DF-13E19A834DCA7248">(link)</a></li>
+<li>2pm-3:30pm: St. Mary Lake Boat Tour, Rising Sun Boat Dock <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B1B30EBE-993F-32BD-5DA2A0F137B33E3F">(link)</a></li>
+<li>2:30pm-4pm: Meet Many Glacier Walk, Swiftcurrent Lake behind the Many Glacier Hotel <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=AFC97519-FC22-8572-DC6DB62329AC5E3E">(link)</a></li>
+<li>3pm-4pm: Lake McDonald Boat Tour, Lake McDonald Boat Dock <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B87E2767-C883-E0B5-FA29EA5E1E6AC145">(link)</a></li>
+<li>4pm-5pm: Historic Hotel Walking Tour, Many Glacier Hotel <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B0509F63-C0B9-C94E-88508439E4AEE35A">(link)</a></li>
+<li>7pm-7:45pm: Apgar CG Evening Talk, Apgar CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B371CF2F-D15F-3F34-85EFF5C9DA0B6232">(link)</a></li>
+<li>7pm-7:45pm: Native America Speaks - Frank Finley, Apgar CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=1ACED512-EE07-CEA7-29C508E1C8B69E9F">(link)</a></li>
+<li>8pm-8:45pm: Many Glacier CG Evening Talk, Many Glacier CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=734A4847-D724-30E2-D7CB2E6A2DF02E96">(link)</a></li>
+<li>8pm-8:45pm: Many Glacier Hotel Evening Program, Many Glacier Hotel Lucerne Room  <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B07965A7-B345-6627-E05B3A5BD9C04645">(link)</a></li>
+<li>8pm-8:45pm: Rising Sun CG Evening Talk, Rising Sun CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B22BF0BF-F7BB-29A3-73F5C03253DD544E">(link)</a></li>
+<li>8pm-8:45pm: St. Mary CG Evening Talk, St. Mary CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B1CAF6AF-B2AD-A508-58AD9CC41B44F2C4">(link)</a></li>
+<li>8pm-8:45pm: Two Medicine CG Evening Talk, Two Medicine CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B30EA52E-DEEC-0E70-A038C908973BF03A">(link)</a></li>
+<li>8pm-8:45pm: Native America Speaks - Kevin Kicking Woman, Two Medicine CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=8C9608BD-FDB9-AB4F-1A5DCEBF71AFE78E">(link)</a></li>
+<li>9pm-9:45pm: Fish Creek CG Evening Program, Fish Creek CG Amphitheater <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=B37E0B53-DDC1-9EEA-B6E1EBC28EAA69BF">(link)</a></li></ul>

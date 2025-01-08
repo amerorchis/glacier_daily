@@ -6,8 +6,8 @@
 - [X] Web version
   - [X] View in browser link
 - [X] Change drip operation to bulk operation
-- [ ] Finish Readme
-- [ ] Comment code
+- [X] Finish Readme
+- [X] Comment code
 
 ### Medium:
 
@@ -16,7 +16,7 @@
   - [X] Preset seasonal banners
 - [X] Include peak photos
 - [ ] Proper alt text
-- [ ] Clear files after 6 months
+- [X] Clear files after 6 months
 
 ### Low:
 
