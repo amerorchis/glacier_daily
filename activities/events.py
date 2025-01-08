@@ -63,7 +63,7 @@ def events_today(now = date.today().strftime('%Y-%m-%d')):
             new_events, _ = fetch_events(new_endpoint, headers)
             raw_events.extend(new_events)
 
-        now = datetime.now()
+        now = datetime(*[int(i) for i in now.split('-')])
         if raw_events:
             events = [process_event(event) for event in raw_events]
             events.sort(key=lambda x: x["sortable"])
@@ -91,7 +91,7 @@ def events_today(now = date.today().strftime('%Y-%m-%d')):
         year = datetime.now().year
         if datetime(year, 9, 20, 1, 30) < now < datetime(year, 12, 6, 23, 30):
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
-        if datetime(year, 12, 6, 1, 30) < now < datetime(year, 12, 31, 23, 30) or datetime(1, 1, 1, 1, 30) < datetime(1, 4, 1, 1, 30):
+        if datetime(year, 12, 6, 1, 30) < now < datetime(year, 12, 31, 23, 30) or datetime(year, 1, 1, 1, 30) < now < datetime(year, 4, 1, 1, 29):
             return ''
         if datetime(year, 4, 1, 1, 30) < now < datetime(year, 6, 1, 1, 30):
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
