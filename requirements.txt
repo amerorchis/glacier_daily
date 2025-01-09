@@ -13,4 +13,3 @@ python-dotenv
 requests-cache
 pytz
 pytest
-unittest
