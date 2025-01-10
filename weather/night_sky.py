@@ -64,7 +64,7 @@ class Forecast:
                 response.raise_for_status()
                 forecast_text = response.text
             except RequestException as e:
-                raise ForecastFetchError(f"Failed to fetch NOAA forecast: {str(e)}")
+                raise ForecastFetchError(f"Failed to fetch NOAA forecast: {str(e)}") from e
 
         self.raw_text = forecast_text.strip()
         self.forecast_periods: List[KpPeriod] = []
