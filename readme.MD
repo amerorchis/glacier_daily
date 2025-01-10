@@ -2,6 +2,8 @@
 
 A comprehensive system that automatically generates and distributes daily email updates about conditions at Glacier National Park. The system aggregates data from multiple sources, processes it, and delivers personalized updates to subscribers through the Drip email platform.
 
+View the result [here.](https://glacier.org/glacier-daily-updates-signup/#iFrame1)
+
 ## Features
 
 - Real-time park conditions and updates

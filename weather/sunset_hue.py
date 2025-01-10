@@ -21,24 +21,29 @@ def get_sunset_hue(test: bool = False) -> str:
         "x-api-key": os.environ.get('SUNSETHUE_KEY')
     }
 
-    response = requests.get(url, headers=headers, data=payload, timeout=10)
+    try:
+        response = requests.get(url, headers=headers, data=payload, timeout=10)
+    except requests.exceptions.Timeout:
+        return 0, 'unknown', ''
 
     if response.status_code == 200:
         r = response.json()
     else:
-        return ''
+        return 0, 'unknown', ''
 
-    quality, quality_text, cloud_cover = r.get('data').get('quality', 0), r.get('data').get('quality_text', '').lower(), r.get('data').get('cloud_cover', 0)
+    quality, quality_text, cloud_cover = r.get('data').get('quality', 0), r.get('data').get('quality_text', 'unknown').lower(), r.get('data').get('cloud_cover', 0)
 
     if test:
         print(quality, quality_text, cloud_cover)
 
-    if quality < 0.41 or cloud_cover > 0.7:
-        return ''
+    if quality < 0.41 or cloud_cover > 0.6:
+        msg = ''
+    else:
+        msg = f'The sunset is forecast to be {quality_text} this evening{"." if quality_text == "good" else "!"}'
 
-    return f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">The sunset is forecast to be {quality_text} this evening{"." if quality_text == "good" else "!"}</p>'
+    return cloud_cover, quality_text, msg
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv("email.env")
-    print(get_sunset_hue(True))
+    get_sunset_hue(True)

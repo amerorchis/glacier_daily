@@ -7,7 +7,6 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
-from pathlib import Path
 from typing import List, Tuple
 
 try:
@@ -63,7 +62,6 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
 
         font_size = 20
         font = ImageFont.truetype(font_path, font_size)
-
 
         # Add the text to the image
         text_width = draw.textlength(f'{high} | {low}', font=font)
