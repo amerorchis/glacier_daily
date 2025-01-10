@@ -48,7 +48,6 @@ class WeatherContent:
                 'forecast': executor.submit(get_forecast),
                 'aqi': executor.submit(self._get_aqi),
                 'alerts': executor.submit(weather_alerts),
-                'aurora': executor.submit(aurora_forecast),
                 'season': executor.submit(get_season),
                 'sunset_hue': executor.submit(get_sunset_hue)
             }
@@ -57,11 +56,20 @@ class WeatherContent:
             self.results, self.message1 = futures['forecast'].result()
             self.message2 = futures['aqi'].result()
             self.season = futures['season'].result()
+            cloud_cover, sunset_quality, sunset_message = futures['sunset_hue'].result()
+            aurora_quality, aurora_message = aurora_forecast(cloud_cover)
 
+            color_quality = f'<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">Evening Viewing Forecasts:<br>'\
+                            f'Aurora: {aurora_quality} | '\
+                            f'Sunset Color: {sunset_quality} | '\
+                            f'Cloud Cover: {round(cloud_cover * 100)}%'\
+                            '</p>'
+
+            message = '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">' + ' '.join(filter(bool, [aurora_message, sunset_message])) + '</p>'
             # Append additional weather information
             additional_info = [
-                futures['aurora'].result(),
-                futures['sunset_hue'].result(),
+                color_quality,
+                message,
                 futures['alerts'].result()
             ]
 
@@ -103,4 +111,6 @@ def weather_data() -> WeatherContent:
     return WeatherContent()
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv("email.env")
     print(weather_data().message2)
