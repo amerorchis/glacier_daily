@@ -21,7 +21,10 @@ def get_sunset_hue(test: bool = False) -> str:
         "x-api-key": os.environ.get('SUNSETHUE_KEY')
     }
 
-    response = requests.get(url, headers=headers, data=payload, timeout=10)
+    try:
+        response = requests.get(url, headers=headers, data=payload, timeout=10)
+    except requests.exceptions.Timeout:
+        return 0, 'unknown', ''
 
     if response.status_code == 200:
         r = response.json()
