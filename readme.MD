@@ -73,7 +73,7 @@ python main.py --tag "Test Glacier Daily Update"
 
 ## Architecture
 
-### Core Modules
+### Modules
 
 - **activities/**: Manages ranger activities and events
 
@@ -84,7 +84,7 @@ python main.py --tag "Test Glacier Daily Update"
 
   - Forecasts from Open-Meteo API
   - Air quality monitoring
-  - Aurora forecasts
+  - Aurora forecasts from NOAA
   - Weather alerts from NWS
   - Interactive park weather map generation
 - **roads/**: Road status tracking
@@ -103,9 +103,6 @@ python main.py --tag "Test Glacier Daily Update"
   - Email template handling
   - Delivery scheduling
   - Subscription updates
-
-### Supporting Modules
-
 - **image_otd/**: Daily image selection and processing
 
   - Integration with Flickr API
@@ -147,29 +144,4 @@ python main.py --tag "Test Glacier Daily Update"
    - Content uploaded to FTP server
    - JSON data prepared for Drip
    - Emails triggered through Drip API
-
-## Maintenance
-
-### Daily Operations
-
-- Script runs automatically via cron job
-- Logs available in standard output
-- Error handling with retry mechanisms
-
-### Troubleshooting
-
-- Check API status and rate limits
-- Verify FTP server connectivity
-- Monitor Drip delivery statistics
-- Review error logs for failed operations
-
-### Common Issues
-
-- API timeout resolution
-- FTP upload retry handling
-- Image processing error recovery
-- Subscriber list synchronization
-
-## Credits
-
-Developed by Andrew Smith (2023) for the Glacier National Park Conservancy.
+     ## Credits
