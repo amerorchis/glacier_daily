@@ -144,4 +144,7 @@ python main.py --tag "Test Glacier Daily Update"
    - Content uploaded to FTP server
    - JSON data prepared for Drip
    - Emails triggered through Drip API
-     ## Credits
+
+## Credits
+
+Made by Andrew Smith for the Glacier National Park Conservancy, 2023.
