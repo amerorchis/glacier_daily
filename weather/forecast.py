@@ -8,87 +8,151 @@ from requests.adapters import HTTPAdapter
 import json
 from datetime import datetime
 from math import floor
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
+from dataclasses import dataclass
+from pathlib import Path
+from requests.exceptions import RequestException
 
+# Constants
+BASE_URL = "https://api.open-meteo.com/v1/forecast"
+CACHE_DURATION = 3600  # Cache duration in seconds
+RETRY_ATTEMPTS = 5
+BACKOFF_FACTOR = 0.2
+FEET_TO_METERS = 3.281
+TIME_FORMAT = "%-I:%M%p"
+
+@dataclass
+class Location:
+    """Represents a location in Glacier National Park."""
+    name: str
+    latitude: float
+    longitude: float
+    altitude: float
+
+class WeatherAPI:
+    """Handles interactions with the Open-Meteo API."""
+
+    def __init__(self) -> None:
+        self.session = self._setup_session()
+        self.locations = self._load_locations()
+
+    @staticmethod
+    def _setup_session() -> requests_cache.CachedSession:
+        """Set up a cached session with retry capabilities."""
+        cache_session = requests_cache.CachedSession('.cache', expire_after=CACHE_DURATION)
+        retry_strategy = Retry(total=RETRY_ATTEMPTS, backoff_factor=BACKOFF_FACTOR)
+        retry_adapter = HTTPAdapter(max_retries=retry_strategy)
+
+        cache_session.mount("http://", retry_adapter)
+        cache_session.mount("https://", retry_adapter)
+        return cache_session
+
+    @staticmethod
+    def _load_locations() -> List[Location]:
+        """Load location data."""
+        locations_data = {
+            'West Glacier': {'latitude': 48.50228, 'longitude': -113.98202, 'altitude': 3218},
+            'Logan Pass': {'latitude': 48.69567, 'longitude': -113.71656, 'altitude': 6626},
+            'St. Mary': {'latitude': 48.74746, 'longitude': -113.43877, 'altitude': 4500},
+            'Two Medicine': {'latitude': 48.48480, 'longitude': -113.36981, 'altitude': 5174},
+            'Many Glacier': {'latitude': 48.79664, 'longitude': -113.65773, 'altitude': 4895},
+            'Polebridge': {'latitude': 48.78348, 'longitude': -114.28056, 'altitude': 3560}
+        }
+
+        return [
+            Location(name=name, **data)
+            for name, data in locations_data.items()
+        ]
+
+    def _build_params(self) -> Dict[str, Any]:
+        """Build parameters for the API request."""
+        return {
+            "latitude": [loc.latitude for loc in self.locations],
+            "longitude": [loc.longitude for loc in self.locations],
+            "daily": [
+                "weather_code",
+                "temperature_2m_max",
+                "temperature_2m_min",
+                "sunrise",
+                "sunset",
+                "daylight_duration"
+            ],
+            "temperature_unit": "fahrenheit",
+            "wind_speed_unit": "mph",
+            "timezone": ["America/Denver"] * len(self.locations),
+            "forecast_days": 1,
+            "elevation": [loc.altitude / FEET_TO_METERS for loc in self.locations]
+        }
+
+    def _fetch_weather_codes(self) -> Dict[str, Dict[str, Dict[str, str]]]:
+        """Load weather code descriptions."""
+        try:
+            with open(Path('weather/descriptions.json'), encoding='utf8') as desc:
+                return json.load(desc)
+        except FileNotFoundError as e:
+            raise FileNotFoundError("Weather descriptions file not found. Ensure 'weather/descriptions.json' exists.") from e
+
+    def _format_daylight_info(self, forecast_data: Dict[str, Any]) -> str:
+        """Format daylight information string."""
+        wg = forecast_data[0]['daily']
+
+        sunrise = datetime.fromisoformat(wg['sunrise'][0]).strftime(TIME_FORMAT).lower()
+        sunset = datetime.fromisoformat(wg['sunset'][0]).strftime(TIME_FORMAT).lower()
+
+        duration_hours = floor(wg['daylight_duration'][0] / (60 * 60))
+        duration_minutes = floor((wg['daylight_duration'][0] - (duration_hours * 60 * 60)) / 60)
+
+        return (
+            f"Today, sunrise is at {sunrise} and sunset is at {sunset}. "
+            f"There will be {duration_hours} hours and {duration_minutes} minutes of daylight.\n"
+        )
+
+    def _process_forecasts(self, 
+                          forecasts: List[Dict[str, Any]], 
+                          weather_codes: Dict[str, Dict[str, Dict[str, str]]]) -> List[Tuple[str, int, int, str]]:
+        """Process forecast data into required format."""
+
+        results = []
+        for location, forecast in zip(self.locations, forecasts):
+            daily = forecast['daily']
+            low = round(daily['temperature_2m_min'][0])
+            high = round(daily['temperature_2m_max'][0])
+            code = daily['weather_code'][0]
+            condition = weather_codes[str(code)]['day']['description'].lower()
+            results.append((location.name, high, low, condition))
+        return results
 
 def get_forecast() -> Tuple[List[Tuple[str, int, int, str]], str]:
     """
     Fetch weather forecasts for various locations in Glacier National Park.
     
     Returns:
-        Tuple[List[Tuple[str, int, int, str]], str]: A tuple containing a list of forecast results and a string describing the daylight duration.
+        Tuple[List[Tuple[str, int, int, str]], str]: A tuple containing:
+            - List of tuples with (location_name, high_temp, low_temp, condition)
+            - String describing the daylight duration
+            
+    Raises:
+        FileNotFoundError: If weather descriptions file is not found
+        requests.RequestException: If API request fails
+        json.JSONDecodeError: If API response is invalid
     """
-    # Setup the Open-Meteo API client with cache and retry on error
-    cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
-    retry_strategy = Retry(total=5, backoff_factor=0.2)
+    api = WeatherAPI()
 
-    # Create an HTTPAdapter with the retry strategy
-    retry_adapter = HTTPAdapter(max_retries=retry_strategy)
+    try:
+        response = api.session.get(BASE_URL, params=api._build_params())
+        response.raise_for_status()
+        forecasts = response.json()
 
-    # Mount the retry adapter to the cache session
-    cache_session.mount("http://", retry_adapter)
-    cache_session.mount("https://", retry_adapter)
+        weather_codes = api._fetch_weather_codes()
+        results = api._process_forecasts(forecasts, weather_codes)
+        length_str = api._format_daylight_info(forecasts)
 
-    places = {
-        'West Glacier': {'latitude':48.50228, 'longitude':-113.98202, 'altitude':3218},
-        'Logan Pass': {'latitude':48.69567, 'longitude':-113.71656, 'altitude':6626},
-        'St. Mary': {'latitude':48.74746, 'longitude':-113.43877, 'altitude':4500},
-        'Two Medicine': {'latitude':48.48480, 'longitude':-113.36981, 'altitude':5174},
-        'Many Glacier': {'latitude':48.79664, 'longitude':-113.65773, 'altitude':4895},
-        'Polebridge': {'latitude':48.78348, 'longitude':-114.28056, 'altitude':3560}
-    }
+        return results, length_str
+    except RequestException as e:
+        raise RequestException(f"Failed to fetch weather data: {str(e)}") from e
+    except json.JSONDecodeError as e:
+        raise json.JSONDecodeError(f"Failed to parse API response: {str(e)}", e.doc, e.pos) from e
 
-    latitude, longitude, elevation = [], [], []
-
-    for i in places:
-        latitude.append(places[i]['latitude'])
-        longitude.append(places[i]['longitude'])
-        elevation.append(places[i]['altitude'] / 3.281)
-
-
-    # Make sure all required weather variables are listed here
-    # The order of variables in hourly or daily is important to assign them correctly below
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "daily": ["weather_code", "temperature_2m_max", "temperature_2m_min", "sunrise", "sunset", "daylight_duration"],
-        "temperature_unit": "fahrenheit",
-        "wind_speed_unit": "mph",
-        "timezone": ["America/Denver"] * len(places),
-        "forecast_days": 1,
-        "elevation": elevation
-    }
-
-    responses = cache_session.get(url, params=params)
-    forecasts = json.loads(responses.text)
-
-    with open('weather/descriptions.json') as desc:
-        code_convert = json.load(desc)
-
-    results = []
-    for place, forecast in zip(places, forecasts):
-        forecast = forecast['daily']
-        low = round(forecast['temperature_2m_min'][0])
-        high = round(forecast['temperature_2m_max'][0])
-        code = forecast['weather_code'][0]
-        cond = code_convert[str(code)]['day']['description'].lower()
-        results.append((place, high, low, cond))
-
-    time_format = "%-I:%M%p"
-    wg = forecasts[0]['daily']
-    sunrise = datetime.fromisoformat(wg['sunrise'][0])
-    sunrise = sunrise.strftime(time_format).lower()
-
-    sunset = datetime.fromisoformat(wg['sunset'][0])
-    sunset = sunset.strftime(time_format).lower()
-
-    duration_hours = floor(wg['daylight_duration'][0] / (60 * 60))
-    duration_minutes = floor((wg['daylight_duration'][0] - (duration_hours * 60 * 60)) / 60)
-
-    length_str = f"Today, sunrise is at {sunrise} and sunset is at {sunset}. There will be {duration_hours} hours and {duration_minutes} minutes of daylight.\n"
-
-    return results, length_str
 
 if __name__ == "__main__":
     results, length_str = get_forecast()
