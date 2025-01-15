@@ -69,7 +69,7 @@ class WeatherAlertService:
             point = point.strip()
             if point:
                 # Convert WHAT..., WHERE..., etc. to What:, Where:, etc.
-                point = re.sub(r'^(WHAT|WHERE|WHEN|IMPACTS)\.+\s*', 
+                point = re.sub(r'^(WHAT|WHERE|WHEN|IMPACTS|ADDITIONAL DETAILS)\.+\s*', 
                              lambda m: m.group(1).capitalize() + ': ',
                              point)
                 cleaned_bullets.append(point)

@@ -1,34 +1,41 @@
 """
-This module determines the current season based on the current month.
+This module determines the season based on a given or current date.
+Seasons are defined as:
+    - Winter: December 1 - March 31
+    - Spring: April 1 - June 30 
+    - Summer: July 1 - September 30
+    - Fall: October 1 - November 30
+Note: this is to figure out which template theme to use and so it goes
+by the vibe in GNP, not the actual season dates.
 """
 
 from datetime import datetime
+from typing import Optional
 
-def get_season() -> str:
+def get_season(date: Optional[datetime] = None) -> str:
     """
-    Determine the current season based on the current month.
-    
+    Determine the season based on the given date or current date.
+
+    Args:
+        date (datetime, optional): The date to check. Defaults to current date.
+
     Returns:
-        str: The current season ('summer', 'fall', or 'winter').
+        str: The season ('winter', 'spring', 'summer', or 'fall')
+
     """
-    month = datetime.now().month
+    if not date:
+        date = datetime.now()
 
-    summer_months = [4,5,6,7,8]
-    fall_months = [9,10,11]
-    winter_months = [12,1,2,3]
+    month = date.month
 
-    if month in summer_months:
-        return 'summer'
-
-    elif month in fall_months:
-        return 'fall'
-    
-    elif month in winter_months:
+    if month in [12, 1, 2, 3]:
         return 'winter'
-
-    else:
+    elif month in [4, 5, 6]:
+        return 'spring'
+    elif month in [7, 8, 9]:
         return 'summer'
-
+    else:  # months 10, 11
+        return 'fall'
 
 if __name__ == '__main__':
     print(get_season())
