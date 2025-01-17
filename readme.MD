@@ -71,7 +71,7 @@ To run in test mode (sends only to test subscribers):
 python main.py --tag "Test Glacier Daily Update"
 ```
 
-## Architecture
+## Organization
 
 ### Modules
 
