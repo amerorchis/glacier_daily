@@ -1,12 +1,15 @@
 """
 Define an object that represents a hiker/biker closure.
 """
-try:
-    from roads.Place import Place
-    from roads.Road import Road
-except ModuleNotFoundError:
-    from Place import Place
-    from Road import Road
+
+import sys
+import os
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from roads.Place import Place
+from roads.Road import Road
 
 class HikerBiker(Place):
     """
@@ -15,6 +18,9 @@ class HikerBiker(Place):
     place_type = 'hiker_biker'
 
     def __init__(self, name: str, coords: tuple, gtsr: Road) -> None:
+        """
+        Constructor
+        """
         super().__init__(name)
         self.locations = self.places[self.place_type]
         self.north = coords

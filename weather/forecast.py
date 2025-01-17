@@ -33,6 +33,9 @@ class WeatherAPI:
     """Handles interactions with the Open-Meteo API."""
 
     def __init__(self) -> None:
+        """
+        Constructor
+        """
         self.session = self._setup_session()
         self.locations = self._load_locations()
 

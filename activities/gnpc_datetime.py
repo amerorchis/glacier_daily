@@ -1,3 +1,7 @@
+"""
+Convert date strings from Glacier National Park Conservancy format to a localized datetime object.
+"""
+
 import re
 from datetime import datetime
 import pytz

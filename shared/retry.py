@@ -19,7 +19,13 @@ def retry(times: int, exceptions: tuple, default: str = '', backoff: int = 15):
     :type backoff: Int = 15
     """
     def decorator(func):
+        """
+        Decorator
+        """
         def newfn(*args, **kwargs):
+            """
+            The new function
+            """
             attempt = 0
             while attempt < times:
                 try:

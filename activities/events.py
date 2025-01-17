@@ -34,10 +34,16 @@ def events_today(now = date.today().strftime('%Y-%m-%d')):
         str: An HTML string containing the list of events or a message if no events are available.
     """
     def fetch_events(endpoint, headers):
+        """
+        Get events from endpoint
+        """
         response = requests.get(endpoint, headers=headers, timeout=245).json()
         return response['data'], int(response['total']) // 10 + 1
 
     def process_event(event):
+        """
+        Make text clearer and more readable
+        """
         deletions = [
             'Meet in front of the ', 'Meet in front of ', 'Meet on the shore of ',
             'Meet in the lobby of the ', 'Meet in the ', 'Meet at the ', 'Meet at '

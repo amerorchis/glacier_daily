@@ -1,3 +1,7 @@
+"""
+Retrieve and process aurora forecast.
+"""
+
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -30,6 +34,7 @@ class KpPeriod:
     kp_value: float
 
     def __str__(self) -> str:
+        """Stringify"""
         return f"{self.start_time.strftime('%Y-%m-%d %H:%M')} {self.start_time.tzname}: Kp {self.kp_value}"
 
 class DarkPeriod(NamedTuple):
@@ -332,6 +337,7 @@ class Forecast:
 
 
 def aurora_forecast(cloud_cover: float = 0.) -> str:
+    """Get and format the forecast"""
     f = Forecast()
 
     cloudy = cloud_cover >= 0.3

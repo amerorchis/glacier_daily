@@ -28,6 +28,9 @@ class FlickrAPIError(Exception):
 
 @dataclass
 class FlickrImage:
+    """
+    An image downloaded from Flickr.
+    """
     path: Path
     title: str
     link: str

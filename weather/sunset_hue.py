@@ -1,3 +1,7 @@
+"""
+Get and format a forecast as to the colorfulness of the sunset.
+"""
+
 from datetime import datetime
 import os
 import requests

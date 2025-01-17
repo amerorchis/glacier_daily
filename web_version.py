@@ -1,5 +1,6 @@
 """
 This module generates a daily update for Glacier National Park and saves it as an HTML file.
+The multiple class encapsulations are necessary for the template to work here and in Drip.
 """
 
 from datetime import datetime
@@ -7,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 from typing import Dict
 
 class DailyUpdate:
+    """An object to encapsulate the information"""
     def __init__(self, data: Dict[str, str]):
         """
         Initialize the DailyUpdate with data.
@@ -18,6 +20,7 @@ class DailyUpdate:
         self.timestring = datetime.now().strftime('%-m/%-d/%-y at %-I:%M%p MT')
 
 class myClass:
+    """Encapsulates the DailyUpdate with arbitrary class"""
     def __init__(self, glacier: DailyUpdate):
         """
         Initialize myClass with a DailyUpdate instance.
@@ -27,6 +30,7 @@ class myClass:
         self.daily_update = glacier
 
 class Subscriber:
+    """Name of the subscriber"""
     email = 'for-web'
 
 def web_version(data: Dict[str, str], file_name: str = 'server/today.html', template_path: str = 'email_template.html') -> str:
