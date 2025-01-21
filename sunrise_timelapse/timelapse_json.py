@@ -26,13 +26,16 @@ def gen_json(files: List[str]) -> str:
         Extract the date from a filename.
 
         Args:
-            file_name (str): Filename in the format 'month_day_year.mp4'.
+            file_name (str): Filename in the format 'month_day_year_sunrise_timelapse.mp4'.
 
         Returns:
             Tuple[int, int, int]: A tuple containing the year, month, and day.
         """
         # Split the file name by underscores to extract the date parts
         parts = file_name.split('_')
+        
+        if len(parts) < 3:
+            raise IndexError('Sunrise timelapse name malformed.')
 
         # Assuming the format is month_day_year, convert parts to integers
         month = int(parts[0])
@@ -44,6 +47,9 @@ def gen_json(files: List[str]) -> str:
 
     files.remove('..')
     files.remove('.')
+
+    if not files:
+        raise ValueError('No sunrise timelapse files')
 
     files.sort(key=get_date_from_file_name, reverse=True)
 
