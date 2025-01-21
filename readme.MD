@@ -4,6 +4,8 @@ A comprehensive system that automatically generates and distributes daily email 
 
 View the result [here.](https://glacier.org/glacier-daily-updates-signup/#iFrame1)
 
+[![Tests](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml/badge.svg)](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml)
+
 ## Features
 
 - Real-time park conditions and updates

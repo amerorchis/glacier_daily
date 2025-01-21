@@ -8,8 +8,8 @@ from math import radians, sin, cos, sqrt, atan2
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
     sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-from roads.places import places
 
+from roads.places import places
 
 class Place:
     """
@@ -18,6 +18,9 @@ class Place:
     place_type = None
 
     def __init__(self, name: str) -> None:
+        """
+        Constructor
+        """
         self.name = name
         self.closures_found = False
         self.entirely_closed = False

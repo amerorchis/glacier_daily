@@ -13,6 +13,9 @@ class Road(Place):
     place_type = 'roads'
 
     def __init__(self, name: str, orientation: str = 'EW'):
+        """
+        Constructor
+        """
         super().__init__(name)
         self.locations = self.places[self.place_type][name]
         if orientation.upper() in ['NS','EW']:

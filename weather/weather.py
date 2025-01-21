@@ -18,6 +18,9 @@ from weather.season import get_season
 from weather.sunset_hue import get_sunset_hue
 
 class WeatherContent:
+    """
+    Object for all of the data related to the weather forecast.
+    """
     AQI_CATEGORIES: List[Tuple[int, str]] = [
         (50, 'good.'),
         (100, 'moderate.'),
