@@ -89,13 +89,15 @@ def get_product():
 
     # Figure out total number of products
     r = requests.get(url=url, headers=header, timeout=12)
+    if r.status_code == 500:
+        raise requests.exceptions.RequestException
+
     products = json.loads(r.text)
     total_products = products['meta']['pagination']['total']
 
     # Select one of these products
     random.seed(datetime.today().strftime("%Y:%m:%d"))
     product_otd = random.randrange(1, total_products + 1)
-
     # Function to retrieve a product.
     def retrieve_potd(product_otd):
         """
