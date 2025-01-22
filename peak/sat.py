@@ -8,6 +8,7 @@ from datetime import datetime
 from io import BytesIO
 import requests
 
+import PIL
 from PIL import Image
 
 from dotenv import load_dotenv
@@ -53,18 +54,22 @@ def peak_sat(peak: dict) -> str:
     # Construct url and get image.
     base_url = f"https://api.mapbox.com/styles/v1/{mapbox_account}/{mapbox_style}/static/"
     url_params = f"{lon},{lat},{zoom},{bearing}/{dimensions}?access_token={access_token}&logo=false"
-    r = requests.get(f'{base_url}{url_params}', timeout=10)
+    try:
+        r = requests.get(f'{base_url}{url_params}', timeout=10)
 
-    # If successful, save file, then return URL from FTP function.
-    if r.status_code == 200:
-        image = Image.open(BytesIO(r.content))
-        image.save('email_images/today/peak.jpg')
+        # If successful, save file, then return URL from FTP function.
+        if r.status_code == 200:
+            image = Image.open(BytesIO(r.content))
+            image.save('email_images/today/peak.jpg')
 
-        return upload_peak()
+            return upload_peak()
+        else:
+            raise requests.RequestException('Bad status code')
 
-    # If it fails, give the default peak header.
-    print('Peak sat image failed.')
-    return 'https://glacier.org/daily/summer/peak.jpg'
+    except (requests.RequestException, PIL.UnidentifiedImageError) as e:
+        # If it fails, give the default peak header.
+        print(f'Peak sat image failed. {e}')
+        return 'https://glacier.org/daily/summer/peak.jpg'
 
 if __name__ == "__main__":
     peak_sat({'name': 'Long Knife Peak', 'elevation': '9910', 'lat': '48.99815','lon':'-114.21147'})

@@ -18,11 +18,14 @@ def peak(test = False):
     """
     Select a random peak, and return the relevant information.
     """
+    if test:
+        print('Test mode.')
 
     # Check if we already have today's peak
-    already_retrieved, keys = retrieve_from_json(['peak', 'peak_image', 'peak_map'])
-    if already_retrieved:
-        return keys
+    else:
+        already_retrieved, keys = retrieve_from_json(['peak', 'peak_image', 'peak_map'])
+        if already_retrieved:
+            return keys
 
     with open('peak/PeaksCSV.csv', 'r', encoding='utf-8') as p:
         peaks = list(csv.DictReader(p))

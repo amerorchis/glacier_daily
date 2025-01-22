@@ -143,17 +143,19 @@ def play_button() -> None:
         FileOperationError: If there are issues with file operations
     """
     try:
-        if not os.path.exists("email_images/today/sunrise_frame.jpg"):
+        frame_path = "email_images/today/sunrise_frame.jpg"
+        if not os.path.exists(frame_path):
             raise FileOperationError("Frame image not found")
-        
-        if not os.path.exists("email_images/base/play_button.png"):
+
+        play_button_path = "email_images/base/play_button.png"
+        if not os.path.exists(play_button_path):
             raise FileOperationError("Play button image not found")
 
         # Open the timelapse frame
-        background = Image.open("email_images/today/sunrise_frame.jpg")
+        background = Image.open(frame_path)
 
         # Open the play button
-        overlay = Image.open("email_images/base/play_button.png")
+        overlay = Image.open(play_button_path)
 
         # Calculate the positions
         overlay_position = (
