@@ -90,7 +90,3 @@ def update_scheduled_subs():
 
     updates = {"start": start_today, "end": end_today}
     return updates
-
-
-if __name__ == "__main__":
-    print(update_scheduled_subs())

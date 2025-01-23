@@ -96,10 +96,3 @@ def get_flickr() -> FlickrImage:
         raise FlickrAPIError(f"Missing environment variable: {str(e)}")
     except Exception as e:
         raise FlickrAPIError(f"Flickr API error: {str(e)}")
-
-
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-
-    load_dotenv("email.env")
-    print(get_flickr())

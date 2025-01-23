@@ -7,7 +7,7 @@ import pytest
 import requests
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from activities.events import events_today
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string

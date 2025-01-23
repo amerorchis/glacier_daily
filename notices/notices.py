@@ -10,7 +10,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from shared.retry import retry
 
@@ -76,10 +76,3 @@ def get_notices():
             pass
 
     return '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
-
-
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-
-    load_dotenv("email.env")
-    print(get_notices())

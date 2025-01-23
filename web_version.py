@@ -72,7 +72,7 @@ def web_version(
     return file_name
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     data = {
         "date": "2024-05-01",
         "today": "May 1, 2024",

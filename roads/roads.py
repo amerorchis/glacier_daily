@@ -126,5 +126,5 @@ def get_road_status() -> str:
         return ""
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(get_road_status())

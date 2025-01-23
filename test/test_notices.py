@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import gspread
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from notices.notices import get_notices
 

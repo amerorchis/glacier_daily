@@ -8,7 +8,7 @@ from typing import Tuple
 from math import radians, sin, cos, sqrt, atan2
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from roads.places import places
 

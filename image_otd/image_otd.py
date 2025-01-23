@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from image_otd.flickr import get_flickr
 from shared.retrieve_from_json import retrieve_from_json
@@ -122,7 +122,3 @@ def resize_full() -> Tuple[str, str, str]:
     upload_address = upload_pic_otd()
 
     return upload_address, image_data.title, image_data.link
-
-
-if __name__ == "__main__":
-    print(resize_full())

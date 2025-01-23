@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from shared.ftp import upload_file
 
@@ -76,7 +76,7 @@ def peak_sat(peak: dict) -> str:
         return "https://glacier.org/daily/summer/peak.jpg"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     peak_sat(
         {
             "name": "Long Knife Peak",

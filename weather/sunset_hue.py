@@ -51,7 +51,7 @@ def get_sunset_hue(test: bool = False) -> str:
     return cloud_cover, quality_text, msg
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     from dotenv import load_dotenv
 
     load_dotenv("email.env")

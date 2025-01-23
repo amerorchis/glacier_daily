@@ -9,7 +9,7 @@ from datetime import datetime
 import json
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from product_otd.product import get_product, resize_image, upload_potd
 
@@ -187,5 +187,5 @@ class TestUploadPotd:
                 upload_potd()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__])

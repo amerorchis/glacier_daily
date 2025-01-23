@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from sunrise_timelapse.vid_frame import (
     find_frame,

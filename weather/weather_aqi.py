@@ -53,5 +53,5 @@ def get_air_quality() -> int:
         return ""
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(get_air_quality())

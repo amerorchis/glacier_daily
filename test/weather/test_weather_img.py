@@ -9,7 +9,7 @@ from PIL import Image
 import pytest
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from weather.weather_img import weather_image, upload_weather, _validate_input
 

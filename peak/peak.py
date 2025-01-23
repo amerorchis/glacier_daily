@@ -9,7 +9,7 @@ import os
 import csv
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from peak.sat import peak_sat
 from shared.retrieve_from_json import retrieve_from_json
@@ -46,5 +46,5 @@ def peak(test=False):
     return f"{today['name']} - {today['elevation']} ft.", peak_img, google_maps
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(peak(test=True))

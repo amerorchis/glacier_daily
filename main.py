@@ -42,7 +42,7 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     bulk_workflow_trigger(subscribers)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     parser = argparse.ArgumentParser(description="Run Glacier Daily Update")
     parser.add_argument(
         "--tag",

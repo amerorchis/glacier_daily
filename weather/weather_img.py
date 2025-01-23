@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import List, Tuple, Dict
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from weather.weather import weather_data
 from weather.season import get_season
@@ -141,7 +141,7 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
     return upload_weather()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     from dotenv import load_dotenv
 
     load_dotenv("email.env")

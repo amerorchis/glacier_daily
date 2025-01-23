@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 
@@ -154,11 +154,3 @@ def get_gnpc_events() -> List[Dict[str, str]]:
         return events
     except Exception as e:
         raise GNPCError(f"Error processing event dates: {str(e)}")
-
-
-"""if __name__ == "__main__":
-    try:
-        print(get_gnpc_events())
-    except GNPCError as e:
-        print(f"Error: {str(e)}")
-        sys.exit(1)"""

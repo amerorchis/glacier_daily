@@ -8,7 +8,7 @@ import concurrent.futures
 from typing import Optional, List, Tuple
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from weather.weather_alerts import weather_alerts
 from weather.night_sky import aurora_forecast
@@ -128,7 +128,7 @@ def weather_data() -> WeatherContent:
     return WeatherContent()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     from dotenv import load_dotenv
 
     load_dotenv("email.env")
