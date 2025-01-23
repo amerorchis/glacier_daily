@@ -142,8 +142,9 @@ def test_hiker_biker_string_representation(mock_gtsr):
     assert isinstance(string_rep, str)
     assert "miles from gate" in string_rep
 
-def test_hiker_biker_no_gtsr():
     """Test behavior when GTSR info is not available"""
+    import urllib3
+    urllib3.disable_warnings()
     result = hiker_biker()
     assert result == ""
 
