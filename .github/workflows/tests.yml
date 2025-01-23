@@ -63,7 +63,7 @@ jobs:
           SUNSETHUE_KEY: ${{ secrets.SUNSETHUE_KEY }}
           TEST_SECRET: ${{ secrets.TEST_SECRET }}
         run: |
-          pytest --cov-branch --cov-report=xml
+          pytest --cov-branch --cov-report=xml && ls -alrt && pwd
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
