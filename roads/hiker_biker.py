@@ -2,18 +2,19 @@
 Retrieve and format the hiker/biker status.
 """
 
+import os
 import json
 import sys
 import traceback
 import requests
 import urllib3
 
-try:
-    from roads.HikerBiker import HikerBiker
-    from roads.roads import closed_roads
-except ModuleNotFoundError:
-    from roads import closed_roads
-    from HikerBiker import HikerBiker
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+from roads.HikerBiker import HikerBiker
+from roads.roads import closed_roads
+
 urllib3.disable_warnings()
 
 def hiker_biker() -> str:
@@ -21,7 +22,8 @@ def hiker_biker() -> str:
     Retrieve and format hiker biker closure locations.
     """
     # Find GTSR road closure info.
-    gtsr = closed_roads().get('Going-to-the-Sun Road', '')
+    closures = closed_roads()
+    gtsr = closures.get('Going-to-the-Sun Road', '')
 
     urls = ["https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="\
         "SELECT%20*%20FROM%20glac_hiker_biker_closures%20WHERE%20status%20=%20%27active%27",

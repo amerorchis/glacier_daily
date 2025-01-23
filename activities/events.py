@@ -107,7 +107,7 @@ def events_today(now = date.today().strftime('%Y-%m-%d')):
         print(f'Failed to retrieve events. {e}', file=sys.stderr)
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv("email.env")
-    print(events_today('2024-07-01'))
+    print(events_today('2024-07-01'))"""
