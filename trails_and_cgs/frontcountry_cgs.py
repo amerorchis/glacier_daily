@@ -13,6 +13,7 @@ import urllib3
 
 urllib3.disable_warnings()
 
+
 def campground_alerts():
     """
     Fetches the status of front country campgrounds from the NPS API and processes the data to identify closures and alerts.
@@ -20,42 +21,65 @@ def campground_alerts():
     Returns:
         str: A formatted HTML string containing the status of campgrounds, or an error message if the data is unavailable.
     """
-    url = 'https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds'
+    url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
     r = requests.get(url, verify=False)
     status = json.loads(r.text)
 
     try:
-        campgrounds = status['rows']
+        campgrounds = status["rows"]
     except KeyError:
-        return 'The campgrounds page on the park website is currently down.'
+        return "The campgrounds page on the park website is currently down."
 
     closures = []
     season_closures = []
     statuses = []
 
     for i in campgrounds:
-        name = i['name'].replace('  ',' ')
+        name = i["name"].replace("  ", " ")
 
-        if i['status'] == 'closed':
-            if 'season' in i['service_status']:
+        if i["status"] == "closed":
+            if "season" in i["service_status"]:
                 season_closures.append(name)
             else:
-                closures.append(f'{name} CG: currently closed.')
+                closures.append(f"{name} CG: currently closed.")
 
-        notice = f'{i["description"]}' if i["description"] and ('camping only' in i["description"].lower() or 'posted' in i["description"].lower()) else None
+        notice = (
+            f'{i["description"]}'
+            if i["description"]
+            and (
+                "camping only" in i["description"].lower()
+                or "posted" in i["description"].lower()
+            )
+            else None
+        )
         if notice:
-            notice = notice.replace(' <br><br><a href="https://www.nps.gov/glac/planyourvisit/reservation-campgrounds.htm" target="_blank">Campground Details</a><br><br>', '')
-            notice = notice.replace('<b>','').replace('</b>','')
-            notice =  '. '.join(i.capitalize() for i in notice.split('. '))
-            notice = f'{name} CG: {notice}'
+            notice = notice.replace(
+                ' <br><br><a href="https://www.nps.gov/glac/planyourvisit/reservation-campgrounds.htm" target="_blank">Campground Details</a><br><br>',
+                "",
+            )
+            notice = notice.replace("<b>", "").replace("</b>", "")
+            notice = ". ".join(i.capitalize() for i in notice.split(". "))
+            notice = f"{name} CG: {notice}"
             statuses.append(notice)
 
-    statuses, closures, season_closures = set(statuses), set(closures), set(season_closures) # remove duplicates
-    statuses, closures, season_closures = sorted(list(statuses)), sorted(list(closures)), sorted(list(season_closures)) # turn back into a list and sort
+    statuses, closures, season_closures = (
+        set(statuses),
+        set(closures),
+        set(season_closures),
+    )  # remove duplicates
+    statuses, closures, season_closures = (
+        sorted(list(statuses)),
+        sorted(list(closures)),
+        sorted(list(season_closures)),
+    )  # turn back into a list and sort
     statuses.extend(closures)
 
     if season_closures:
-        seasonal = [f'Closed for the season: {", ".join(season_closures)}'] if datetime.now().month >= 8 else [f'Not yet open for the season: {", ".join(season_closures)}']
+        seasonal = (
+            [f'Closed for the season: {", ".join(season_closures)}']
+            if datetime.now().month >= 8
+            else [f'Not yet open for the season: {", ".join(season_closures)}']
+        )
         statuses.extend(seasonal)
 
     if statuses:
@@ -65,6 +89,7 @@ def campground_alerts():
         return message + "</ul>"
     else:
         return ""
+
 
 def get_campground_status() -> str:
     """
@@ -76,8 +101,12 @@ def get_campground_status() -> str:
     try:
         return campground_alerts()
     except requests.exceptions.HTTPError:
-        print(f'Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}', file=sys.stderr)
-        return ''
+        print(
+            f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",
+            file=sys.stderr,
+        )
+        return ""
+
 
 if __name__ == "__main__":
     print(get_campground_status())

@@ -12,6 +12,7 @@ by the vibe in GNP, not the actual season dates.
 from datetime import datetime
 from typing import Optional
 
+
 def get_season(date: Optional[datetime] = None) -> str:
     """
     Determine the season based on the given date or current date.
@@ -29,13 +30,14 @@ def get_season(date: Optional[datetime] = None) -> str:
     month = date.month
 
     if month in [12, 1, 2, 3]:
-        return 'winter'
+        return "winter"
     elif month in [4, 5, 6]:
-        return 'spring'
+        return "spring"
     elif month in [7, 8, 9]:
-        return 'summer'
+        return "summer"
     else:  # months 10, 11
-        return 'fall'
+        return "fall"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print(get_season())

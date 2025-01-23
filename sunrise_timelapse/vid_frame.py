@@ -13,6 +13,7 @@ from PIL import Image
 import numpy as np
 
 from dotenv import load_dotenv
+
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
@@ -23,17 +24,24 @@ from shared.ftp import upload_file
 from sunrise_timelapse.timelapse_json import *
 from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
 
+
 class TimelapseError(Exception):
     """Base exception for timelapse processing errors."""
+
     pass
+
 
 class VideoProcessingError(TimelapseError):
     """Exception raised for errors during video processing."""
+
     pass
+
 
 class FileOperationError(TimelapseError):
     """Exception raised for file operation errors."""
+
     pass
+
 
 def find_frame(video_path: Path) -> bool:
     """
@@ -55,7 +63,7 @@ def find_frame(video_path: Path) -> bool:
 
         # Open the video file
         video = cv2.VideoCapture(str(video_path))
-        
+
         if not video.isOpened():
             raise VideoProcessingError(f"Failed to open video: {video_path}")
 
@@ -118,11 +126,11 @@ def find_frame(video_path: Path) -> bool:
             return False
 
         # Ensure the output directory exists
-        os.makedirs('email_images/today', exist_ok=True)
-        
+        os.makedirs("email_images/today", exist_ok=True)
+
         try:
             # Save the frame
-            cv2.imwrite('email_images/today/sunrise_frame.jpg', max_red_frame)
+            cv2.imwrite("email_images/today/sunrise_frame.jpg", max_red_frame)
             play_button()
             return True
         except Exception as e:
@@ -130,10 +138,11 @@ def find_frame(video_path: Path) -> bool:
 
     except (cv2.error, Exception) as e:
         raise VideoProcessingError(f"Error processing video: {e}")
-    
+
     finally:
-        if 'video' in locals():
+        if "video" in locals():
             video.release()
+
 
 def play_button() -> None:
     """
@@ -160,7 +169,7 @@ def play_button() -> None:
         # Calculate the positions
         overlay_position = (
             (background.width - overlay.width) // 2,
-            (background.height - overlay.height) // 2
+            (background.height - overlay.height) // 2,
         )
 
         # Create a new image with the background
@@ -175,6 +184,7 @@ def play_button() -> None:
     except (IOError, OSError) as e:
         raise FileOperationError(f"Error in play_button operation: {e}")
 
+
 def made_today(video: Path) -> bool:
     """
     Check if the video was created today.
@@ -187,21 +197,22 @@ def made_today(video: Path) -> bool:
     """
     try:
         if not os.path.exists(video):
-            print('No video at given path.', file=sys.stderr)
+            print("No video at given path.", file=sys.stderr)
             return False
-        
+
         creation_date = datetime.fromtimestamp(os.path.getctime(video)).date()
         today = datetime.now().date()
-        
+
         if creation_date == today:
             return True
         else:
-            print(f'Video made on {creation_date}', file=sys.stderr)
+            print(f"Video made on {creation_date}", file=sys.stderr)
             return False
 
     except (OSError, ValueError) as e:
         print(f"Error checking video date: {e}", file=sys.stderr)
         return False
+
 
 def process_video(test: bool = False) -> Tuple[Optional[str], Optional[str]]:
     """
@@ -214,28 +225,32 @@ def process_video(test: bool = False) -> Tuple[Optional[str], Optional[str]]:
     """
     try:
         # Check if we already have today's video
-        already_retrieved, keys = retrieve_from_json(['sunrise_vid', 'sunrise_still'])
+        already_retrieved, keys = retrieve_from_json(["sunrise_vid", "sunrise_still"])
         if already_retrieved:
             return keys
 
         if sunrise_timelapse_complete_time() > 0:
-            print('Too early for sunrise', file=sys.stderr)
-            return '', ''
+            print("Too early for sunrise", file=sys.stderr)
+            return "", ""
 
         # Make sure there is a video and it was made today
-        new_style = Path('/home/pi/Modules/timelapse/images/Compilation/videos/sunrise_timelapse.mp4')
-        old_style = Path('/home/pi/Documents/sunrise_timelapse/sunrise_timelapse.mp4')
-        test_style = Path('/Users/ws1/Documents/script/glacier_daily/email_images/today/sunrise_frame.jpg')
+        new_style = Path(
+            "/home/pi/Modules/timelapse/images/Compilation/videos/sunrise_timelapse.mp4"
+        )
+        old_style = Path("/home/pi/Documents/sunrise_timelapse/sunrise_timelapse.mp4")
+        test_style = Path(
+            "/Users/ws1/Documents/script/glacier_daily/email_images/today/sunrise_frame.jpg"
+        )
 
         if made_today(new_style):
             video_path = new_style
         elif made_today(old_style):
             video_path = old_style
-            print('Using old video.', file=sys.stderr)
+            print("Using old video.", file=sys.stderr)
         elif made_today(test) and test:
             video_path = test_style
         else:
-            print('No video from today.', file=sys.stderr)
+            print("No video from today.", file=sys.stderr)
             return None, None
 
         try:
@@ -246,13 +261,15 @@ def process_video(test: bool = False) -> Tuple[Optional[str], Optional[str]]:
 
         if frame_found:
             today = datetime.now()
-            filename_vid = f'{today.month}_{today.day}_{today.year}_sunrise_timelapse.mp4'
-            frame_path = 'email_images/today/sunrise_frame.jpg'
-            filename_frame = f'{today.month}_{today.day}_{today.year}_sunrise.jpg'
+            filename_vid = (
+                f"{today.month}_{today.day}_{today.year}_sunrise_timelapse.mp4"
+            )
+            frame_path = "email_images/today/sunrise_frame.jpg"
+            filename_frame = f"{today.month}_{today.day}_{today.year}_sunrise.jpg"
 
             try:
-                vid, vid_files = upload_file('sunrise_vid', filename_vid, video_path)
-                frame, _ = upload_file('sunrise_still', filename_frame, frame_path)
+                vid, vid_files = upload_file("sunrise_vid", filename_vid, video_path)
+                frame, _ = upload_file("sunrise_still", filename_frame, frame_path)
 
                 try:
                     print(vid_files)
@@ -262,18 +279,19 @@ def process_video(test: bool = False) -> Tuple[Optional[str], Optional[str]]:
                         vid = uploaded
                 except Exception as e:
                     print(f"Error with JSON operations: {e}", file=sys.stderr)
-                
+
                 return vid, frame
 
             except Exception as e:
                 print(f"Error uploading files: {e}", file=sys.stderr)
                 return None, None
         else:
-            return '', ''
+            return "", ""
 
     except Exception as e:
         print(f"Unexpected error in process_video: {e}", file=sys.stderr)
         return None, None
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print(process_video(test=True))

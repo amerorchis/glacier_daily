@@ -7,6 +7,7 @@ generating data, uploading it to a website, and sending emails to subscribers.
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv("email.env")
 
 from drip.drip_actions import get_subs, bulk_workflow_trigger
@@ -15,7 +16,8 @@ from generate_and_upload import serve_api
 import argparse
 from typing import List
 
-def main(tag: str = 'Glacier Daily Update', test: bool = False) -> None:
+
+def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     """
     Main function to perform the Glacier Daily Update.
 
@@ -26,25 +28,31 @@ def main(tag: str = 'Glacier Daily Update', test: bool = False) -> None:
 
     # Retrieve subscribers from Drip.
     subscribers: List[str] = get_subs(tag)
-    print('Subscribers found')
+    print("Subscribers found")
 
     # Generated data and upload to website.
     serve_api()
 
     # See if this fixes the issue with timelapse not showing.
     from time import sleep
+
     sleep(630 if not test else 0)
 
     # Send the email to each subscriber using Drip API.
     bulk_workflow_trigger(subscribers)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Run Glacier Daily Update')
-    parser.add_argument('--tag', type=str, default='Glacier Daily Update',
-                       help='Tag to filter subscribers (default: Glacier Daily Update)')
+    parser = argparse.ArgumentParser(description="Run Glacier Daily Update")
+    parser.add_argument(
+        "--tag",
+        type=str,
+        default="Glacier Daily Update",
+        help="Tag to filter subscribers (default: Glacier Daily Update)",
+    )
     args = parser.parse_args()
 
-    environ = os.environ.get('TERM')
+    environ = os.environ.get("TERM")
 
     if environ is None:
         main()

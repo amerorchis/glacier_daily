@@ -13,13 +13,18 @@ def sunrise_timelapse_complete_time():
     Calculate the sunrise time and add 50 minutes.
     """
     # Create West Glacier LI object
-    wg=LocationInfo(name='west glacier', region='MT', timezone='US/Mountain', \
-                    latitude=48.4950, longitude=-113.9811)
+    wg = LocationInfo(
+        name="west glacier",
+        region="MT",
+        timezone="US/Mountain",
+        latitude=48.4950,
+        longitude=-113.9811,
+    )
 
     # Create West Glacier sun object
     s = sun.sun(wg.observer, date=date.today(), tzinfo=wg.timezone)
 
-    now = datetime.now(tz=ZoneInfo('America/Denver'))
+    now = datetime.now(tz=ZoneInfo("America/Denver"))
 
     # Sunrise time minus now plus 52 minutes
     timelapse_ready_in = s["sunrise"] - now + timedelta(minutes=52)
@@ -35,8 +40,11 @@ def sleep_time():
     timelapse_ready_in = sunrise_timelapse_complete_time()
 
     if timelapse_ready_in > 0:
-        print(f'Waiting {round(timelapse_ready_in/60)} minutes for timelapse to finish.')
+        print(
+            f"Waiting {round(timelapse_ready_in/60)} minutes for timelapse to finish."
+        )
         sleep(timelapse_ready_in)
+
 
 if __name__ == "__main__":
     sleep_time()

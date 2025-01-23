@@ -15,19 +15,10 @@ from weather.forecast import WeatherAPI, Location, get_forecast
 
 # Test data
 SAMPLE_LOCATION = Location(
-    name="Test Location",
-    latitude=48.50228,
-    longitude=-113.98202,
-    altitude=3218
+    name="Test Location", latitude=48.50228, longitude=-113.98202, altitude=3218
 )
 
-MOCK_WEATHER_CODES = {
-    "0": {
-        "day": {
-            "description": "Sunny"
-        }
-    }
-}
+MOCK_WEATHER_CODES = {"0": {"day": {"description": "Sunny"}}}
 
 MOCK_API_RESPONSE = {
     "daily": {
@@ -36,23 +27,26 @@ MOCK_API_RESPONSE = {
         "weather_code": [0],
         "sunrise": ["2025-01-14T07:30:00"],
         "sunset": ["2025-01-14T17:30:00"],
-        "daylight_duration": [36000]  # 10 hours in seconds
+        "daylight_duration": [36000],  # 10 hours in seconds
     }
 }
+
 
 @pytest.fixture
 def weather_api():
     """Create a WeatherAPI instance with mocked session."""
-    with patch('requests_cache.CachedSession') as mock_session:
+    with patch("requests_cache.CachedSession") as mock_session:
         api = WeatherAPI()
         api.session = mock_session
         yield api
 
+
 @pytest.fixture
 def mock_weather_codes_file():
     """Mock the weather codes JSON file."""
-    with patch('builtins.open', mock_open(read_data=json.dumps(MOCK_WEATHER_CODES))):
+    with patch("builtins.open", mock_open(read_data=json.dumps(MOCK_WEATHER_CODES))):
         yield
+
 
 class TestWeatherAPI:
     def test_init(self):
@@ -100,7 +94,7 @@ class TestWeatherAPI:
         assert isinstance(low, int)
         assert condition.lower() == "sunny"
 
-    @patch('pathlib.Path.open', mock_open(read_data=json.dumps(MOCK_WEATHER_CODES)))
+    @patch("pathlib.Path.open", mock_open(read_data=json.dumps(MOCK_WEATHER_CODES)))
     def test_fetch_weather_codes(self, weather_api):
         """Test weather codes fetching."""
         codes = weather_api._fetch_weather_codes()
@@ -110,12 +104,13 @@ class TestWeatherAPI:
 
     def test_fetch_weather_codes_file_not_found(self, weather_api):
         """Test weather codes file not found error."""
-        with patch('builtins.open', side_effect=FileNotFoundError("File not found")):
+        with patch("builtins.open", side_effect=FileNotFoundError("File not found")):
             with pytest.raises(FileNotFoundError) as exc_info:
                 weather_api._fetch_weather_codes()
             assert "Weather descriptions file not found" in str(exc_info.value)
 
-@patch('requests_cache.CachedSession')
+
+@patch("requests_cache.CachedSession")
 class TestGetForecast:
     """Test the main get_forecast function."""
 
@@ -135,7 +130,7 @@ class TestGetForecast:
     def test_api_error(self, mock_session):
         """Test API error handling."""
         mock_session.return_value.get.side_effect = RequestException("API Error")
-        
+
         with pytest.raises(RequestException):
             get_forecast()
 
@@ -144,9 +139,10 @@ class TestGetForecast:
         mock_response = Mock()
         mock_response.json.side_effect = json.JSONDecodeError("Invalid JSON", "", 0)
         mock_session.return_value.get.return_value = mock_response
-        
+
         with pytest.raises(json.JSONDecodeError):
             get_forecast()
+
 
 def test_location_dataclass():
     """Test Location dataclass."""
@@ -155,6 +151,7 @@ def test_location_dataclass():
     assert location.latitude == 48.0
     assert location.longitude == -113.0
     assert location.altitude == 3000
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

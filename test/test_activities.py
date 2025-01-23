@@ -16,28 +16,40 @@ from activities.gnpc_events import (
     scrape_events_page,
     GNPCError,
     GNPCRequestError,
-    GNPCParsingError
+    GNPCParsingError,
 )
+
 
 def test_activity_retrieval():
     """Test that events are retrieved and formatted for a known day."""
-    with open('test/files/events.txt', 'r', encoding='utf8') as f:
+    with open("test/files/events.txt", "r", encoding="utf8") as f:
         actual = f.read()
-    assert events_today('2024-07-01') == actual
+    assert events_today("2024-07-01") == actual
+
 
 def test_no_activities_no_message():
-    assert events_today(f'{datetime.now().year}-01-08') == ""
+    assert events_today(f"{datetime.now().year}-01-08") == ""
+
 
 def test_no_activities_season_concluded():
-    print(events_today(f'{datetime.now().year}-12-05'))
-    assert events_today(f'{datetime.now().year}-12-05') == '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
+    print(events_today(f"{datetime.now().year}-12-05"))
+    assert (
+        events_today(f"{datetime.now().year}-12-05")
+        == '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
+    )
+
 
 def test_no_activities_season_not_started():
-    assert events_today(f'{datetime.now().year}-04-05') == '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
+    assert (
+        events_today(f"{datetime.now().year}-04-05")
+        == '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
+    )
+
 
 @pytest.fixture
 def mst_timezone():
-    return pytz.timezone('America/Denver')
+    return pytz.timezone("America/Denver")
+
 
 @pytest.fixture
 def sample_dates():
@@ -49,8 +61,9 @@ def sample_dates():
         # Different month
         ("December 25, 2024 6:45", datetime(2024, 12, 25, 18, 45)),
         # Different minutes
-        ("January 1, 2024 7:05", datetime(2024, 1, 1, 19, 5))
+        ("January 1, 2024 7:05", datetime(2024, 1, 1, 19, 5)),
     ]
+
 
 def test_convert_gnpc_datetimes_valid_dates(sample_dates, mst_timezone):
     """Test conversion of valid date strings."""
@@ -60,21 +73,25 @@ def test_convert_gnpc_datetimes_valid_dates(sample_dates, mst_timezone):
         assert result == expected
         assert result.tzinfo == expected.tzinfo
 
+
 def test_convert_gnpc_datetimes_invalid_format():
     """Test handling of invalid date string formats."""
     invalid_dates = [
         "Not a date",
         "15 July, 2024 7:30",  # Wrong order
-        "July 15 2024 7:30",   # Missing comma
-        "July 15, 2024",       # Missing time
-        "July 15, 2024 7",     # Incomplete time
-        "",                    # Empty string
+        "July 15 2024 7:30",  # Missing comma
+        "July 15, 2024",  # Missing time
+        "July 15, 2024 7",  # Incomplete time
+        "",  # Empty string
         "July 32, 2024 7:30",  # Invalid day
     ]
-    
+
     for invalid_date in invalid_dates:
         result = convert_gnpc_datetimes(invalid_date)
-        assert result == invalid_date  # Should return original string for invalid formats
+        assert (
+            result == invalid_date
+        )  # Should return original string for invalid formats
+
 
 def test_convert_gnpc_datetimes_edge_cases(mst_timezone):
     """Test edge cases for date conversion."""
@@ -84,7 +101,7 @@ def test_convert_gnpc_datetimes_edge_cases(mst_timezone):
         # Year boundaries
         ("December 31, 2024 11:59", datetime(2024, 12, 31, 23, 59)),
         # Noon
-        ("January 1, 2024 12:00", datetime(2024, 1, 1, 12, 0))
+        ("January 1, 2024 12:00", datetime(2024, 1, 1, 12, 0)),
     ]
 
     for date_string, expected_dt in edge_cases:
@@ -92,48 +109,58 @@ def test_convert_gnpc_datetimes_edge_cases(mst_timezone):
         expected = mst_timezone.localize(expected_dt)
         assert result == expected
 
+
 def test_datetime_to_string_standard():
     """Test standard datetime string formatting."""
-    tz = pytz.timezone('America/Denver')
+    tz = pytz.timezone("America/Denver")
     test_cases = [
-        (tz.localize(datetime(2024, 7, 15, 19, 30)), 
-         "Monday, July 15, 2024, 7:30PM MDT"),
-        (tz.localize(datetime(2024, 12, 25, 18, 45)), 
-         "Wednesday, December 25, 2024, 6:45PM MST"),
-        (tz.localize(datetime(2024, 1, 1, 12, 0)), 
-         "Monday, January 1, 2024, 12:00PM MST")
+        (
+            tz.localize(datetime(2024, 7, 15, 19, 30)),
+            "Monday, July 15, 2024, 7:30PM MDT",
+        ),
+        (
+            tz.localize(datetime(2024, 12, 25, 18, 45)),
+            "Wednesday, December 25, 2024, 6:45PM MST",
+        ),
+        (
+            tz.localize(datetime(2024, 1, 1, 12, 0)),
+            "Monday, January 1, 2024, 12:00PM MST",
+        ),
     ]
-    
+
     for dt, expected in test_cases:
         result = datetime_to_string(dt)
         assert result == expected
 
+
 def test_datetime_to_string_single_digit_hours():
     """Test formatting of times with single-digit hours."""
-    tz = pytz.timezone('America/Denver')
+    tz = pytz.timezone("America/Denver")
     dt = tz.localize(datetime(2024, 7, 15, 9, 5))
     result = datetime_to_string(dt)
     assert result == "Monday, July 15, 2024, 9:05AM MDT"
 
+
 def test_datetime_to_string_timezone_handling():
     """Test handling of different timezones."""
     # Create datetime in different timezone
-    pst = pytz.timezone('America/Los_Angeles')
+    pst = pytz.timezone("America/Los_Angeles")
     dt_pst = pst.localize(datetime(2024, 7, 15, 18, 30))
-    
+
     # Convert to MST/MDT
-    mst = pytz.timezone('America/Denver')
+    mst = pytz.timezone("America/Denver")
     dt_mst = dt_pst.astimezone(mst)
-    
+
     result = datetime_to_string(dt_mst)
     assert result == "Monday, July 15, 2024, 7:30PM MDT"
+
 
 def test_convert_and_format_integration(sample_dates, mst_timezone):
     """Test integration between conversion and formatting functions."""
     for date_string, _ in sample_dates:
         converted = convert_gnpc_datetimes(date_string)
         formatted = datetime_to_string(converted)
-        
+
         # Convert back and compare components
         reconverted = convert_gnpc_datetimes(formatted)
         assert converted.year == reconverted.year
@@ -142,6 +169,7 @@ def test_convert_and_format_integration(sample_dates, mst_timezone):
         assert converted.hour == reconverted.hour
         assert converted.minute == reconverted.minute
         assert converted.tzinfo == reconverted.tzinfo
+
 
 @pytest.fixture
 def sample_conversation_html():
@@ -155,6 +183,7 @@ def sample_conversation_html():
     </div>
     """
 
+
 @pytest.fixture
 def sample_book_club_html():
     return """
@@ -167,6 +196,7 @@ def sample_book_club_html():
     </div>
     """
 
+
 @pytest.fixture
 def mock_response(sample_conversation_html):
     mock_resp = Mock()
@@ -174,28 +204,38 @@ def mock_response(sample_conversation_html):
     mock_resp.content = sample_conversation_html
     return mock_resp
 
+
 def test_scrape_events_page_success(mock_response):
-    with patch('requests.get', return_value=mock_response):
-        events = scrape_events_page('https://glacier.org/glacier-conversations', 'Glacier Conversation:')
-        
+    with patch("requests.get", return_value=mock_response):
+        events = scrape_events_page(
+            "https://glacier.org/glacier-conversations", "Glacier Conversation:"
+        )
+
         assert len(events) == 1
-        assert events[0]['title'] == 'Glacier Conversation: Sample Event Title'
-        assert events[0]['pic'] == 'https://example.com/thumb.jpg'
-        assert events[0]['datetime'] == 'January 15, 2024 7:30'
+        assert events[0]["title"] == "Glacier Conversation: Sample Event Title"
+        assert events[0]["pic"] == "https://example.com/thumb.jpg"
+        assert events[0]["datetime"] == "January 15, 2024 7:30"
+
 
 def test_scrape_events_page_request_error():
-    with patch('requests.get', side_effect=requests.RequestException('Network error')):
-        with pytest.raises(GNPCRequestError, match='Failed to access'):
-            scrape_events_page('https://glacier.org/glacier-conversations', 'Glacier Conversation:')
+    with patch("requests.get", side_effect=requests.RequestException("Network error")):
+        with pytest.raises(GNPCRequestError, match="Failed to access"):
+            scrape_events_page(
+                "https://glacier.org/glacier-conversations", "Glacier Conversation:"
+            )
+
 
 def test_scrape_events_page_invalid_html():
     mock_resp = Mock()
     mock_resp.status_code = 200
     mock_resp.content = "Invalid HTML"
-    
-    with patch('requests.get', return_value=mock_resp):
-        events = scrape_events_page('https://glacier.org/glacier-conversations', 'Glacier Conversation:')
+
+    with patch("requests.get", return_value=mock_resp):
+        events = scrape_events_page(
+            "https://glacier.org/glacier-conversations", "Glacier Conversation:"
+        )
         assert events == []
+
 
 def test_scrape_events_page_missing_elements():
     """Test handling of HTML with missing required elements"""
@@ -210,12 +250,15 @@ def test_scrape_events_page_missing_elements():
     mock_resp = Mock()
     mock_resp.status_code = 200
     mock_resp.content = html
-    
-    with patch('requests.get', return_value=mock_resp):
-        events = scrape_events_page('https://glacier.org/glacier-conversations', 'Glacier Conversation:')
+
+    with patch("requests.get", return_value=mock_resp):
+        events = scrape_events_page(
+            "https://glacier.org/glacier-conversations", "Glacier Conversation:"
+        )
         assert len(events) == 1
-        assert events[0]['pic'] == ''  # Should have empty string for missing image
-        assert events[0]['title'] == 'Glacier Conversation: Title'
+        assert events[0]["pic"] == ""  # Should have empty string for missing image
+        assert events[0]["title"] == "Glacier Conversation: Title"
+
 
 def test_scrape_events_page_completely_missing_elements():
     """Test handling of HTML with no usable event data"""
@@ -223,42 +266,52 @@ def test_scrape_events_page_completely_missing_elements():
     mock_resp = Mock()
     mock_resp.status_code = 200
     mock_resp.content = html
-    
-    with patch('requests.get', return_value=mock_resp):
-        events = scrape_events_page('https://glacier.org/glacier-conversations', 'Glacier Conversation:')
+
+    with patch("requests.get", return_value=mock_resp):
+        events = scrape_events_page(
+            "https://glacier.org/glacier-conversations", "Glacier Conversation:"
+        )
         assert events == []  # Should return empty list when no valid events found
+
 
 def test_get_gnpc_events_success(sample_conversation_html, sample_book_club_html):
     mock_responses = {
-        'https://glacier.org/glacier-conversations': Mock(status_code=200, content=sample_conversation_html),
-        'https://glacier.org/glacier-book-club': Mock(status_code=200, content=sample_book_club_html)
+        "https://glacier.org/glacier-conversations": Mock(
+            status_code=200, content=sample_conversation_html
+        ),
+        "https://glacier.org/glacier-book-club": Mock(
+            status_code=200, content=sample_book_club_html
+        ),
     }
-    
+
     def mock_get(url, **kwargs):
         return mock_responses[url]
-    
-    with patch('requests.get', side_effect=mock_get):
+
+    with patch("requests.get", side_effect=mock_get):
         events = get_gnpc_events()
-        
+
         assert len(events) == 2
-        assert any('Glacier Conversation:' in event['title'] for event in events)
-        assert any('Glacier Book Club:' in event['title'] for event in events)
+        assert any("Glacier Conversation:" in event["title"] for event in events)
+        assert any("Glacier Book Club:" in event["title"] for event in events)
+
 
 def test_get_gnpc_events_partial_failure(sample_conversation_html):
     def mock_get(url, **kwargs):
-        if 'conversations' in url:
+        if "conversations" in url:
             return Mock(status_code=200, content=sample_conversation_html)
-        raise requests.RequestException('Network error')
-    
-    with patch('requests.get', side_effect=mock_get):
+        raise requests.RequestException("Network error")
+
+    with patch("requests.get", side_effect=mock_get):
         events = get_gnpc_events()
         assert len(events) == 1
-        assert 'Glacier Conversation:' in events[0]['title']
+        assert "Glacier Conversation:" in events[0]["title"]
+
 
 def test_get_gnpc_events_all_failures():
-    with patch('requests.get', side_effect=requests.RequestException('Network error')):
+    with patch("requests.get", side_effect=requests.RequestException("Network error")):
         events = get_gnpc_events()
         assert events == []
+
 
 def test_get_gnpc_events_invalid_date():
     html = """
@@ -271,10 +324,11 @@ def test_get_gnpc_events_invalid_date():
     </div>
     """
     mock_resp = Mock(status_code=200, content=html)
-    
-    with patch('requests.get', return_value=mock_resp):
+
+    with patch("requests.get", return_value=mock_resp):
         events = get_gnpc_events()
         assert events == []
+
 
 def test_event_sorting():
     html1 = """
@@ -295,14 +349,16 @@ def test_event_sorting():
         <p>Register</p>
     </div>
     """
-    
+
     mock_responses = {
-        'https://glacier.org/glacier-conversations': Mock(status_code=200, content=html1),
-        'https://glacier.org/glacier-book-club': Mock(status_code=200, content=html2)
+        "https://glacier.org/glacier-conversations": Mock(
+            status_code=200, content=html1
+        ),
+        "https://glacier.org/glacier-book-club": Mock(status_code=200, content=html2),
     }
-    
-    with patch('requests.get', side_effect=lambda url, **kwargs: mock_responses[url]):
+
+    with patch("requests.get", side_effect=lambda url, **kwargs: mock_responses[url]):
         events = get_gnpc_events()
         assert len(events) == 2
-        assert 'January' in events[0]['datetime']
-        assert 'March' in events[1]['datetime']
+        assert "January" in events[0]["datetime"]
+        assert "March" in events[1]["datetime"]

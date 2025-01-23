@@ -4,7 +4,8 @@ A decorator to retry an operation.
 
 from time import sleep
 
-def retry(times: int, exceptions: tuple, default: str = '', backoff: int = 15):
+
+def retry(times: int, exceptions: tuple, default: str = "", backoff: int = 15):
     """
     Retry Decorator
     Retries the wrapped function/method `times` times if the exceptions listed
@@ -18,10 +19,12 @@ def retry(times: int, exceptions: tuple, default: str = '', backoff: int = 15):
     :param backoff: How long to wait between attempts
     :type backoff: Int = 15
     """
+
     def decorator(func):
         """
         Decorator
         """
+
         def newfn(*args, **kwargs):
             """
             The new function
@@ -32,13 +35,14 @@ def retry(times: int, exceptions: tuple, default: str = '', backoff: int = 15):
                     return func(*args, **kwargs)
                 except exceptions:
                     print(
-                        'Exception thrown when attempting to run %s, attempt '
-                        '%d of %d' % (func, attempt + 1, times)
+                        "Exception thrown when attempting to run %s, attempt "
+                        "%d of %d" % (func, attempt + 1, times)
                     )
                     attempt += 1
                     sleep(backoff)
 
             return default
-        return newfn
-    return decorator
 
+        return newfn
+
+    return decorator
