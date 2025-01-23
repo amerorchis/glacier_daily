@@ -10,9 +10,11 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
 
 from weather.weather_alerts import WeatherAlertService, WeatherAlert, weather_alerts
 
+
 @pytest.fixture
 def weather_service():
     return WeatherAlertService()
+
 
 @pytest.fixture
 def sample_alert():
@@ -20,8 +22,9 @@ def sample_alert():
         headline="High Wind Watch",
         description="* WHAT...Southwest winds 40 to 50 mph.\n\n* WHERE...Rocky Mountain Front.",
         issued_time=datetime(2025, 1, 13, 13, 13),
-        full_text="High Wind Watch issued January 13 at 1:13PM MST: * WHAT...Southwest winds 40 to 50 mph.\n\n* WHERE...Rocky Mountain Front."
+        full_text="High Wind Watch issued January 13 at 1:13PM MST: * WHAT...Southwest winds 40 to 50 mph.\n\n* WHERE...Rocky Mountain Front.",
     )
+
 
 @pytest.fixture
 def sample_api_response():
@@ -31,18 +34,21 @@ def sample_api_response():
                 "properties": {
                     "headline": "High Wind Watch issued January 13 at 1:13PM MST",
                     "description": "* WHAT...Southwest winds 40 to 50 mph.\n\n* WHERE...Rocky Mountain Front.",
-                    "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"]
+                    "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"],
                 }
             },
             {
                 "properties": {
                     "headline": "Winter Storm Warning issued January 13 at 2:13PM MST",
                     "description": "* WHAT...Heavy snow expected.\n\n* WHERE...Northern Rocky Mountains.",
-                    "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ999"]  # Non-local zone
+                    "affectedZones": [
+                        "https://api.weather.gov/zones/forecast/MTZ999"
+                    ],  # Non-local zone
                 }
-            }
+            },
         ]
     }
+
 
 class TestWeatherAlertService:
     def test_parse_alert_time(self, weather_service):
@@ -89,7 +95,7 @@ class TestWeatherAlertService:
         result = weather_service.format_html_message([])
         assert result == ""
 
-    @patch('requests.get')
+    @patch("requests.get")
     def test_fetch_alerts_success(self, mock_get, weather_service, sample_api_response):
         mock_response = Mock()
         mock_response.status_code = 200
@@ -98,10 +104,12 @@ class TestWeatherAlertService:
 
         result = weather_service.fetch_alerts()
         assert len(result) == 2
-        assert "High Wind Watch" in result[0]['properties']['headline']
+        assert "High Wind Watch" in result[0]["properties"]["headline"]
 
-    @patch('requests.get')
-    def test_fetch_alerts_retry_then_success(self, mock_get, weather_service, sample_api_response):
+    @patch("requests.get")
+    def test_fetch_alerts_retry_then_success(
+        self, mock_get, weather_service, sample_api_response
+    ):
         fail_response = Mock()
         fail_response.status_code = 500
 
@@ -116,18 +124,22 @@ class TestWeatherAlertService:
         assert mock_get.call_count == 2
 
     def test_filter_local_alerts(self, weather_service, sample_api_response):
-        alerts = sample_api_response['features']
+        alerts = sample_api_response["features"]
         result = weather_service.filter_local_alerts(alerts)
         assert len(result) == 1
-        assert "High Wind Watch" in result[0]['headline']
+        assert "High Wind Watch" in result[0]["headline"]
 
     def test_process_alerts(self, weather_service, sample_api_response):
-        alerts = [{
-            "headline": "High Wind Watch",
-            "description": "* WHAT...Test alert",
-            "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"]
-        }]
-        alerts[0]["headline"] = "High Wind Watch issued January 13 at 1:13PM MST"  # Add issued time
+        alerts = [
+            {
+                "headline": "High Wind Watch",
+                "description": "* WHAT...Test alert",
+                "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"],
+            }
+        ]
+        alerts[0][
+            "headline"
+        ] = "High Wind Watch issued January 13 at 1:13PM MST"  # Add issued time
         result = weather_service.process_alerts(alerts)
         assert len(result) == 1
         assert isinstance(result[0], WeatherAlert)
@@ -139,32 +151,33 @@ class TestWeatherAlertService:
             {
                 "headline": "High Wind Watch issued January 13 at 1:13PM MST",
                 "description": "* WHAT...Test 1",
-                "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"]
+                "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"],
             },
             {
                 "headline": "High Wind Watch issued January 13 at 2:13PM MST",  # Later time
                 "description": "* WHAT...Test 2",
-                "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"]
-            }
+                "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"],
+            },
         ]
         result = weather_service.process_alerts(alerts)
         assert len(result) == 1  # Should be deduplicated
 
+
 class TestMainFunction:
-    @patch.object(WeatherAlertService, 'fetch_alerts')
+    @patch.object(WeatherAlertService, "fetch_alerts")
     def test_weather_alerts_success(self, mock_fetch, sample_api_response):
-        mock_fetch.return_value = sample_api_response['features']
+        mock_fetch.return_value = sample_api_response["features"]
         result = weather_alerts()
         assert isinstance(result, str)
         assert "Weather Service" in result
 
-    @patch.object(WeatherAlertService, 'fetch_alerts')
+    @patch.object(WeatherAlertService, "fetch_alerts")
     def test_weather_alerts_no_alerts(self, mock_fetch):
         mock_fetch.return_value = []
         result = weather_alerts()
         assert result == ""
 
-    @patch.object(WeatherAlertService, 'fetch_alerts')
+    @patch.object(WeatherAlertService, "fetch_alerts")
     def test_weather_alerts_error_handling(self, mock_fetch):
         mock_fetch.side_effect = Exception("Test error")
         result = weather_alerts()

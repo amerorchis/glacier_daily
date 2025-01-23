@@ -25,22 +25,24 @@ DIMENSIONS: Dict[str, Tuple[float, float]] = {
     "St. Mary": (591, 303),
     "Two Medicine": (623, 524),
     "Logan Pass": (423.52, 336),
-    "Many Glacier": (460.1623, 185)
+    "Many Glacier": (460.1623, 185),
 }
+
 
 def upload_weather() -> str:
     """
     Upload the product image to the glacier.org ftp server.
-    
+
     Returns:
         str: Address of the uploaded image.
     """
     today = datetime.now()
-    filename = f'{today.month}_{today.day}_{today.year}_today_park_map.png'
-    file = 'email_images/today/today_park_map.png'
-    directory = 'weather'
+    filename = f"{today.month}_{today.day}_{today.year}_today_park_map.png"
+    file = "email_images/today/today_park_map.png"
+    directory = "weather"
     address, _ = upload_file(directory, filename, file)
     return address
+
 
 def _validate_input(results: List[Tuple[str, int, int, str]]) -> None:
     """Validate the input data format and values."""
@@ -49,7 +51,9 @@ def _validate_input(results: List[Tuple[str, int, int, str]]) -> None:
 
     for location in results:
         if len(location) != 4:
-            raise ValueError("Each location must have name, high temp, low temp, and condition")
+            raise ValueError(
+                "Each location must have name, high temp, low temp, and condition"
+            )
         name, high, low, cond = location
         if name not in DIMENSIONS:
             raise ValueError(f"Unknown location: {name}")
@@ -58,6 +62,7 @@ def _validate_input(results: List[Tuple[str, int, int, str]]) -> None:
         if not cond:
             raise ValueError(f"Weather condition cannot be empty for {name}")
 
+
 def _get_font(font_path: str, size: int) -> ImageFont.FreeTypeFont:
     """Get font object with error handling."""
     try:
@@ -65,20 +70,22 @@ def _get_font(font_path: str, size: int) -> ImageFont.FreeTypeFont:
     except (OSError, IOError) as e:
         raise FileNotFoundError(f"Font file not found or invalid: {font_path}") from e
 
+
 def _get_base_image(season: str) -> Image.Image:
     """Get the base map image for the given season."""
-    image_path = f'email_images/base/park_map_{season}.png'
+    image_path = f"email_images/base/park_map_{season}.png"
     try:
         return Image.open(image_path)
     except (OSError, IOError) as e:
         raise FileNotFoundError(f"Base map not found: {image_path}") from e
+
 
 def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
     """
     Create a weather image based on the provided forecast results and upload it.
 
     Args:
-        results (List[Tuple[str, int, int, str]]): List of tuples containing location 
+        results (List[Tuple[str, int, int, str]]): List of tuples containing location
             name, high temperature, low temperature, and weather condition.
 
     Returns:
@@ -91,7 +98,7 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
     draw = ImageDraw.Draw(image)
 
     # Setup font
-    font_path = 'email_images/base/OpenSans-Regular.ttf'
+    font_path = "email_images/base/OpenSans-Regular.ttf"
     default_font = _get_font(font_path, 20)
 
     # Add weather data for each location
@@ -100,7 +107,7 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
         left, y = DIMENSIONS[name]
 
         # Add temperature
-        temp_text = f'{high} | {low}'
+        temp_text = f"{high} | {low}"
         text_width = draw.textlength(temp_text, font=default_font)
         x = left + ((139.11 - text_width) / 2)
         draw.text((x, y), temp_text, font=default_font, fill=(0, 0, 0))
@@ -122,18 +129,20 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
     day = datetime.now().strftime("%B %-d, %Y").upper()
     text_width = draw.textlength(day, font=default_font)
     x = 149 + ((347 - text_width) / 2)
-    draw.text((x, 74), day, font=default_font, fill='#FFFFFF')
+    draw.text((x, 74), day, font=default_font, fill="#FFFFFF")
 
     # Save and resize
     try:
         image = image.resize((405, 374))
-        image.save('email_images/today/today_park_map.png')
+        image.save("email_images/today/today_park_map.png")
     except (OSError, IOError) as e:
         raise OSError(f"Failed to save image: {e}") from e
 
     return upload_weather()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from dotenv import load_dotenv
+
     load_dotenv("email.env")
     print(weather_image(weather_data().results))

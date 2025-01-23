@@ -11,6 +11,7 @@ from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
 from dotenv import load_dotenv
+
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
@@ -23,40 +24,43 @@ from shared.ftp import upload_file
 
 class ImageProcessingError(Exception):
     """Raised when image processing operations fail"""
+
     pass
+
 
 def upload_pic_otd() -> str:
     """
     Upload the picture of the day to the specified directory.
-    
+
     Returns:
         str: The address where the image was uploaded
-        
+
     Raises:
         FileNotFoundError: If the image file doesn't exist
     """
     today = datetime.now()
-    filename = f'{today.month}_{today.day}_{today.year}_pic_otd.jpg'
-    file = Path('email_images/today/resized_image_otd.jpg')
-    
+    filename = f"{today.month}_{today.day}_{today.year}_pic_otd.jpg"
+    file = Path("email_images/today/resized_image_otd.jpg")
+
     if not file.exists():
         raise FileNotFoundError(f"Image file not found: {file}")
-        
-    directory = 'picture'
+
+    directory = "picture"
     address, _ = upload_file(directory, filename, str(file))
     return address
+
 
 def process_image(image_path: Path, dimensions: Tuple[int, int, int]) -> Path:
     """
     Process and resize an image while maintaining aspect ratio.
-    
+
     Args:
         image_path: Path to the input image
         dimensions: Tuple of (width, height, scale_multiplier)
-        
+
     Returns:
         Path: Path to the processed image
-        
+
     Raises:
         ImageProcessingError: If image processing fails
     """
@@ -77,13 +81,13 @@ def process_image(image_path: Path, dimensions: Tuple[int, int, int]) -> Path:
             new_width = int(new_height * aspect_ratio)
 
         resized_image = image.resize((new_width, new_height), Image.LANCZOS)
-        canvas = Image.new('RGB', (desired_width, desired_height), (255, 255, 255))
+        canvas = Image.new("RGB", (desired_width, desired_height), (255, 255, 255))
 
         x = (canvas.width - resized_image.width) // 2
         y = (canvas.height - resized_image.height) // 2
         canvas.paste(resized_image, (x, y))
 
-        output_path = Path('email_images/today/resized_image_otd.jpg')
+        output_path = Path("email_images/today/resized_image_otd.jpg")
         output_path.parent.mkdir(parents=True, exist_ok=True)
         canvas.save(output_path)
 
@@ -94,18 +98,21 @@ def process_image(image_path: Path, dimensions: Tuple[int, int, int]) -> Path:
     except Exception as e:
         raise ImageProcessingError(f"Image processing failed: {str(e)}")
 
+
 def resize_full() -> Tuple[str, str, str]:
     """
     Main function to retrieve and process the image of the day.
-    
+
     Returns:
         Tuple[str, str, str]: (upload_address, image_title, image_link)
-        
+
     Raises:
         FlickrAPIError: If Flickr operations fail
         ImageProcessingError: If image processing fails
     """
-    already_retrieved, keys = retrieve_from_json(['image_otd', 'image_otd_title', 'image_otd_link'])
+    already_retrieved, keys = retrieve_from_json(
+        ["image_otd", "image_otd_title", "image_otd_link"]
+    )
     if already_retrieved:
         return keys
 
@@ -115,6 +122,7 @@ def resize_full() -> Tuple[str, str, str]:
     upload_address = upload_pic_otd()
 
     return upload_address, image_data.title, image_data.link
+
 
 if __name__ == "__main__":
     print(resize_full())

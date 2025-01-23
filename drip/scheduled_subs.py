@@ -8,7 +8,7 @@ try:
     from drip.update_subscriber import update_subscriber
 except ModuleNotFoundError:
     from subscriber_list import subscriber_list
-    from update_subscriber import update_subscriber  
+    from update_subscriber import update_subscriber
 from datetime import datetime, timedelta
 
 
@@ -21,10 +21,10 @@ def start(subs: list):
     """
     for email in subs:
         updates = {
-            'email': email,
-            'tags': ['Glacier Daily Update'],
-            'custom_fields': {'Daily_Start': ''},
-            'remove_tags': ['Daily Start Set']
+            "email": email,
+            "tags": ["Glacier Daily Update"],
+            "custom_fields": {"Daily_Start": ""},
+            "remove_tags": ["Daily Start Set"],
         }
 
         update_subscriber(updates)
@@ -39,9 +39,9 @@ def end(subs: list):
     """
     for email in subs:
         updates = {
-            'email': email,
-            'custom_fields': {'Daily_End': ''},
-            'remove_tags': ['Daily End Set', 'Glacier Daily Update']
+            "email": email,
+            "custom_fields": {"Daily_End": ""},
+            "remove_tags": ["Daily End Set", "Glacier Daily Update"],
         }
 
         update_subscriber(updates)
@@ -54,10 +54,10 @@ def update_scheduled_subs():
     Returns:
         dict: A dictionary with lists of emails that are starting and ending updates today.
     """
-    scheduled = subscriber_list('Daily Start Set, Daily End Set')
+    scheduled = subscriber_list("Daily Start Set, Daily End Set")
 
     if not scheduled:
-        return {'start' : [], 'end' : []}
+        return {"start": [], "end": []}
 
     start_today = list()
     end_today = list()
@@ -66,31 +66,31 @@ def update_scheduled_subs():
     tomorrow = datetime.now() + timedelta(days=1)
 
     for i in scheduled:
-        tags = i['tags']
-        email = i['email']
+        tags = i["tags"]
+        email = i["email"]
 
         # If start date is earlier than tomorrow (ie is today or before) add to list.
-        if 'Daily Start Set' in tags:
-            start_day = i['custom_fields']['Daily_Start']
+        if "Daily Start Set" in tags:
+            start_day = i["custom_fields"]["Daily_Start"]
             start_day = datetime.strptime(start_day, date_format)
             if start_day < tomorrow:
                 start_today.append(email)
-                print(f'{email} is starting today!')
+                print(f"{email} is starting today!")
 
         # If end date is yesterday or earlier, stop sending daily updates.
-        if 'Daily End Set' in tags:
-            end_day = i['custom_fields']['Daily_End']
+        if "Daily End Set" in tags:
+            end_day = i["custom_fields"]["Daily_End"]
             end_day = datetime.strptime(end_day, date_format)
             if end_day <= yesterday:
                 end_today.append(email)
-                print(f'{email} will no longer get daily updates :(')
+                print(f"{email} will no longer get daily updates :(")
 
     start(start_today)
     end(end_today)
 
-    updates = {'start' : start_today, 'end' : end_today}
+    updates = {"start": start_today, "end": end_today}
     return updates
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(update_scheduled_subs())

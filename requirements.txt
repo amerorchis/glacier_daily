@@ -15,3 +15,5 @@ pytz
 pytest
 pytest-cov
 timezonefinder
+pre-commit
+black

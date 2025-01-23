@@ -1,6 +1,7 @@
 """
 A super class for Roads and Hiker/Biker that finds the nearest named location from coordinates.
 """
+
 import sys
 import os
 from typing import Tuple
@@ -11,10 +12,12 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
 
 from roads.places import places
 
+
 class Place:
     """
     A super class used for an object with GPS coordinates that needs a named location.
     """
+
     place_type = None
 
     def __init__(self, name: str) -> None:
@@ -25,7 +28,7 @@ class Place:
         self.closures_found = False
         self.entirely_closed = False
         self.coords_set = False
-        self.closure_str = ''
+        self.closure_str = ""
         self.places = places
         self.locations = []
         self.north = []
@@ -36,7 +39,7 @@ class Place:
         self.south_loc = ()
         self.west = []
         self.west_loc = ()
-        self.orientation = ''
+        self.orientation = ""
 
     def dist(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """
@@ -59,23 +62,30 @@ class Place:
         """
         Locates the named place that has the minimum distance from the given coordinates.
         """
-        min_dist = float('inf')
+        min_dist = float("inf")
         for j in self.locations:
             distance = self.dist(coords[0], coords[1], j[0], j[1])
             if distance < min_dist:
                 if distance < 3:
                     setattr(self, f"{direction}_loc", self.locations[j])
                 else:
-                    setattr(self, f"{direction}_loc",\
-                            f'{coords[0]}, {coords[1]} (name of location not found).')
+                    setattr(
+                        self,
+                        f"{direction}_loc",
+                        f"{coords[0]}, {coords[1]} (name of location not found).",
+                    )
                 min_dist = distance
 
     def closure_spot(self) -> None:
         """
         Get the closure spot for any direction that has coordinates given.
         """
-        for direction, coords in [('north', self.north), ('south', self.south),\
-                                  ('east', self.east), ('west', self.west)]:
+        for direction, coords in [
+            ("north", self.north),
+            ("south", self.south),
+            ("east", self.east),
+            ("west", self.west),
+        ]:
             if coords:
                 self.find_min_distance(direction, coords[::-1])
 
