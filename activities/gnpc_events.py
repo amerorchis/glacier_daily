@@ -144,9 +144,9 @@ def get_gnpc_events() -> List[Dict[str, str]]:
     except Exception as e:
         raise GNPCError(f"Error processing event dates: {str(e)}")
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     try:
         print(get_gnpc_events())
     except GNPCError as e:
         print(f"Error: {str(e)}")
-        sys.exit(1)
+        sys.exit(1)"""

@@ -4,7 +4,7 @@ Get road status from NPS and format into HTML.
 import json
 import sys
 import traceback
-from typing import List
+from typing import List, Dict
 import requests
 import urllib3
 
@@ -14,7 +14,7 @@ except ModuleNotFoundError:
     from Road import Road
 urllib3.disable_warnings()
 
-def closed_roads() -> List[Road]:
+def closed_roads() -> Dict[str, Road]:
     """
     Retrieve closed road info from NPS and convert coordinates to names.
     """

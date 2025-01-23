@@ -25,7 +25,11 @@ class HikerBiker(Place):
         self.locations = self.places[self.place_type]
         self.north = coords
         self.mile_marker = None
-        self.gen_str(gtsr)
+        try:
+            self.gen_str(gtsr)
+        except (ValueError, TypeError):
+            self.closure_str = f'{coords} (name of location not found)'
+
 
     def get_side(self) -> str:
         """

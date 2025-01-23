@@ -13,4 +13,5 @@ python-dotenv
 requests-cache
 pytz
 pytest
+pytest-cov
 timezonefinder
