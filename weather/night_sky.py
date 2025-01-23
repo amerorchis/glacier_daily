@@ -381,5 +381,5 @@ def aurora_forecast(cloud_cover: float = 0.0) -> str:
     return cast, msg
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(aurora_forecast(cloud_cover=0.2))

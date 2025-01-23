@@ -46,5 +46,5 @@ def sleep_time():
         sleep(timelapse_ready_in)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     sleep_time()

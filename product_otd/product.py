@@ -18,7 +18,7 @@ from PIL import Image
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from shared.retrieve_from_json import retrieve_from_json
 from shared.ftp import upload_file
@@ -186,5 +186,5 @@ def get_product():
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(get_product())

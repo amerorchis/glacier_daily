@@ -8,7 +8,7 @@ import json
 import sys
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from drip.subscriber_list import subscriber_list
 from drip.scheduled_subs import update_scheduled_subs
@@ -131,7 +131,3 @@ def send_in_drip(email: str, campaign_id: str = "169298893") -> None:
             r["errors"][0]["message"],
             file=sys.stderr,
         )
-
-
-if __name__ == "__main__":
-    print(get_subs("Glacier Daily Update"))

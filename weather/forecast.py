@@ -192,6 +192,6 @@ def get_forecast() -> Tuple[List[Tuple[str, int, int, str]], str]:
         ) from e
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     results, length_str = get_forecast()
     print(results, length_str)

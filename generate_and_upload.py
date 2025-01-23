@@ -128,5 +128,5 @@ def serve_api():
     send_to_server(printable, "printable")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     serve_api()

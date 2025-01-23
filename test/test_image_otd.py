@@ -10,7 +10,7 @@ from PIL import Image, UnidentifiedImageError
 
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from image_otd.flickr import FlickrImage, get_flickr, FlickrAPIError
 from image_otd.image_otd import (

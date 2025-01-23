@@ -39,5 +39,5 @@ def get_season(date: Optional[datetime] = None) -> str:
         return "fall"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(get_season())

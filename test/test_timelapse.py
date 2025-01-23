@@ -9,7 +9,7 @@ import os
 import sys
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from sunrise_timelapse.timelapse_json import send_timelapse_data, gen_json
 
@@ -100,5 +100,5 @@ def test_gen_json_sorting():
     ]
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__])

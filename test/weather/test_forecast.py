@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from weather.forecast import WeatherAPI, Location, get_forecast
 
@@ -153,5 +153,5 @@ def test_location_dataclass():
     assert location.altitude == 3000
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__])

@@ -6,7 +6,7 @@ import requests
 import json
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from roads.hiker_biker import get_hiker_biker_status, hiker_biker
 from roads.HikerBiker import HikerBiker

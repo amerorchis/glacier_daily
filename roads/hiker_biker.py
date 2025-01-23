@@ -10,7 +10,7 @@ import requests
 import urllib3
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
 
 from roads.HikerBiker import HikerBiker
 from roads.roads import closed_roads
@@ -117,5 +117,5 @@ def get_hiker_biker_status() -> str:
         return ""
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(get_hiker_biker_status())
