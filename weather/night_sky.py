@@ -169,7 +169,8 @@ class Forecast:
 
         # Parse values for each time period
         for i in range(8):
-            time_values = lines[start_idx + 1 + i].split()[:4]
+            time_values = lines[start_idx + 1 + i].split()
+            time_values = [i for i in time_values if 'G' not in i]  # Filter out any storm notes
             if len(time_values) != 4:  # Time range + 3 values
                 raise ForecastValidationError(f"Invalid data line: {time_values}")
 

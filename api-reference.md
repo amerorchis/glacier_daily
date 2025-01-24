@@ -3,12 +3,15 @@
 ## National Park Service (NPS) APIs
 
 ### NPS Events API
+
 - Endpoint: `developer.nps.gov/api/v1/events`
 - Purpose: Ranger program schedules
 - Authentication: NPS API key required
 
 ### NPS Carto APIs
+
 Multiple endpoints on `carto.nps.gov`:
+
 - Road closures: `glaclive/api/v2/sql/glac_road_nds`
 - Hiker/biker closures: `glaclive/api/v2/sql/glac_hiker_biker_closures`
 - Winter recreation closures: `glaclive/api/v2/sql/winter_rec_closure`
@@ -16,6 +19,7 @@ Multiple endpoints on `carto.nps.gov`:
 - Frontcountry campgrounds: `glaclive/api/v2/sql/glac_front_country_campgrounds`
 
 ### NPS Air Quality API
+
 - Endpoint: `www.nps.gov/featurecontent/ard/currentdata/json/glac.json`
 - Purpose: Air quality index data
 - Authentication: None required
@@ -23,21 +27,25 @@ Multiple endpoints on `carto.nps.gov`:
 ## Weather APIs
 
 ### Open-Meteo API
+
 - Endpoint: `api.open-meteo.com/v1/forecast`
 - Purpose: Weather forecasts for multiple park locations
 - Authentication: None required
 
 ### National Weather Service API
+
 - Endpoint: `api.weather.gov/alerts/active/area/MT`
 - Purpose: Weather alerts
 - Authentication: None required
 
 ### NOAA Space Weather API
+
 - Endpoint: `services.swpc.noaa.gov/text/3-day-forecast.txt`
 - Purpose: Aurora forecasts
 - Authentication: None required
 
 ### Sunset Hue API
+
 - Endpoint: `api.sunsethue.com/event`
 - Purpose: Sunset quality predictions
 - Authentication: API key required
@@ -45,12 +53,14 @@ Multiple endpoints on `carto.nps.gov`:
 ## Image and Media APIs
 
 ### Flickr API
+
 - Purpose: Access to GlacierNPS Flickr account
-- Authentication: 
+- Authentication:
   - API key and secret required
   - GlacierNPS UID required
 
 ### Mapbox API
+
 - Purpose: Satellite imagery for peaks
 - Features: Custom style support
 - Authentication: Mapbox token required
@@ -58,13 +68,15 @@ Multiple endpoints on `carto.nps.gov`:
 ## E-commerce and Marketing
 
 ### BigCommerce API
+
 - Endpoint: `api.bigcommerce.com/stores/{store_hash}/v3/catalog/products`
 - Purpose: Product information
 - Authentication: BC_TOKEN and BC_STORE_HASH required
 
 ### Drip Email API
+
 - Endpoint: `api.getdrip.com/v2/`
-- Purpose: 
+- Purpose:
   - Subscriber management
   - Email delivery
 - Authentication: DRIP_TOKEN and DRIP_ACCOUNT required
@@ -72,6 +84,7 @@ Multiple endpoints on `carto.nps.gov`:
 ## File Storage
 
 ### Main FTP Server
+
 - Host: glacier.org
 - Purpose:
   - Image storage
@@ -79,12 +92,14 @@ Multiple endpoints on `carto.nps.gov`:
 - Authentication: FTP credentials required
 
 ### Webcam FTP Server
+
 - Purpose: Sunrise timelapse videos
 - Authentication: Separate FTP credentials required
 
 ## Google Services
 
 ### Google Sheets API
+
 - Purpose: Notices/announcements
 - Authentication: Service account credentials required
 - Configuration: Accesses spreadsheet ID '1Z3jyEj8grDiNKRbYIJWjXG970N7dZO0VLx5pPFZoh2Q'
@@ -92,10 +107,12 @@ Multiple endpoints on `carto.nps.gov`:
 ## Local Data Sources
 
 ### CSV Files
+
 - Location: `peak/PeaksCSV.csv`
 - Purpose: Peak information for random selection
 
 ### JSON Files
+
 - Weather codes: `weather/descriptions.json`
 - Cached data: `server/email.json`
 
@@ -135,9 +152,3 @@ timelapse_server=your_timelapse_server
 # Other
 SUNSETHUE_KEY=your_sunsethue_key
 ```
-
-## Notes
-- Many APIs have rate limits that should be considered
-- Some services require specific request headers
-- Error handling and retries are implemented for most API calls
-- Cache mechanisms are in place for appropriate endpoints
