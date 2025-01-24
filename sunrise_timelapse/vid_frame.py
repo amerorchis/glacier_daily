@@ -17,7 +17,9 @@ from dotenv import load_dotenv
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from shared.retrieve_from_json import retrieve_from_json
 from shared.ftp import upload_file
@@ -272,7 +274,6 @@ def process_video(test: bool = False) -> Tuple[Optional[str], Optional[str]]:
                 frame, _ = upload_file("sunrise_still", filename_frame, frame_path)
 
                 try:
-                    print(vid_files)
                     data = gen_json(vid_files)
                     uploaded = send_timelapse_data(data)
                     if uploaded:
