@@ -2,10 +2,10 @@
 This module provides FTP functionalities including deleting old files and uploading new files.
 """
 
-from ftplib import FTP
+import ftplib
 import os
 from datetime import datetime, timedelta
-import ftplib
+from ftplib import FTP
 
 
 def delete_on_first(ftp: FTP) -> None:

@@ -2,15 +2,18 @@
 Retrieve and format the hiker/biker status.
 """
 
-import os
 import json
+import os
 import sys
 import traceback
+
 import requests
 import urllib3
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from roads.HikerBiker import HikerBiker
 from roads.roads import closed_roads

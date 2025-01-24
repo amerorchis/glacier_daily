@@ -7,16 +7,19 @@ locations within the park, then uploads them to an FTP server.
 
 import os
 import sys
-from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
+
+from PIL import Image, ImageDraw, ImageFont
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
-from weather.weather import weather_data
-from weather.season import get_season
 from shared.ftp import upload_file
+from weather.season import get_season
+from weather.weather import weather_data
 
 # Constants
 DIMENSIONS: Dict[str, Tuple[float, float]] = {

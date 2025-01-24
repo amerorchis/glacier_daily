@@ -6,15 +6,17 @@ generating data, uploading it to a website, and sending emails to subscribers.
 """
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv("email.env")
 
-from drip.drip_actions import get_subs, bulk_workflow_trigger
-from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
-from generate_and_upload import serve_api
 import argparse
 from typing import List
+
+from drip.drip_actions import bulk_workflow_trigger, get_subs
+from generate_and_upload import serve_api
+from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 
 
 def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:

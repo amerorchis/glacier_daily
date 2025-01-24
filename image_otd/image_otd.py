@@ -6,20 +6,22 @@ It includes functions to resize the image and upload it to a specified directory
 import os
 import sys
 from datetime import datetime
-from typing import Tuple
 from pathlib import Path
+from typing import Tuple
 
-from PIL import Image, UnidentifiedImageError
 from dotenv import load_dotenv
+from PIL import Image, UnidentifiedImageError
 
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from image_otd.flickr import get_flickr
-from shared.retrieve_from_json import retrieve_from_json
 from shared.ftp import upload_file
+from shared.retrieve_from_json import retrieve_from_json
 
 
 class ImageProcessingError(Exception):

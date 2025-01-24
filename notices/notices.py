@@ -2,15 +2,17 @@
 This module retrieves notices from a Google Sheets document and formats them for display.
 """
 
-import sys
 import os
+import sys
+from datetime import datetime, timedelta
 
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime, timedelta
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from shared.retry import retry
 

@@ -3,11 +3,12 @@ This module provides functionality to fetch and process trail closure informatio
 from the Glacier National Park website.
 """
 
-import traceback
+import json
 import sys
+import traceback
+
 import requests
 import urllib3
-import json
 
 urllib3.disable_warnings()
 

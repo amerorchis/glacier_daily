@@ -2,11 +2,13 @@
 Module for testing the Drip API functionality.
 """
 
-import sys
 import os
+import sys
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from drip.subscriber_list import subscriber_list
 

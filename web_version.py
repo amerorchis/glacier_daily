@@ -4,8 +4,9 @@ The multiple class encapsulations are necessary for the template to work here an
 """
 
 from datetime import datetime
-from jinja2 import Environment, FileSystemLoader
 from typing import Dict
+
+from jinja2 import Environment, FileSystemLoader
 
 
 class DailyUpdate:

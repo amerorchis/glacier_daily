@@ -2,10 +2,11 @@
 This module provides a function to update subscriber information in the Drip email marketing platform.
 """
 
+import json
 import os
 import urllib.parse
+
 import requests
-import json
 
 
 def update_subscriber(updates: dict):

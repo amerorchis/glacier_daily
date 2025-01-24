@@ -2,16 +2,19 @@
 This module provides functions to interact with the Drip email marketing platform, including retrieving subscribers and triggering workflows.
 """
 
-import requests
-import os
 import json
+import os
 import sys
 
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+import requests
 
-from drip.subscriber_list import subscriber_list
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
+
 from drip.scheduled_subs import update_scheduled_subs
+from drip.subscriber_list import subscriber_list
 
 
 def get_subs(tag: str) -> list:

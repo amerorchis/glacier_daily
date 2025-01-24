@@ -2,14 +2,15 @@
 This module interacts with the Flickr API to retrieve the image of the day.
 """
 
-from dataclasses import dataclass
-from flickrapi import FlickrAPI
 import random
+from dataclasses import dataclass
 from datetime import datetime
-from urllib.request import urlretrieve, URLError
-from pathlib import Path
 from os import environ
+from pathlib import Path
 from typing import Dict
+from urllib.request import URLError, urlretrieve
+
+from flickrapi import FlickrAPI
 
 
 def get_env_vars() -> Dict[str, str]:

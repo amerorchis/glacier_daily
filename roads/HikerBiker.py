@@ -2,11 +2,13 @@
 Define an object that represents a hiker/biker closure.
 """
 
-import sys
 import os
+import sys
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from roads.Place import Place
 from roads.Road import Road

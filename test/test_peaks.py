@@ -1,13 +1,14 @@
-import pytest
-from unittest.mock import patch, Mock, ANY
-from datetime import datetime, date
-import os
-import json
-import requests
 import io
-from PIL import Image
-import numpy as np
+import json
+import os
+from datetime import date, datetime
 from pathlib import Path
+from unittest.mock import ANY, Mock, patch
+
+import numpy as np
+import pytest
+import requests
+from PIL import Image
 
 from peak.peak import peak
 from peak.sat import peak_sat, upload_peak

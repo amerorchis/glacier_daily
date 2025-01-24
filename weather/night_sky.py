@@ -7,30 +7,24 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Dict, List, NamedTuple, Optional
 
-import requests
-from requests.exceptions import RequestException
 import pytz
+import requests
 from astral import LocationInfo
 from astral.sun import sun
+from requests.exceptions import RequestException
 from timezonefinder import TimezoneFinder
 
 
 class ForecastError(Exception):
     """Base class for forecast-related errors."""
 
-    pass
-
 
 class ForecastValidationError(ForecastError):
     """Raised when forecast data is invalid or corrupted."""
 
-    pass
-
 
 class ForecastFetchError(ForecastError):
     """Raised when forecast data cannot be fetched from NOAA."""
-
-    pass
 
 
 @dataclass
@@ -170,7 +164,9 @@ class Forecast:
         # Parse values for each time period
         for i in range(8):
             time_values = lines[start_idx + 1 + i].split()
-            time_values = [i for i in time_values if 'G' not in i]  # Filter out any storm notes
+            time_values = [
+                i for i in time_values if "G" not in i
+            ]  # Filter out any storm notes
             if len(time_values) != 4:  # Time range + 3 values
                 raise ForecastValidationError(f"Invalid data line: {time_values}")
 

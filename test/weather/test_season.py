@@ -2,13 +2,16 @@
 Test module for season determination functionality.
 """
 
-import sys
 import os
+import sys
 from datetime import datetime
+
 import pytest
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from weather.season import get_season
 

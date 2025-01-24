@@ -2,15 +2,18 @@
 This module retrieves information about GNPC events by scraping the GNPC website.
 """
 
-import sys
 import os
-from typing import List, Dict
+import sys
+from typing import Dict, List
+
 import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 

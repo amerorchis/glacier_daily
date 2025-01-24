@@ -5,7 +5,8 @@ Get road status from NPS and format into HTML.
 import json
 import sys
 import traceback
-from typing import List, Dict
+from typing import Dict, List
+
 import requests
 import urllib3
 

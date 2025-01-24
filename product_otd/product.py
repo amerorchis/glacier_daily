@@ -1,16 +1,16 @@
 """
-Select a product at random, find its image, resize and upload the image, 
+Select a product at random, find its image, resize and upload the image,
 then return a description, link to product, and link to photo.
 """
 
-import sys
 import json
 import os
 import random
-
-from re import sub
+import sys
 from datetime import datetime
 from io import BytesIO
+from re import sub
+
 import requests
 from dotenv import load_dotenv
 from PIL import Image
@@ -18,10 +18,12 @@ from PIL import Image
 load_dotenv("email.env")
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
-from shared.retrieve_from_json import retrieve_from_json
 from shared.ftp import upload_file
+from shared.retrieve_from_json import retrieve_from_json
 
 
 def upload_potd():
