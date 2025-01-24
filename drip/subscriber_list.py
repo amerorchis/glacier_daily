@@ -2,9 +2,10 @@
 This module provides a function to retrieve a list of subscribers from the Drip email marketing platform.
 """
 
-import requests
 import os
 import sys
+
+import requests
 
 
 def subscriber_list(tag="Glacier Daily Update") -> list:

@@ -2,10 +2,11 @@
 Convert date strings from Glacier National Park Conservancy format to a localized datetime object.
 """
 
+import calendar
 import re
 from datetime import datetime
+
 import pytz
-import calendar
 
 
 def convert_gnpc_datetimes(date_string: str):

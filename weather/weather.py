@@ -2,20 +2,22 @@
 This module fetches and processes various weather-related data including forecasts, air quality index (AQI), weather alerts, aurora forecasts, seasonal information, and sunset hues.
 """
 
+import concurrent.futures
 import os
 import sys
-import concurrent.futures
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
-from weather.weather_alerts import weather_alerts
-from weather.night_sky import aurora_forecast
-from weather.weather_aqi import get_air_quality
 from weather.forecast import get_forecast
+from weather.night_sky import aurora_forecast
 from weather.season import get_season
 from weather.sunset_hue import get_sunset_hue
+from weather.weather_alerts import weather_alerts
+from weather.weather_aqi import get_air_quality
 
 
 class WeatherContent:

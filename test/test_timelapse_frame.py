@@ -1,24 +1,27 @@
-import pytest
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch, MagicMock, ANY
-import sys
+from unittest.mock import ANY, MagicMock, patch
+
 import cv2
 import numpy as np
+import pytest
 from PIL import Image
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from sunrise_timelapse.vid_frame import (
-    find_frame,
-    play_button,
-    made_today,
-    process_video,
+    FileOperationError,
     TimelapseError,
     VideoProcessingError,
-    FileOperationError,
+    find_frame,
+    made_today,
+    play_button,
+    process_video,
 )
 
 

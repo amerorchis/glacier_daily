@@ -2,9 +2,10 @@
 This module fetches the Air Quality Index (AQI) for West Glacier from the National Park Service.
 """
 
+from contextlib import contextmanager
+
 import requests
 from urllib3.exceptions import InsecureRequestWarning
-from contextlib import contextmanager
 
 
 @contextmanager

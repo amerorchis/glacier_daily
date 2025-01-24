@@ -2,8 +2,8 @@
 Get any values that have been retrieved already from today's JSON file.
 """
 
-import json
 import base64
+import json
 from datetime import datetime
 
 

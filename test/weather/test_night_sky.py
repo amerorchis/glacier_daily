@@ -1,22 +1,25 @@
-import sys
-import os
-import pytest
-from datetime import datetime
-import pytz
-from unittest.mock import patch, MagicMock
 import json
+import os
+import sys
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
+import pytz
 from requests.exceptions import RequestException
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from weather.night_sky import (
+    DarkPeriod,
     Forecast,
     ForecastError,
-    ForecastValidationError,
     ForecastFetchError,
+    ForecastValidationError,
     KpPeriod,
-    DarkPeriod,
     aurora_forecast,
 )
 
@@ -35,14 +38,14 @@ Scale levels).
 NOAA Kp index breakdown Jan 10-Jan 12 2025
 
              Jan 10       Jan 11       Jan 12
-00-03UT       1.33         2.33         1.67     
-03-06UT       3.33         0.67         2.67     
-06-09UT       1.67         1.33         1.33     
-09-12UT       3.00         2.00         1.33     
-12-15UT       1.33         1.67         2.67     
-15-18UT       1.67         2.00         3.00     
-18-21UT       1.67         3.33         3.67     
-21-00UT       1.67         2.67         1.67     
+00-03UT       1.33         2.33         1.67
+03-06UT       3.33         0.67         2.67
+06-09UT       1.67         1.33         1.33
+09-12UT       3.00         2.00         1.33
+12-15UT       1.33         1.67         2.67
+15-18UT       1.67         2.00         3.00
+18-21UT       1.67         3.33         3.67
+21-00UT       1.67         2.67         1.67
 
 Rationale: No G1 (Minor) or greater geomagnetic storms are expected.  No
 significant transient or recurrent solar wind features are forecast.

@@ -2,16 +2,19 @@
 Unit tests for the weather image generator module.
 """
 
-import sys
 import os
-from unittest.mock import patch, MagicMock
-from PIL import Image
+import sys
+from unittest.mock import MagicMock, patch
+
 import pytest
+from PIL import Image
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
-from weather.weather_img import weather_image, upload_weather, _validate_input
+from weather.weather_img import _validate_input, upload_weather, weather_image
 
 
 @pytest.fixture

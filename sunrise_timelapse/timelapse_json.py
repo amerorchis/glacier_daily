@@ -2,13 +2,13 @@
 This module handles the generation of JSON data for sunrise timelapse videos and the uploading of this data to an FTP server.
 """
 
+import io
 import json
+import os
 import socket
 from datetime import datetime
 from ftplib import FTP
 from time import sleep
-import io
-import os
 from typing import List, Tuple, Union
 
 

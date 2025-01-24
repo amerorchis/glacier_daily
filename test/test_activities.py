@@ -1,22 +1,25 @@
-import sys
 import os
+import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
-import pytz
+
 import pytest
+import pytz
 import requests
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from activities.events import events_today
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 from activities.gnpc_events import (
+    GNPCError,
+    GNPCParsingError,
+    GNPCRequestError,
     get_gnpc_events,
     scrape_events_page,
-    GNPCError,
-    GNPCRequestError,
-    GNPCParsingError,
 )
 
 

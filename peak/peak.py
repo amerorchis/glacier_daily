@@ -2,14 +2,16 @@
 Select a random peak, get an image of it, and return the info.
 """
 
-import random
-from datetime import date
-import sys
-import os
 import csv
+import os
+import random
+import sys
+from datetime import date
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
 from peak.sat import peak_sat
 from shared.retrieve_from_json import retrieve_from_json

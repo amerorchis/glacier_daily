@@ -1,23 +1,24 @@
 # test_flickr.py
-import sys
 import os
-
-import pytest
+import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 from urllib.error import URLError
+
+import pytest
 from PIL import Image, UnidentifiedImageError
 
-
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
-from image_otd.flickr import FlickrImage, get_flickr, FlickrAPIError
+from image_otd.flickr import FlickrAPIError, FlickrImage, get_flickr
 from image_otd.image_otd import (
+    ImageProcessingError,
     process_image,
     resize_full,
     upload_pic_otd,
-    ImageProcessingError,
 )
 
 
@@ -101,18 +102,19 @@ def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
             get_flickr()
 
 
+from pathlib import Path
+from unittest.mock import Mock, patch
+
 # test/test_image_otd.py
 import pytest
-from pathlib import Path
 from PIL import Image, UnidentifiedImageError
-from unittest.mock import Mock, patch
 
 from image_otd.flickr import FlickrImage
 from image_otd.image_otd import (
+    ImageProcessingError,
     process_image,
     resize_full,
     upload_pic_otd,
-    ImageProcessingError,
 )
 
 

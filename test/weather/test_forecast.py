@@ -1,17 +1,20 @@
-import sys
-import os
-import pytest
-from unittest.mock import Mock, patch, mock_open
-import requests_cache
-from requests.exceptions import RequestException
 import json
+import os
+import sys
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
+import requests_cache
+from requests.exceptions import RequestException
 
 if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # pragma: no cover
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 
-from weather.forecast import WeatherAPI, Location, get_forecast
+from weather.forecast import Location, WeatherAPI, get_forecast
 
 # Test data
 SAMPLE_LOCATION = Location(

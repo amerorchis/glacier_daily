@@ -3,26 +3,26 @@
 Generate all of the data with a ThreadPoolExecutor, then upload it to the glacier.org
 server with FTP.
 """
-from datetime import datetime
-import json
 import base64
 import concurrent.futures
+import json
+from datetime import datetime
 
-from shared.ftp import upload_file
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
+from drip.html_friendly import html_safe
+from image_otd.image_otd import resize_full
+from notices.notices import get_notices
 from peak.peak import peak
-from roads.roads import get_road_status
+from product_otd.product import get_product
 from roads.hiker_biker import get_hiker_biker_status
-from trails_and_cgs.trails import get_closed_trails
+from roads.roads import get_road_status
+from shared.ftp import upload_file
+from sunrise_timelapse.vid_frame import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
+from trails_and_cgs.trails import get_closed_trails
 from weather.weather import weather_data
 from weather.weather_img import weather_image
-from image_otd.image_otd import resize_full
-from sunrise_timelapse.vid_frame import process_video
-from product_otd.product import get_product
-from notices.notices import get_notices
-from drip.html_friendly import html_safe
 from web_version import web_version
 
 

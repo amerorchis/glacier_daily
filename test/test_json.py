@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import patch, mock_open
-import json
 import base64
+import json
 from datetime import datetime
+from unittest.mock import mock_open, patch
+
+import pytest
 
 from shared.retrieve_from_json import retrieve_from_json
 

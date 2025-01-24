@@ -2,9 +2,10 @@
 Calculate when the sunrise timelapse will be finished and sleep until that time.
 """
 
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from time import sleep
 from zoneinfo import ZoneInfo
+
 from astral import LocationInfo, sun
 
 

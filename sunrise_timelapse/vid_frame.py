@@ -3,16 +3,15 @@ Select the best thumbnail frame from the timelapse video.
 """
 
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
-import sys
-from typing import Tuple, Union, Optional
+from typing import Optional, Tuple, Union
 
 import cv2
-from PIL import Image
 import numpy as np
-
 from dotenv import load_dotenv
+from PIL import Image
 
 load_dotenv("email.env")
 
@@ -21,10 +20,10 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
         os.path.dirname(os.path.abspath(__file__))
     )  # pragma: no cover
 
-from shared.retrieve_from_json import retrieve_from_json
 from shared.ftp import upload_file
-from sunrise_timelapse.timelapse_json import *
+from shared.retrieve_from_json import retrieve_from_json
 from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
+from sunrise_timelapse.timelapse_json import *
 
 
 class TimelapseError(Exception):

@@ -2,11 +2,12 @@
 This module retrieves and processes daily events from the National Park Service API for Glacier National Park.
 """
 
+import os
 import sys
-from datetime import datetime, date
+from datetime import date, datetime
+
 import requests
 from requests.exceptions import JSONDecodeError, ReadTimeout
-import os
 
 
 def time_sortable(time: str):

@@ -2,16 +2,17 @@
 This module fetches weather forecasts for various locations in Glacier National Park using the Open-Meteo API.
 """
 
-import requests_cache
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
 import json
+from dataclasses import dataclass
 from datetime import datetime
 from math import floor
-from typing import List, Tuple, Dict, Any
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import requests_cache
+from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
+from urllib3.util.retry import Retry
 
 # Constants
 BASE_URL = "https://api.open-meteo.com/v1/forecast"
