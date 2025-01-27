@@ -6,6 +6,7 @@ generating data, uploading it to a website, and sending emails to subscribers.
 """
 
 import os
+from time import sleep
 
 from dotenv import load_dotenv
 
@@ -36,8 +37,6 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     serve_api()
 
     # See if this fixes the issue with timelapse not showing.
-    from time import sleep
-
     sleep(630 if not test else 0)
 
     # Send the email to each subscriber using Drip API.
