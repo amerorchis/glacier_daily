@@ -4,6 +4,7 @@ This module fetches and processes weather alerts from the National Weather Servi
 
 import json
 import re
+import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
@@ -49,7 +50,7 @@ class WeatherAlertService:
     @staticmethod
     def parse_alert_time(text: str) -> Optional[datetime]:
         """Parse alert time from text string."""
-        match = re.match(r"(.+) issued (.*?)\sM[DS]T", text, re.DOTALL)
+        match = re.match(r"^(.+?) issued (.*?)\sM[DS]T", text)
         if not match:
             return None
 
@@ -187,7 +188,7 @@ def weather_alerts() -> str:
         return service.format_html_message(processed_alerts)
 
     except Exception as e:
-        print(f"Error processing weather alerts: {e}")
+        print(f"Error processing weather alerts: {e}, {traceback.format_exc()}")
         return ""
 
 
