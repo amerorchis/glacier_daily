@@ -333,7 +333,7 @@ class Forecast:
     @classmethod
     def strftime(cls, time: datetime) -> str:
         """Format datetime object to string."""
-        return time.strftime("%-m/%-d %-I:%M %p %Z")
+        return time.strftime("%-I:%M %p %Z")
 
     @property
     def max_kp(self) -> float:
@@ -368,7 +368,7 @@ def aurora_forecast(cloud_cover: float = 0.0) -> str:
 
     cast = f"{v} Kp ({Forecast.get_aurora_strength(v)})"
     msg = ""
-    if v > 3:
+    if v > 3.8:
         msg = f"The aurora will be visible tonight with a peak Kp of {v} at {Forecast.strftime(v_time)} "
         if cloudy:
             msg += "but it will be cloudy."
