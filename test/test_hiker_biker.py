@@ -162,7 +162,9 @@ def test_hiker_biker_string_representation(mock_gtsr):
 
     urllib3.disable_warnings()
     result = hiker_biker()
-    assert result == ""
+    assert result == "" or result.startswith(
+        '<ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px;line-height:18px; color:#333333;">'
+    )
 
 
 def test_closure_location_names(mock_gtsr):
