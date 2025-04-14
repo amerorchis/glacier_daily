@@ -153,13 +153,13 @@
                                                                 </td>
                                                                 <td colspan="3">
                                                                     <a style="display:block; margin:0 0 14px;"
-                                                                        href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm">
+                                                                        href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm">
                                                                         <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&roads&cgs.jpg"
                                                                             width="540" height="160" alt="Trails"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                        <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm"
+                                                                        <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm"
                                                                             style="color:#6c7e44; text-decoration:none;">Trail
                                                                             Closures</a>
                                                                     </p>
@@ -187,20 +187,23 @@
                                                                     {% endif %}
                                                                     {% if my.daily_update.campgrounds != "" %}<p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                        <a href="https://www.nps.gov/glac/planyourvisit/trailstatusreports.htm"
+                                                                        <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm"
                                                                             style="color:#6c7e44; text-decoration:none;">Campground
                                                                             Closures</a>
                                                                     </p>
                                                                     <div>{{ my.daily_update.campgrounds | base64_decode
                                                                         }}</div>
                                                                     {% endif %}{% endif %}
-                                                                    <p
-                                                                        style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
-                                                                        Trail, road, and campground conditions can
-                                                                        change throughout the day, check the <a
-                                                                            href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm"
-                                                                            style="color:#333333;">NPS website</a> for
-                                                                        the latest.</p>
+                                                                    <div style="padding: 8px; border-radius: 5px; margin-bottom: 35px;">
+                                                                        <p style="margin:0; font-size:12px; font-style: italic;">
+                                                                            Trail, road, and campground condition information provided by Glacier National
+                                                                            Park's official website. Please note that
+                                                                            conditions can change throughout the day.
+                                                                            Check the <a style="color:#333333; font-style: italic;" href="https://www.nps.gov/glac/planyourvisit/index.htm">
+                                                                            park's website</a>
+                                                                            for the latest information and other details to plan your trip.
+                                                                        </p>
+                                                                    </div>
                                                                 </td>
                                                                 <td width="30">
                                                                     <p
