@@ -3,6 +3,7 @@ Get road status from NPS and format into HTML.
 """
 
 import json
+import os
 import sys
 import traceback
 from typing import Dict, List
@@ -10,10 +11,13 @@ from typing import Dict, List
 import requests
 import urllib3
 
-try:
-    from roads.Road import Road
-except ModuleNotFoundError:
-    from Road import Road
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
+
+from roads.Road import Road
+
 urllib3.disable_warnings()
 
 
@@ -65,9 +69,9 @@ def closed_roads() -> Dict[str, Road]:
         elif (
             road_name == "Inside North Fork Road"
         ):  # Handle weird naming for Kintla Road
-            if x["start"][1] > 48.786:
+            if x["start"][1] > 48.787:
                 roads["Kintla Road"].set_coord(x["start"])
-            if x["last"][1] > 48.786:
+            if x["last"][1] > 48.787:
                 roads["Kintla Road"].set_coord(x["last"])
 
     # Return dictionary of roads that have a closure found.
