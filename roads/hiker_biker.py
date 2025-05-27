@@ -52,8 +52,9 @@ def hiker_biker() -> str:
         j
         for j in data
         if (
-            "Avalanche" in j["properties"]["name"]
+            "Hazard" in j["properties"]["name"]
             or "Road Crew" in j["properties"]["name"]
+            or "Avalanche" in j["properties"]["name"]
         )
     ]
 
@@ -72,9 +73,9 @@ def hiker_biker() -> str:
             coord = tuple(i["geometry"]["coordinates"])
             statuses.append(f"{closure_type} {HikerBiker(closure_type, coord, gtsr)}")
 
-        # Otherwise note that none are listed.
+        # Otherwise pass.
         else:
-            statuses.append(f"{closure_type} None listed")
+            continue
 
     # Return empty string if there are no hiker biker restrictions listed.
     if not statuses or all("None listed" in item for item in statuses):
