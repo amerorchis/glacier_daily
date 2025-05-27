@@ -39,7 +39,11 @@ class HikerBiker(Place):
         See if closure is on east or west side of the park or at Logan Pass.
         """
         longitude = self.north[0]
+        latitude = self.north[1]
+        # Logan Pass is at 48.6959, -113.7172
 
+        north_boundary = 48.6998
+        south_boundary = 48.6940
         west_boundary = -113.72402
         east_boundary = -113.71225
 
@@ -47,6 +51,8 @@ class HikerBiker(Place):
             return "west"
         elif longitude > east_boundary:
             return "east"
+        elif latitude > north_boundary:  # West side is technically north of Logan Pass
+            return "west"
         else:
             return "logan"
 
