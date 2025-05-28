@@ -2,10 +2,15 @@
 Custom class to define a road in the park.
 """
 
-try:
-    from roads.Place import Place
-except ModuleNotFoundError:
-    from Place import Place
+import os
+import sys
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
+
+from roads.Place import Place
 
 
 class Road(Place):
@@ -20,7 +25,12 @@ class Road(Place):
         Constructor
         """
         super().__init__(name)
-        self.locations = self.places[self.place_type][name]
+        try:
+            self.locations = self.places[self.place_type][name]
+        except KeyError as exc:
+            raise ValueError(
+                f"Road name '{name}' not found in places['roads']."
+            ) from exc
         if orientation.upper() in ["NS", "EW"]:
             self.orientation = orientation.upper()
         else:

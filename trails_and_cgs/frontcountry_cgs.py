@@ -4,6 +4,7 @@ It retrieves data from the NPS API, processes it to identify closures and alerts
 """
 
 import json
+import os
 import sys
 import traceback
 from datetime import datetime
@@ -11,6 +12,10 @@ from datetime import datetime
 import requests
 import urllib3
 
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path[0] = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )  # pragma: no cover
 urllib3.disable_warnings()
 
 
