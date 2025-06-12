@@ -64,7 +64,15 @@ def closed_trails() -> str:
         str: HTML formatted string of closed trails or a message indicating no closures.
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27"
-    r = requests.get(url, verify=False)
+    try:
+        r = requests.get(url, verify=False, timeout=10)
+    except requests.exceptions.RequestException as e:
+        print(
+            f"Error fetching trail closures: {e}\n"
+            "This may be due to the Glacier National Park website being down.",
+            file=sys.stderr,
+        )
+        return "The trail closures page on the park website is currently down."
     status = json.loads(r.text)
 
     try:
