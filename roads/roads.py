@@ -21,6 +21,14 @@ from roads.Road import Road
 urllib3.disable_warnings()
 
 
+class NPSWebsiteError(Exception):
+    """
+    Custom exception for NPS website errors.
+    """
+
+    pass
+
+
 def closed_roads() -> Dict[str, Road]:
     """
     Retrieve closed road info from NPS and convert coordinates to names.
@@ -34,7 +42,7 @@ def closed_roads() -> Dict[str, Road]:
             f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",
             file=sys.stderr,
         )
-        return {}
+        raise NPSWebsiteError from e
     r.raise_for_status()
     status = json.loads(r.text)
 
@@ -136,6 +144,15 @@ def get_road_status() -> str:
             file=sys.stderr,
         )
         return ""
+    except NPSWebsiteError:
+        print(
+            f"Handled error with NPS website, here is the traceback:\n{traceback.format_exc()}",
+            file=sys.stderr,
+        )
+        return (
+            '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'
+            "The road status page on the park website is currently down.</p>"
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover
