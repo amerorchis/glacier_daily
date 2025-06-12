@@ -39,7 +39,14 @@ def hiker_biker() -> str:
     data = []
 
     for url in urls:
-        r = requests.get(url, verify=False, timeout=5)
+        try:
+            r = requests.get(url, verify=False, timeout=5)
+        except requests.exceptions.RequestException as e:
+            print(
+                f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
+                file=sys.stderr,
+            )
+            continue
         r.raise_for_status()
         data.extend(json.loads(r.text).get("features", ""))
 

@@ -27,7 +27,14 @@ def campground_alerts():
         str: A formatted HTML string containing the status of campgrounds, or an error message if the data is unavailable.
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
-    r = requests.get(url, verify=False)
+    try:
+        r = requests.get(url, verify=False, timeout=10)
+    except requests.exceptions.RequestException as e:
+        print(
+            f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",
+            file=sys.stderr,
+        )
+        return "The campgrounds page on the park website is currently down."
     status = json.loads(r.text)
 
     try:

@@ -27,7 +27,14 @@ def closed_roads() -> Dict[str, Road]:
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
         SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
-    r = requests.get(url, verify=False, timeout=5)
+    try:
+        r = requests.get(url, verify=False, timeout=5)
+    except requests.exceptions.RequestException as e:
+        print(
+            f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",
+            file=sys.stderr,
+        )
+        return {}
     r.raise_for_status()
     status = json.loads(r.text)
 

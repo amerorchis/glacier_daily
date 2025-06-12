@@ -1,13 +1,13 @@
 import base64
 import json
-import os
+from datetime import datetime
 
 import shared.retrieve_from_json as rfj
 
 
 def test_retrieve_from_json_found(tmp_path, monkeypatch):
     # Prepare a fake email.json
-    today = "2025-05-28"
+    today = datetime.now().strftime("%Y-%m-%d")
     data = {"date": today, "foo": base64.b64encode(b"bar").decode("utf-8")}
     server_dir = tmp_path / "server"
     server_dir.mkdir()
