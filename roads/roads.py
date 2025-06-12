@@ -29,7 +29,7 @@ def closed_roads() -> Dict[str, Road]:
         SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
     try:
         r = requests.get(url, verify=False, timeout=5)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
         print(
             f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",
             file=sys.stderr,

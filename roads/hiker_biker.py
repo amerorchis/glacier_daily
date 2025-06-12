@@ -41,7 +41,7 @@ def hiker_biker() -> str:
     for url in urls:
         try:
             r = requests.get(url, verify=False, timeout=5)
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
             print(
                 f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
                 file=sys.stderr,
