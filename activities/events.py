@@ -4,6 +4,7 @@ This module retrieves and processes daily events from the National Park Service 
 
 import os
 import sys
+import traceback
 from datetime import date, datetime
 
 import requests
@@ -41,7 +42,9 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
         """
         Get events from endpoint
         """
-        response = requests.get(endpoint, headers=headers, timeout=245).json()
+        response = requests.get(endpoint, headers=headers, timeout=245)
+        response.raise_for_status()
+        response = response.json()
         return response["data"], int(response["total"]) // 10 + 1
 
     def process_event(event):
@@ -141,6 +144,12 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
 
-    except (JSONDecodeError, ReadTimeout) as e:
+    except (JSONDecodeError, ReadTimeout, requests.HTTPError) as e:
         print(f"Failed to retrieve events. {e}", file=sys.stderr)
+        traceback.print_exc()
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
+
+
+if __name__ == "__main__":
+    # Example usage
+    print(events_today())
