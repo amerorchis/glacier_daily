@@ -97,6 +97,19 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             "string": f'<li>{start}-{end}: {name}, {loc} <a href="{link}">(link)</a></li>',
         }
 
+    def seasonal_message(now_dt):
+        """Return the correct seasonal message for a given datetime object."""
+        year = now_dt.year
+        if datetime(year, 9, 20, 1, 30) < now_dt < datetime(year, 12, 6, 23, 30):
+            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
+        if datetime(year, 12, 6, 1, 30) < now_dt < datetime(
+            year, 12, 31, 23, 30
+        ) or datetime(year, 1, 1, 1, 30) < now_dt < datetime(year, 4, 1, 1, 29):
+            return ""
+        if datetime(year, 4, 1, 1, 30) < now_dt < datetime(year, 6, 1, 1, 30):
+            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
+        return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
+
     try:
         endpoint = f"http://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"
         key = os.environ["NPS"]
@@ -108,7 +121,7 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             new_events, _ = fetch_events(new_endpoint, headers)
             raw_events.extend(new_events)
 
-        now = datetime(*[int(i) for i in now.split("-")])
+        now_dt = datetime(*[int(i) for i in now.split("-")])
         if raw_events:
             events = [process_event(event) for event in raw_events]
             events.sort(key=lambda x: x["sortable"])
@@ -133,21 +146,20 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             message += "\n".join(event["string"] for event in events)
             return message + "</ul>"
 
-        year = datetime.now().year
-        if datetime(year, 9, 20, 1, 30) < now < datetime(year, 12, 6, 23, 30):
-            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
-        if datetime(year, 12, 6, 1, 30) < now < datetime(
-            year, 12, 31, 23, 30
-        ) or datetime(year, 1, 1, 1, 30) < now < datetime(year, 4, 1, 1, 29):
-            return ""
-        if datetime(year, 4, 1, 1, 30) < now < datetime(year, 6, 1, 1, 30):
-            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
-        return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
+        return seasonal_message(now_dt)
 
     except (JSONDecodeError, ReadTimeout, requests.HTTPError) as e:
         print(f"Failed to retrieve events. {e}", file=sys.stderr)
         traceback.print_exc()
-        return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
+        now_dt = datetime(*[int(i) for i in now.split("-")])
+        seasonal_message_str = seasonal_message(now_dt)
+        if (
+            seasonal_message_str
+            != '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
+        ):
+            return seasonal_message_str
+        else:
+            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
 
 
 if __name__ == "__main__":
