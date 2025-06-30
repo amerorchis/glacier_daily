@@ -148,7 +148,7 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
 
         return seasonal_message(now_dt)
 
-    except (JSONDecodeError, ReadTimeout, requests.HTTPError) as e:
+    except (JSONDecodeError, ReadTimeout) as e:
         print(f"Failed to retrieve events. {e}", file=sys.stderr)
         traceback.print_exc()
         now_dt = datetime(*[int(i) for i in now.split("-")])
@@ -160,6 +160,11 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             return seasonal_message_str
         else:
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
+
+    except requests.HTTPError as e:
+        print(f"Failed to retrieve events. {e}", file=sys.stderr)
+        traceback.print_exc()
+        return "502 Response"
 
 
 if __name__ == "__main__":
