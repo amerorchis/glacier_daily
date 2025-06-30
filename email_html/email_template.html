@@ -71,33 +71,37 @@
                                                     <!-- begin articles -->
                                                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                                                         <tbody>
-                                                            {% if my.daily_update.events != "" %}<tr valign="top">
-                                                                <td width="30">
-                                                                    <p
-                                                                        style="margin:0; font-size:1px; line-height:1px;">
-                                                                        &nbsp;</p>
-                                                                </td>
-                                                                <td colspan="3">
-                                                                    <a style="display:block; margin:0 0 14px;"
-                                                                        href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
-                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg"
-                                                                            width="540" height="160" alt="Events"
-                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
-                                                                    <p
-                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                        <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm"
-                                                                            style="color:#6c7e44; text-decoration:none;">Park
-                                                                            Activities Today</a>
-                                                                    </p>
-                                                                    <div>{{ my.daily_update.events | base64_decode }}
-                                                                    </div>
-                                                                </td>
-                                                                <td width="30">
-                                                                    <p
-                                                                        style="margin:0; font-size:1px; line-height:1px;">
-                                                                        &nbsp;</p>
-                                                                </td>
-                                                            </tr>{% endif %}
+                                                            {% if my.daily_update.events != "" %}
+                                                                {% if my.daily_update.events | base64_decode != "502 Response" %}
+                                                                    <tr valign="top">
+                                                                        <td width="30">
+                                                                            <p
+                                                                                style="margin:0; font-size:1px; line-height:1px;">
+                                                                                &nbsp;</p>
+                                                                        </td>
+                                                                        <td colspan="3">
+                                                                            <a style="display:block; margin:0 0 14px;"
+                                                                                href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
+                                                                                <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg"
+                                                                                    width="540" height="160" alt="Events"
+                                                                                    style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                            <p
+                                                                                style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                                <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm"
+                                                                                    style="color:#6c7e44; text-decoration:none;">Park
+                                                                                    Activities Today</a>
+                                                                            </p>
+                                                                            <div>{{ my.daily_update.events | base64_decode }}
+                                                                            </div>
+                                                                        </td>
+                                                                        <td width="30">
+                                                                            <p
+                                                                                style="margin:0; font-size:1px; line-height:1px;">
+                                                                                &nbsp;</p>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endif %}
+                                                            {% endif %}
                                                             <tr valign="top">
                                                                 <td width="30">
                                                                     <p
