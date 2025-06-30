@@ -17,6 +17,48 @@ from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
 
 
+def record_drip_event(email: str, event: str = "Glacier Daily Update trigger") -> None:
+    """
+    Record a single event for a single subscriber using Drip's record event endpoint.
+
+    Args:
+        email (str): The subscriber's email address.
+        event (str): The event name to record. Defaults to 'Glacier Daily Update trigger'.
+
+    Returns:
+        None
+    """
+    drip_token = os.environ["DRIP_TOKEN"]
+    account_id = os.environ["DRIP_ACCOUNT"]
+    api_key = drip_token
+
+    url = f"https://api.getdrip.com/v2/{account_id}/events"
+    headers = {
+        "Authorization": "Bearer " + api_key,
+        "Content-Type": "application/vnd.api+json",
+        "User-Agent": "Glacier Daily API (glacier.org)",
+    }
+
+    data = {
+        "events": [
+            {
+                "email": email,
+                "action": event,
+            }
+        ]
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
+
+    if response.status_code == 204:
+        print(f"Drip: Event '{event}' recorded successfully for {email}!")
+    else:
+        print(
+            f"Failed to record event for {email}. Error message: {response}",
+            file=sys.stderr,
+        )
+
+
 def get_subs(tag: str) -> list:
     """
     Retrieve and update the list of subscribers with a specific tag.
@@ -78,14 +120,16 @@ def bulk_workflow_trigger(sub_list: list) -> None:
 
         data = {"batches": [{"events": subs_json}]}
 
-        response = requests.post(url, headers=headers, data=json.dumps(data))
+        response = requests.post(
+            url, headers=headers, data=json.dumps(data), timeout=30
+        )
         r = response.json()
 
         if response.status_code == 201:
-            print(f"Drip: Bulk workflow add successful!")
+            print("Drip: Bulk workflow add successful!")
         else:
             print(
-                f"Failed to add subscribers to the campaign. Error message:",
+                "Failed to add subscribers to the campaign. Error message:",
                 r["errors"][0]["code"],
                 " - ",
                 r["errors"][0]["message"],
@@ -121,7 +165,7 @@ def send_in_drip(email: str, campaign_id: str = "169298893") -> None:
         ]
     }
 
-    response = requests.post(url, headers=headers, data=json.dumps(data))
+    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
     r = response.json()
 
     if response.status_code == 201:
@@ -134,3 +178,9 @@ def send_in_drip(email: str, campaign_id: str = "169298893") -> None:
             r["errors"][0]["message"],
             file=sys.stderr,
         )
+
+
+if __name__ == "__main__":
+    # Example usage
+    email = "andrew@glacier.org"
+    record_drip_event(email)

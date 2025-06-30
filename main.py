@@ -15,7 +15,7 @@ load_dotenv("email.env")
 import argparse
 from typing import List
 
-from drip.drip_actions import bulk_workflow_trigger, get_subs
+from drip.drip_actions import bulk_workflow_trigger, get_subs, record_drip_event
 from generate_and_upload import serve_api
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 
@@ -37,6 +37,9 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     serve_api()
 
     # See if this fixes the issue with timelapse not showing.
+    record_drip_event(
+        "andrew@glacier.org"
+    )  # Send just to andrew first to see if that triggers cache refresh.
     sleep(630 if not test else 0)
 
     # Send the email to each subscriber using Drip API.
