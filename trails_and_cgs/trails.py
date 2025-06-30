@@ -121,8 +121,18 @@ def closed_trails() -> str:
     closures.pop()
     closures = [i["msg"] for i in closures]  # Extract messages from list
 
-    if "Swiftcurrent Pass: Closed Due To Bear Activity" in closures:
-        closures.remove("Swiftcurrent Pass: Closed Due To Bear Activity")
+    # Ignore these closures which are redundant or bugs in the list
+    reasons_to_ignore = [
+        "Swiftcurrent Pass: Closed Due To Bear Activity",
+        "2024-2025 construction",
+    ]
+
+    # Remove all closures that mention any reason to ignore
+    closures = [
+        closure
+        for closure in closures
+        if not any(reason in closure for reason in reasons_to_ignore)
+    ]
 
     closures = set(closures)  # remove duplicates
     closures = sorted(list(closures))  # turn back into a list and sort
