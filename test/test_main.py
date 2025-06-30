@@ -27,12 +27,20 @@ def test_main_runs_all_steps(monkeypatch):
         lambda subs: calls.append(f"bulk_workflow_trigger:{subs}"),
     )
 
+    monkeypatch.setattr(
+        main,
+        "record_drip_event",
+        lambda email, event="Glacier Daily Update trigger": calls.append(
+            f"record_drip_event:{email}:{event}"
+        ),
+    )
     main.main(tag="TestTag", test=True)
     # Should call all steps in order
     assert calls == [
         "sleep_to_sunrise",
         "get_subs:TestTag",
         "serve_api",
+        "record_drip_event:andrew@glacier.org:Glacier Daily Update trigger",
         "sleep:0",
         "bulk_workflow_trigger:['test@example.com']",
     ]
@@ -56,6 +64,13 @@ def test_main_test_flag_skips_sleep(monkeypatch):
         lambda subs: calls.append(f"bulk_workflow_trigger:{subs}"),
     )
 
+    monkeypatch.setattr(
+        main,
+        "record_drip_event",
+        lambda email, event="Glacier Daily Update trigger": calls.append(
+            f"record_drip_event:{email}:{event}"
+        ),
+    )
     main.main(test=True)
     assert "sleep:0" in calls
 
@@ -78,5 +93,12 @@ def test_main_default_tag(monkeypatch):
         lambda subs: calls.append(f"bulk_workflow_trigger:{subs}"),
     )
 
+    monkeypatch.setattr(
+        main,
+        "record_drip_event",
+        lambda email, event="Glacier Daily Update trigger": calls.append(
+            f"record_drip_event:{email}:{event}"
+        ),
+    )
     main.main()
     assert any("get_subs:Glacier Daily Update" in c for c in calls)
