@@ -100,10 +100,12 @@
     </div>
 
     {% if my.daily_update.events != "" %}
-    <div class="section">
-        <h2>Park Activities Today</h2>
-        {{ my.daily_update.events | base64_decode }}
-    </div>
+        {% if my.daily_update.events | base64_decode != "502 Response" %}
+            <div class="section">
+                <h2>Park Activities Today</h2>
+                {{ my.daily_update.events | base64_decode }}
+            </div>
+        {% endif %}
     {% endif %}
 
     <div class="section">
