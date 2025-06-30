@@ -1,3 +1,29 @@
+def test_record_drip_event_success(monkeypatch):
+    called = {}
+
+    def fake_post(url, headers, data, timeout):
+        called["url"] = url
+        called["headers"] = headers
+        called["data"] = data
+        called["timeout"] = timeout
+
+        class R:
+            status_code = 204
+
+        return R()
+
+    import types
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    monkeypatch.setattr(
+        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
+    )
+    drip_actions.record_drip_event("test@example.com", event="Test Event")
+    assert called["url"].endswith("/v2/a/events")
+    assert "Test Event" in called["data"]
+    assert called["timeout"] == 30
+
+
 """
 Module for testing the Drip API functionality.
 """
@@ -125,8 +151,9 @@ def test_get_subs_merges(monkeypatch):
 def test_bulk_workflow_trigger(monkeypatch):
     called = {}
 
-    def fake_post(url, headers, data):
+    def fake_post(url, headers, data, timeout):
         called["url"] = url
+        called["timeout"] = timeout
 
         class R:
             status_code = 201
@@ -147,7 +174,9 @@ def test_bulk_workflow_trigger(monkeypatch):
 
 
 def test_send_in_drip(monkeypatch):
-    def fake_post(url, headers, data):
+    def fake_post(url, headers, data, timeout):
+        assert timeout == 30
+
         class R:
             status_code = 201
 
