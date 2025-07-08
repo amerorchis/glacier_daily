@@ -305,27 +305,29 @@
                                                                         &nbsp;</p>
                                                                 </td>
                                                                 <td>
-                                                                    <a style="display:block; margin:0 0 14px;"
-                                                                        href="{{ my.daily_update.image_otd_link | base64_decode }}"><img
-                                                                            src="{{ my.daily_update.image_otd | base64_decode }}"
-                                                                            alt="Today's picture of the day" width="255"
-                                                                            height="150"
-                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
-                                                                    <p
-                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                        <a href="{{ my.daily_update.image_otd_link | base64_decode }}"
-                                                                            style="color:#6c7e44; text-decoration:none;">Glacier
-                                                                            Image of the Day</a>
-                                                                    </p>
-                                                                    <p
-                                                                        style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {% if my.daily_update.image_otd_title != "" %}{{
-                                                                        my.daily_update.image_otd_title | base64_decode
-                                                                        }}<br>{% endif %}Image courtesy of
-                                                                        <a href="{{ my.daily_update.image_otd_link | base64_decode }}"
-                                                                            style="color:#333333;">Glacier National
-                                                                            Park.</a>
-                                                                    </p>
+                                                                    {% if my.daily_update.image_otd | base64_decode != 'Flickr API Error' %}
+                                                                        <a style="display:block; margin:0 0 14px;"
+                                                                            href="{{ my.daily_update.image_otd_link | base64_decode }}"><img
+                                                                                src="{{ my.daily_update.image_otd | base64_decode }}"
+                                                                                alt="Today's picture of the day" width="255"
+                                                                                height="150"
+                                                                                style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                        <p
+                                                                            style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                            <a href="{{ my.daily_update.image_otd_link | base64_decode }}"
+                                                                                style="color:#6c7e44; text-decoration:none;">Glacier
+                                                                                Image of the Day</a>
+                                                                        </p>
+                                                                        <p
+                                                                            style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
+                                                                            {% if my.daily_update.image_otd_title != "" %}{{
+                                                                            my.daily_update.image_otd_title | base64_decode
+                                                                            }}<br>{% endif %}Image courtesy of
+                                                                            <a href="{{ my.daily_update.image_otd_link | base64_decode }}"
+                                                                                style="color:#333333;">Glacier National
+                                                                                Park.</a>
+                                                                        </p>
+                                                                    {% endif %}
                                                                 </td>
                                                                 <td width="30">
                                                                     <p

@@ -28,7 +28,7 @@ def test_gen_data(monkeypatch):
     monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
     monkeypatch.setattr(gau, "events_today", lambda: "events")
-    monkeypatch.setattr(gau, "resize_full", lambda: ("img", "img_title", "img_link"))
+    monkeypatch.setattr(gau, "get_image_otd", lambda: ("img", "img_title", "img_link"))
     monkeypatch.setattr(gau, "peak", lambda: ("peak", "peak_img", "peak_map"))
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still"))
     monkeypatch.setattr(

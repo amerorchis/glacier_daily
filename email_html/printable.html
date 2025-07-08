@@ -167,13 +167,15 @@
                     (Product Link)</a>.</p>
         </div>
         <div class="column">
-            <h2>Glacier Image of the Day</h2>
-            <img src="{{ my.daily_update.image_otd | base64_decode }}" alt="Today's picture of the day">
-            {% if my.daily_update.image_otd_title != "" %}
-            <p>{{ my.daily_update.image_otd_title | base64_decode }}</p>
+            {% if my.daily_update.image_otd != "Flickr API Error" %}
+                <h2>Glacier Image of the Day</h2>
+                <img src="{{ my.daily_update.image_otd | base64_decode }}" alt="Today's picture of the day">
+                {% if my.daily_update.image_otd_title != "" %}
+                <p>{{ my.daily_update.image_otd_title | base64_decode }}</p>
+                {% endif %}
+                <p>Image courtesy of <a href="{{ my.daily_update.image_otd_link | base64_decode }}">Glacier National
+                        Park.</a></p>
             {% endif %}
-            <p>Image courtesy of <a href="{{ my.daily_update.image_otd_link | base64_decode }}">Glacier National
-                    Park.</a></p>
         </div>
     </div>
 

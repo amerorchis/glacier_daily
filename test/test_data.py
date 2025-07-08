@@ -54,9 +54,9 @@ def required_truthy_keys():
         "weather_image",
         "weather2",
         "season",
-        "trails",
+        # "trails",
         "campgrounds",
-        "roads",
+        # "roads",
         "peak",
         "peak_image",
         "peak_map",
@@ -65,8 +65,6 @@ def required_truthy_keys():
         "product_title",
         "product_desc",
         "image_otd",
-        "image_otd_title",
-        "image_otd_link",
     }
 
 

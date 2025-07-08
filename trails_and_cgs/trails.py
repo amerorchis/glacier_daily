@@ -155,7 +155,7 @@ def get_closed_trails() -> str:
     """
     try:
         return closed_trails()
-    except requests.exceptions.HTTPError:
+    except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         print(
             f"Handled error with Trail Status, here is the traceback:\n{traceback.format_exc()}",
             file=sys.stderr,

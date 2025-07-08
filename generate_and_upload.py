@@ -11,7 +11,7 @@ from datetime import datetime
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
 from drip.html_friendly import html_safe
-from image_otd.image_otd import resize_full
+from image_otd.image_otd import get_image_otd
 from notices.notices import get_notices
 from peak.peak import peak
 from product_otd.product import get_product
@@ -39,7 +39,7 @@ def gen_data():
         roads_future = executor.submit(get_road_status)
         hiker_biker_future = executor.submit(get_hiker_biker_status)
         events_future = executor.submit(events_today)
-        image_future = executor.submit(resize_full)
+        image_future = executor.submit(get_image_otd)
         peak_future = executor.submit(peak)
         sunrise_future = executor.submit(process_video)
         product_future = executor.submit(get_product)
