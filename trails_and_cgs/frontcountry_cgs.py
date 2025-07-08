@@ -35,7 +35,15 @@ def campground_alerts():
             file=sys.stderr,
         )
         return "The campgrounds page on the park website is currently down."
-    status = json.loads(r.text)
+
+    try:
+        status = json.loads(r.text)
+    except json.JSONDecodeError:
+        print(
+            f"Handled error with Campground Status JSON decode, here is the traceback:\n{traceback.format_exc()}",
+            file=sys.stderr,
+        )
+        return "The campgrounds page on the park website is currently down."
 
     try:
         campgrounds = status["rows"]

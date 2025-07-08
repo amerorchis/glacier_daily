@@ -94,8 +94,8 @@ def get_flickr() -> FlickrImage:
             headers={"User-Agent": "Mozilla/5.0 (compatible; GlacierDailyBot/1.0)"},
         )
 
-        max_retries = 5
-        backoff = 2
+        max_retries = 2
+        backoff = 4
         for attempt in range(max_retries):
             try:
                 with urllib.request.urlopen(req) as response, open(

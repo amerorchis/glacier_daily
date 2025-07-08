@@ -65,8 +65,6 @@ def required_truthy_keys():
         "product_title",
         "product_desc",
         "image_otd",
-        "image_otd_title",
-        "image_otd_link",
     }
 
 
