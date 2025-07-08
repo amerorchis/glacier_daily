@@ -5,6 +5,7 @@ It includes functions to resize the image and upload it to a specified directory
 
 import os
 import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Tuple
@@ -19,7 +20,7 @@ if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
         os.path.dirname(os.path.abspath(__file__))
     )  # pragma: no cover
 
-from image_otd.flickr import get_flickr
+from image_otd.flickr import FlickrAPIError, get_flickr
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json
 
@@ -124,3 +125,26 @@ def resize_full() -> Tuple[str, str, str]:
     upload_address = upload_pic_otd()
 
     return upload_address, image_data.title, image_data.link
+
+
+def get_image_otd() -> Tuple[str, str, str]:
+    """
+    Get the image of the day from Flickr.
+    """
+    try:
+        return resize_full()
+    except FlickrAPIError:
+        return "Flickr API Error", "", ""
+
+
+if __name__ == "__main__":
+    try:
+        upload_address, image_title, image_link = resize_full()
+        print(f"Image uploaded to: {upload_address}")
+        print(f"Image title: {image_title}")
+        print(f"Image link: {image_link}")
+    except (FileNotFoundError, ImageProcessingError) as e:
+        print(f"Error processing image: {str(e)}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
+        # traceback.print_exc()

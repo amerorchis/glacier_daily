@@ -52,16 +52,23 @@ def mock_flickr_response():
 
 def test_get_flickr_success(mock_env_vars, mock_flickr_response):
     with patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI, patch(
-        "image_otd.flickr.urlretrieve"
-    ) as mock_urlretrieve:
+        "image_otd.flickr.urllib.request.urlopen"
+    ) as mock_urlopen, patch("builtins.open", create=True) as mock_open:
 
         # Setup mock FlickrAPI
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
         MockFlickrAPI.return_value = mock_api
 
-        # Setup mock urlretrieve
-        mock_urlretrieve.return_value = None
+        # Setup mock urlopen
+        mock_response = Mock()
+        mock_response.status = 200
+        mock_response.read.return_value = b"fake image data"
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        # Setup mock open
+        mock_file = Mock()
+        mock_open.return_value.__enter__.return_value = mock_file
 
         result = get_flickr()
 
@@ -89,14 +96,14 @@ def test_get_flickr_api_error(mock_env_vars):
 
 def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
     with patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI, patch(
-        "image_otd.flickr.urlretrieve"
-    ) as mock_urlretrieve:
+        "image_otd.flickr.urllib.request.urlopen"
+    ) as mock_urlopen, patch("builtins.open", create=True):
 
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
         MockFlickrAPI.return_value = mock_api
 
-        mock_urlretrieve.side_effect = URLError("Download failed")
+        mock_urlopen.side_effect = URLError("Download failed")
 
         with pytest.raises(FlickrAPIError, match="Failed to download image"):
             get_flickr()
