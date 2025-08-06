@@ -13,7 +13,7 @@ An automated system that generates and distributes daily email updates about con
 - Trail and road status tracking
 - Daily featured peak with satellite imagery
 - Sunrise timelapse videos
-- Park ranger activity schedules
+- Ranger-led activity schedules
 - Featured product and image of the day
 
 ## Quick Start (For Users)
