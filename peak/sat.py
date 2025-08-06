@@ -3,7 +3,6 @@ Generate a static image of peak of the day using Mapbox API and upload to websit
 """
 
 import os
-import sys
 from datetime import datetime
 from io import BytesIO
 
@@ -13,11 +12,6 @@ from dotenv import load_dotenv
 from PIL import Image
 
 load_dotenv("email.env")
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from shared.ftp import upload_file
 

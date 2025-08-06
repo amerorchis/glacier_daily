@@ -2,7 +2,6 @@
 Select the best thumbnail frame from the timelapse video.
 """
 
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,11 +13,6 @@ from dotenv import load_dotenv
 from PIL import Image
 
 load_dotenv("email.env")
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json

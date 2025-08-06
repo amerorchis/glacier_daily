@@ -2,14 +2,6 @@
 Custom class to define a road in the park.
 """
 
-import os
-import sys
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
-
 from roads.Place import Place
 
 

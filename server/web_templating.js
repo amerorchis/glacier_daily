@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             // Get the content container
             const contentContainer = document.getElementById('content');
-            
+
             // Iterate through each key in the JSON
             Object.keys(data).forEach(key => {
                 // Create a regular expression to match the placeholders like {{ key }}

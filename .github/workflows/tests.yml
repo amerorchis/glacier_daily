@@ -7,7 +7,27 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev
+
+      - name: Run pre-commit hooks
+        run: |
+          echo "Running code quality checks..."
+          uv run pre-commit run --all-files --show-diff-on-failure --verbose
+
+  unit-and-integration-test:
     runs-on: ubuntu-latest
     steps:
 
@@ -16,10 +36,12 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          uv sync --extra dev
 
       - name: Create directory
         run: |
@@ -62,7 +84,8 @@ jobs:
           SUNSETHUE_KEY: ${{ secrets.SUNSETHUE_KEY }}
           TEST_SECRET: ${{ secrets.TEST_SECRET }}
         run: |
-          pytest test/ --cov=. --cov-report xml
+          echo "Running test suite with coverage..."
+          uv run pytest test/ --cov=. --cov-report xml --tb=short
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5

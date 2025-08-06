@@ -129,4 +129,5 @@ def serve_api():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    serve_api()
+    gen_data()
+    # serve_api()

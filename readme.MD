@@ -19,7 +19,8 @@ View the result [here.](https://glacier.org/glacier-daily-updates-signup/#iFrame
 
 ## Prerequisites
 
-- Python 3.9 or higher
+- Python 3.9 (required for Raspberry Pi compatibility)
+- [uv](https://docs.astral.sh/uv/) package manager
 - Access to required API keys (see Configuration section)
 - FTP access to glacier.org
 - Drip email marketing account
@@ -33,13 +34,20 @@ git clone [repository-url]
 cd glacier-daily-update
 ```
 
-2. Install required dependencies:
+2. Install dependencies using uv:
 
 ```bash
-pip install -r requirements.txt
+uv sync --extra dev
 ```
 
-3. Set up environment variables in `email.env`:
+3. Create required directories:
+
+```bash
+mkdir -p email_images/today/
+mkdir -p notices/
+```
+
+4. Set up environment variables in `email.env`:
 
 ```
 NPS=your_nps_api_key
@@ -55,6 +63,58 @@ FTP_USERNAME=your_ftp_username
 FTP_PASSWORD=your_ftp_password
 ```
 
+## Development Environment
+
+### Code Quality and Pre-commit Hooks
+
+This project uses Black for code formatting and pre-commit hooks to maintain code quality.
+
+1. Install pre-commit hooks:
+
+```bash
+pre-commit install
+```
+
+2. Format code manually with Black:
+
+```bash
+black .
+```
+
+The pre-commit hooks will automatically run Black formatting and other checks on every commit. If you need to bypass the hooks temporarily, use:
+
+```bash
+git commit --no-verify
+```
+
+### Running Tests
+
+Run the full test suite with coverage:
+
+```bash
+uv run pytest test/ --cov=. --cov-report xml
+```
+
+Run specific tests:
+
+```bash
+# Test a specific file
+uv run pytest test/test_weather.py
+
+# Test a specific module
+uv run pytest test/weather/
+```
+
+### Development Commands
+
+```bash
+# Generate data without sending emails
+uv run python generate_and_upload.py
+
+# Run in test mode (test subscribers only)
+uv run python main.py --tag "Test Glacier Daily Update"
+```
+
 ## Usage
 
 ### Standard Operation
@@ -62,7 +122,7 @@ FTP_PASSWORD=your_ftp_password
 Run the main script to generate and send daily updates:
 
 ```bash
-python main.py
+uv run python main.py
 ```
 
 ### Test Mode
@@ -70,7 +130,7 @@ python main.py
 To run in test mode (sends only to test subscribers):
 
 ```bash
-python main.py --tag "Test Glacier Daily Update"
+uv run python main.py --tag "Test Glacier Daily Update"
 ```
 
 ## Organization

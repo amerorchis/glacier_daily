@@ -3,7 +3,6 @@ This module handles the image of the day functionality.
 It includes functions to resize the image and upload it to a specified directory.
 """
 
-import os
 import sys
 import traceback
 from datetime import datetime
@@ -14,11 +13,6 @@ from dotenv import load_dotenv
 from PIL import Image, UnidentifiedImageError
 
 load_dotenv("email.env")
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from image_otd.flickr import FlickrAPIError, get_flickr
 from shared.ftp import upload_file

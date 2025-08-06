@@ -3,18 +3,12 @@ Get road status from NPS and format into HTML.
 """
 
 import json
-import os
 import sys
 import traceback
 from typing import Dict, List
 
 import requests
 import urllib3
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from roads.Road import Road
 

@@ -1,18 +1,11 @@
 import io
 import json
-import os
 import socket
-import sys
 from datetime import datetime
 from ftplib import FTP
 from unittest.mock import ANY, Mock, patch
 
 import pytest
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from sunrise_timelapse.timelapse_json import gen_json, send_timelapse_data
 

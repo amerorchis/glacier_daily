@@ -1,6 +1,4 @@
 import json
-import os
-import sys
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
@@ -8,11 +6,6 @@ from unittest.mock import Mock, mock_open, patch
 import pytest
 import requests_cache
 from requests.exceptions import RequestException
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from weather.forecast import Location, WeatherAPI, get_forecast
 
