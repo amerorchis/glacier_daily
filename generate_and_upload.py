@@ -6,6 +6,7 @@ server with FTP.
 import base64
 import concurrent.futures
 import json
+import os
 from datetime import datetime
 
 from activities.events import events_today
@@ -129,5 +130,8 @@ def serve_api():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    gen_data()
-    # serve_api()
+    environment = os.getenv("ENVIRONMENT", "development")
+    if environment == "development":
+        gen_data()
+    elif environment == "production":
+        serve_api()
