@@ -27,7 +27,7 @@ jobs:
           echo "Running code quality checks..."
           uv run pre-commit run --all-files --show-diff-on-failure --verbose
 
-  test:
+  unit-and-integration-test:
     runs-on: ubuntu-latest
     steps:
 

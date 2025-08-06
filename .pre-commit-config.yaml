@@ -10,6 +10,7 @@ repos:
     rev: 24.10.0
     hooks:
     -   id: black
+        exclude: '\.(html|txt)$'
 
 -   repo: https://github.com/gitleaks/gitleaks
     rev: v8.23.2
