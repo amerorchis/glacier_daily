@@ -1,18 +1,11 @@
 import io
 import json
-import os
-import sys
 from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import requests
 from PIL import Image
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from product_otd.product import get_product, resize_image, upload_potd
 
@@ -64,14 +57,12 @@ class TestGetProduct:
         self, mock_product_response, mock_image_response, mock_env_vars
     ):
         """Test successful product retrieval"""
-        with patch("requests.get") as mock_get, patch(
-            "product_otd.product.resize_image"
-        ) as mock_resize, patch(
-            "product_otd.product.upload_potd"
-        ) as mock_upload, patch(
-            "product_otd.product.retrieve_from_json", return_value=(False, None)
-        ), patch(
-            "random.randrange", return_value=1
+        with (
+            patch("requests.get") as mock_get,
+            patch("product_otd.product.resize_image") as mock_resize,
+            patch("product_otd.product.upload_potd") as mock_upload,
+            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
+            patch("random.randrange", return_value=1),
         ):
 
             # Mock API responses
@@ -111,8 +102,9 @@ class TestGetProduct:
 
     def test_get_product_api_error(self, mock_env_vars):
         """Test handling of API error"""
-        with patch("requests.get") as mock_get, patch(
-            "product_otd.product.retrieve_from_json", return_value=(False, None)
+        with (
+            patch("requests.get") as mock_get,
+            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
         ):
 
             mock_get.return_value = Mock(status_code=500)
@@ -126,9 +118,11 @@ class TestResizeImage:
 
     def test_resize_image_success(self, mock_image):
         """Test successful image resizing"""
-        with patch("requests.get") as mock_get, patch(
-            "PIL.Image.open"
-        ) as mock_open, patch("PIL.Image.new") as mock_new:
+        with (
+            patch("requests.get") as mock_get,
+            patch("PIL.Image.open") as mock_open,
+            patch("PIL.Image.new") as mock_new,
+        ):
 
             # Mock request response
             mock_response = Mock()

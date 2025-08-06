@@ -1,15 +1,8 @@
 import json
-import os
-import sys
 from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from weather.weather_alerts import WeatherAlert, WeatherAlertService, weather_alerts
 

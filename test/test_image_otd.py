@@ -1,17 +1,10 @@
 # test_flickr.py
-import os
-import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 from urllib.error import URLError
 
 import pytest
 from PIL import Image, UnidentifiedImageError
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from image_otd.flickr import FlickrAPIError, FlickrImage, get_flickr
 from image_otd.image_otd import (
@@ -51,9 +44,11 @@ def mock_flickr_response():
 
 
 def test_get_flickr_success(mock_env_vars, mock_flickr_response):
-    with patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI, patch(
-        "image_otd.flickr.urllib.request.urlopen"
-    ) as mock_urlopen, patch("builtins.open", create=True) as mock_open:
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+        patch("builtins.open", create=True) as mock_open,
+    ):
 
         # Setup mock FlickrAPI
         mock_api = Mock()
@@ -95,9 +90,11 @@ def test_get_flickr_api_error(mock_env_vars):
 
 
 def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
-    with patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI, patch(
-        "image_otd.flickr.urllib.request.urlopen"
-    ) as mock_urlopen, patch("builtins.open", create=True):
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+        patch("builtins.open", create=True),
+    ):
 
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
@@ -173,8 +170,9 @@ def test_process_image_processing_error(sample_image):
 
 
 def test_upload_pic_otd_success():
-    with patch("image_otd.image_otd.upload_file") as mock_upload, patch(
-        "image_otd.image_otd.Path.exists", return_value=True
+    with (
+        patch("image_otd.image_otd.upload_file") as mock_upload,
+        patch("image_otd.image_otd.Path.exists", return_value=True),
     ):
 
         mock_upload.return_value = ("http://example.com/image.jpg", None)
@@ -199,13 +197,12 @@ def test_resize_full_cached():
 
 
 def test_resize_full_new_image(sample_image):
-    with patch(
-        "image_otd.image_otd.retrieve_from_json", return_value=(False, None)
-    ), patch("image_otd.image_otd.get_flickr") as mock_get_flickr, patch(
-        "image_otd.image_otd.process_image"
-    ) as mock_process, patch(
-        "image_otd.image_otd.upload_pic_otd"
-    ) as mock_upload:
+    with (
+        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
+        patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
+        patch("image_otd.image_otd.process_image") as mock_process,
+        patch("image_otd.image_otd.upload_pic_otd") as mock_upload,
+    ):
 
         # Setup mocks
         mock_get_flickr.return_value = FlickrImage(
@@ -223,9 +220,10 @@ def test_resize_full_new_image(sample_image):
 
 
 def test_resize_full_flickr_error():
-    with patch(
-        "image_otd.image_otd.retrieve_from_json", return_value=(False, None)
-    ), patch("image_otd.image_otd.get_flickr") as mock_get_flickr:
+    with (
+        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
+        patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
+    ):
 
         mock_get_flickr.side_effect = FlickrAPIError("API Error")
 
@@ -234,11 +232,11 @@ def test_resize_full_flickr_error():
 
 
 def test_resize_full_processing_error(sample_image):
-    with patch(
-        "image_otd.image_otd.retrieve_from_json", return_value=(False, None)
-    ), patch("image_otd.image_otd.get_flickr") as mock_get_flickr, patch(
-        "image_otd.image_otd.process_image"
-    ) as mock_process:
+    with (
+        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
+        patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
+        patch("image_otd.image_otd.process_image") as mock_process,
+    ):
 
         mock_get_flickr.return_value = FlickrImage(
             sample_image, "test_title", "test_link"

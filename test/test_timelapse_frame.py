@@ -1,5 +1,3 @@
-import os
-import sys
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
@@ -8,11 +6,6 @@ import cv2
 import numpy as np
 import pytest
 from PIL import Image
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from sunrise_timelapse.vid_frame import (
     FileOperationError,
@@ -61,11 +54,11 @@ def test_find_frame_success(mock_video, tmp_path):
     # Create empty file
     video_path.touch()
 
-    with patch("cv2.VideoCapture", return_value=mock_video), patch(
-        "cv2.imwrite"
-    ) as mock_imwrite, patch(
-        "sunrise_timelapse.vid_frame.play_button"
-    ) as mock_play_button:
+    with (
+        patch("cv2.VideoCapture", return_value=mock_video),
+        patch("cv2.imwrite") as mock_imwrite,
+        patch("sunrise_timelapse.vid_frame.play_button") as mock_play_button,
+    ):
 
         result = find_frame(video_path)
 

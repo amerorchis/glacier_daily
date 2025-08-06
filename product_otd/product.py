@@ -6,7 +6,6 @@ then return a description, link to product, and link to photo.
 import json
 import os
 import random
-import sys
 from datetime import datetime
 from io import BytesIO
 from re import sub
@@ -16,11 +15,6 @@ from dotenv import load_dotenv
 from PIL import Image
 
 load_dotenv("email.env")
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json

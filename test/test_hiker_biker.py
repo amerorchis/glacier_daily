@@ -1,17 +1,9 @@
 import json
-import os
-import sys
+from typing import Dict, Optional
 from unittest.mock import Mock, patch
 
 import pytest
 import requests
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
-
-from typing import Dict, Optional
 
 from roads.hiker_biker import get_hiker_biker_status, hiker_biker
 from roads.HikerBiker import HikerBiker

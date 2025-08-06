@@ -1,13 +1,6 @@
-import os
-import sys
 from unittest.mock import patch
 
 import pytest
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
 
 from weather.weather import WeatherContent, weather_data
 
@@ -27,15 +20,14 @@ MOCK_AURORA_RETURN = ("Good", "Aurora visible tonight")
 @pytest.fixture
 def mock_all_weather_services():
     """Fixture to mock all external weather service calls"""
-    with patch("weather.weather.get_forecast") as mock_forecast, patch(
-        "weather.weather.get_air_quality"
-    ) as mock_aqi, patch("weather.weather.weather_alerts") as mock_alerts, patch(
-        "weather.weather.get_season"
-    ) as mock_season, patch(
-        "weather.weather.get_sunset_hue"
-    ) as mock_sunset, patch(
-        "weather.weather.aurora_forecast"
-    ) as mock_aurora:
+    with (
+        patch("weather.weather.get_forecast") as mock_forecast,
+        patch("weather.weather.get_air_quality") as mock_aqi,
+        patch("weather.weather.weather_alerts") as mock_alerts,
+        patch("weather.weather.get_season") as mock_season,
+        patch("weather.weather.get_sunset_hue") as mock_sunset,
+        patch("weather.weather.aurora_forecast") as mock_aurora,
+    ):
 
         # Set up mock returns
         mock_forecast.return_value = MOCK_FORECAST_RETURN

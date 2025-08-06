@@ -28,14 +28,6 @@ def test_record_drip_event_success(monkeypatch):
 Module for testing the Drip API functionality.
 """
 
-import os
-import sys
-
-if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
-    sys.path[0] = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )  # pragma: no cover
-
 
 # --- html_friendly.py ---
 import drip.html_friendly as html_friendly

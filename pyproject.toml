@@ -1,27 +1,71 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "glacier-daily"
 version = "1.1.0"
 description = "Daily email updates about conditions at Glacier National Park"
+authors = [
+    {name = "Andrew Smith", email = "andrew@glacier.org"},
+]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = "==3.9.*"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Other Audience",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+]
 dependencies = [
     "astral>=3.2",
     "beautifulsoup4>=4.13.4",
-    "black>=25.1.0",
     "flickrapi>=2.4.0",
     "gspread>=6.2.1",
     "jinja2>=3.1.6",
     "numpy>=2.0.2",
     "opencv-python>=4.11.0.86",
     "pillow>=11.3.0",
-    "pre-commit>=4.2.0",
     "protobuf>=6.31.1",
-    "pytest>=8.4.1",
-    "pytest-cov>=6.2.1",
     "python-dotenv>=1.1.1",
     "pytz>=2025.2",
     "requests>=2.32.4",
     "requests-cache>=1.2.1",
     "timezonefinder>=7.0.1",
     "urllib3>=2.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.1.0",
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+]
+
+[project.scripts]
+glacier-daily = "main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["activities", "drip", "image_otd", "notices", "peak", "product_otd", "roads", "shared", "sunrise_timelapse", "trails_and_cgs", "weather"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--strict-markers --strict-config"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::urllib3.exceptions.NotOpenSSLWarning",
 ]
