@@ -87,8 +87,6 @@ def get_flickr() -> FlickrImage:
         save_loc = Path("email_images/today/raw_image_otd.jpg")
         save_loc.parent.mkdir(parents=True, exist_ok=True)
 
-        print(f"Downloading image from {pic_url} to {save_loc}")
-
         req = urllib.request.Request(
             pic_url,
             headers={
@@ -110,9 +108,10 @@ def get_flickr() -> FlickrImage:
         backoff = 4
         for attempt in range(max_retries):
             try:
-                with urllib.request.urlopen(req) as response, open(
-                    save_loc, "wb"
-                ) as out_file:
+                with (
+                    urllib.request.urlopen(req) as response,
+                    open(save_loc, "wb") as out_file,
+                ):
                     if response.status == 429:
                         # Too Many Requests, backoff and retry
                         if attempt < max_retries - 1:
