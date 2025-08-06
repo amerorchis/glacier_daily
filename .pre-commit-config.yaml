@@ -4,6 +4,7 @@ repos:
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
+        exclude: '\.(html|txt)$'
     -   id: trailing-whitespace
         exclude: '\.(html|txt)$'
 
