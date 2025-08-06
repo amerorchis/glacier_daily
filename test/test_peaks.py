@@ -87,10 +87,10 @@ def test_peak_sat_image_generation(mock_env_vars, sample_peak_data):
     mock_response.status_code = 200
     mock_response.content = b"test_image_content"
 
-    with patch("requests.get", return_value=mock_response), patch(
-        "PIL.Image.open"
-    ) as mock_open, patch(
-        "peak.sat.upload_peak", return_value="https://example.com/peak.jpg"
+    with (
+        patch("requests.get", return_value=mock_response),
+        patch("PIL.Image.open") as mock_open,
+        patch("peak.sat.upload_peak", return_value="https://example.com/peak.jpg"),
     ):
 
         result = peak_sat(sample_peak_data)
@@ -156,8 +156,9 @@ def test_peak_with_invalid_coordinates(mock_env_vars):
 
 def test_peak_csv_read():
     """Test reading of peaks from CSV"""
-    with patch("random.seed"), patch(
-        "peak.peak.retrieve_from_json", return_value=(False, None)
+    with (
+        patch("random.seed"),
+        patch("peak.peak.retrieve_from_json", return_value=(False, None)),
     ):
         result = peak(test=True)
 

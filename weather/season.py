@@ -2,7 +2,7 @@
 This module determines the season based on a given or current date.
 Seasons are defined as:
     - Winter: December 1 - March 31
-    - Spring: April 1 - June 30 
+    - Spring: April 1 - June 30
     - Summer: July 1 - September 30
     - Fall: October 1 - November 30
 Note: this is to figure out which template theme to use and so it goes

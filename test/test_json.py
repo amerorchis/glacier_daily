@@ -33,8 +33,9 @@ def sample_json_data():
 def test_successful_retrieval(sample_json_data):
     mock_file = mock_open(read_data=json.dumps(sample_json_data))
 
-    with patch("builtins.open", mock_file), patch(
-        "shared.retrieve_from_json.datetime", MockDateTimeNow
+    with (
+        patch("builtins.open", mock_file),
+        patch("shared.retrieve_from_json.datetime", MockDateTimeNow),
     ):
 
         success, values = retrieve_from_json(["weather1", "peak", "roads"])
