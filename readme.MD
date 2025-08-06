@@ -39,7 +39,14 @@ cd glacier-daily-update
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables in `email.env`:
+3. Create required directories:
+
+```bash
+mkdir -p email_images/today/
+mkdir -p notices/
+```
+
+4. Set up environment variables in `email.env`:
 
 ```
 NPS=your_nps_api_key
@@ -53,6 +60,58 @@ BC_TOKEN=your_bigcommerce_token
 BC_STORE_HASH=your_store_hash
 FTP_USERNAME=your_ftp_username
 FTP_PASSWORD=your_ftp_password
+```
+
+## Development Environment
+
+### Code Quality and Pre-commit Hooks
+
+This project uses Black for code formatting and pre-commit hooks to maintain code quality.
+
+1. Install pre-commit hooks:
+
+```bash
+pre-commit install
+```
+
+2. Format code manually with Black:
+
+```bash
+black .
+```
+
+The pre-commit hooks will automatically run Black formatting and other checks on every commit. If you need to bypass the hooks temporarily, use:
+
+```bash
+git commit --no-verify
+```
+
+### Running Tests
+
+Run the full test suite with coverage:
+
+```bash
+pytest test/ --cov=. --cov-report xml
+```
+
+Run specific tests:
+
+```bash
+# Test a specific file
+pytest test/test_weather.py
+
+# Test a specific module
+pytest test/weather/
+```
+
+### Development Commands
+
+```bash
+# Generate data without sending emails
+python generate_and_upload.py
+
+# Run in test mode (test subscribers only)
+python main.py --tag "Test Glacier Daily Update"
 ```
 
 ## Usage
