@@ -305,7 +305,7 @@
                                                                         &nbsp;</p>
                                                                 </td>
                                                                 <td>
-                                                                    {% if my.daily_update.image_otd | base64_decode != 'Flickr API Error' %}
+                                                                    {% if my.daily_update.image_otd | base64_decode != "Flickr API Error" %}
                                                                         <a style="display:block; margin:0 0 14px;"
                                                                             href="{{ my.daily_update.image_otd_link | base64_decode }}"><img
                                                                                 src="{{ my.daily_update.image_otd | base64_decode }}"
