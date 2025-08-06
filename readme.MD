@@ -2,60 +2,61 @@
 
 [![codecov](https://codecov.io/github/amerorchis/glacier_daily/graph/badge.svg?token=JS85YV7E68)](https://codecov.io/github/amerorchis/glacier_daily) [![Tests](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml/badge.svg)](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A comprehensive system that automatically generates and distributes daily email updates about conditions at Glacier National Park. The system aggregates data from multiple sources, processes it, and delivers personalized updates to subscribers through the Drip email platform.
+An automated system that generates and distributes daily email updates about conditions at Glacier National Park. The system aggregates data from multiple sources and delivers personalized updates to subscribers through the Drip email platform.
 
-View the result [here.](https://glacier.org/glacier-daily-updates-signup/#iFrame1)
+**View the live emails [here](https://glacier.org/glacier-daily-updates-signup/#iFrame1).**
 
 ## Features
 
 - Real-time park conditions and updates
-- Weather forecasts and alerts
+- Weather forecasts, alerts, and air quality
 - Trail and road status tracking
 - Daily featured peak with satellite imagery
 - Sunrise timelapse videos
 - Park ranger activity schedules
 - Featured product and image of the day
-- Automated email delivery
 
-## Prerequisites
+## Quick Start (For Users)
 
-- Python 3.9 (required for Raspberry Pi compatibility)
+### Prerequisites
+- Python 3.9
 - [uv](https://docs.astral.sh/uv/) package manager
-- Access to required API keys (see Configuration section)
-- FTP access to glacier.org
-- Drip email marketing account
+- API keys and FTP access (see Configuration)
 
-## Installation
-
-1. Clone the repository:
-
+### Installation
 ```bash
+# Clone and setup
 git clone [repository-url]
 cd glacier-daily-update
+uv sync
+
+# Create required directories
+mkdir -p email_images/today/ notices/
+
+# Configure environment variables in email.env (see Configuration section)
 ```
 
-2. Install dependencies using uv:
-
+### Usage
 ```bash
-uv sync --extra dev
+# Run daily update (production)
+uv run python main.py
+
+# Run in test mode (test subscribers only)
+uv run python main.py --tag "Test Glacier Daily Update"
+
+# Generate data without sending emails
+uv run python generate_and_upload.py
 ```
 
-3. Create required directories:
+### Configuration
 
-```bash
-mkdir -p email_images/today/
-mkdir -p notices/
-```
-
-4. Set up environment variables in `email.env`:
-
+Create `email.env` with your API keys and credentials:
 ```
 NPS=your_nps_api_key
 DRIP_TOKEN=your_drip_token
 DRIP_ACCOUNT=your_drip_account_id
 flickr_key=your_flickr_key
 flickr_secret=your_flickr_secret
-glaciernps_uid=your_glaciernps_user_id
 MAPBOX_TOKEN=your_mapbox_token
 BC_TOKEN=your_bigcommerce_token
 BC_STORE_HASH=your_store_hash
@@ -63,149 +64,89 @@ FTP_USERNAME=your_ftp_username
 FTP_PASSWORD=your_ftp_password
 ```
 
-## Development Environment
+---
 
-### Code Quality and Pre-commit Hooks
+## Contributing & Development
 
-This project uses Black for code formatting and pre-commit hooks to maintain code quality.
+### Development Setup
 
-1. Install pre-commit hooks:
+1. **Install development dependencies:**
+   ```bash
+   uv sync --extra dev
+   ```
+
+2. **Install pre-commit hooks:**
+   ```bash
+   uv run pre-commit install
+   ```
+
+3. **Set up Google Sheets API:**
+   - Place service account JSON file in `notices/sheets-api-389117-34906b5fba7f.json`
+
+### Code Quality
+
+This project uses automated code formatting and quality checks:
+
+- **Black** for Python code formatting
+- **isort** for import sorting
+- **Pre-commit hooks** for automated checks
 
 ```bash
-pre-commit install
+# Format code manually
+uv run black .
+
+# Run all quality checks
+uv run pre-commit run --all-files
 ```
 
-2. Format code manually with Black:
+### Testing
 
 ```bash
-black .
-```
-
-The pre-commit hooks will automatically run Black formatting and other checks on every commit. If you need to bypass the hooks temporarily, use:
-
-```bash
-git commit --no-verify
-```
-
-### Running Tests
-
-Run the full test suite with coverage:
-
-```bash
+# Run full test suite with coverage
 uv run pytest test/ --cov=. --cov-report xml
-```
 
-Run specific tests:
-
-```bash
-# Test a specific file
+# Run specific tests
 uv run pytest test/test_weather.py
-
-# Test a specific module
 uv run pytest test/weather/
 ```
 
-### Development Commands
+### Running Individual Modules
 
+With the package structure, run modules as:
 ```bash
-# Generate data without sending emails
-uv run python generate_and_upload.py
+# Run specific module
+uv run python -m peak.peak
+uv run python -m weather.weather
 
-# Run in test mode (test subscribers only)
-uv run python main.py --tag "Test Glacier Daily Update"
+# Suppress urllib3 SSL warnings on macOS (harmless)
+uv run python -W ignore -m peak.peak
 ```
 
-## Usage
+### Architecture Overview
 
-### Standard Operation
+**Data Collection:** Uses `ThreadPoolExecutor` to gather data from multiple APIs concurrently.
 
-Run the main script to generate and send daily updates:
+**Core Modules:**
+- `weather/` - Weather forecasts, alerts, air quality, aurora predictions
+- `activities/` - Park ranger events from NPS and GNPC
+- `roads/` - Road closures and hiker/biker access
+- `trails_and_cgs/` - Trail closures and campground availability
+- `peak/` - Daily featured peak with satellite imagery
+- `image_otd/` - Daily image selection from Flickr
+- `product_otd/` - Featured product from BigCommerce
+- `drip/` - Email delivery and subscriber management
+- `shared/` - FTP operations, retry mechanisms, utilities
 
-```bash
-uv run python main.py
-```
+**Data Flow:**
+1. **Collection**: Concurrent API calls gather real-time data
+2. **Processing**: Format data for HTML email templates
+3. **Distribution**: Upload to glacier.org via FTP and trigger emails through Drip
 
-### Test Mode
+### Error Handling
 
-To run in test mode (sends only to test subscribers):
+The system uses a custom retry decorator (`shared/retry.py`) with exponential backoff for API calls. Most modules have fallback mechanisms to ensure emails can still be sent even if individual data sources fail.
 
-```bash
-uv run python main.py --tag "Test Glacier Daily Update"
-```
-
-## Organization
-
-### Modules
-
-- **activities/**: Manages ranger activities and events
-
-  - Fetches from NPS API
-  - Processes GNPC events and conversations
-  - Formats event schedules
-- **weather/**: Comprehensive weather information
-
-  - Forecasts from Open-Meteo API
-  - Air quality monitoring
-  - Aurora forecasts from NOAA
-  - Weather alerts from NWS
-  - Interactive park weather map generation
-- **roads/**: Road status tracking
-
-  - Real-time closure information
-  - Hiker/biker access updates
-  - Location-based status reporting
-- **trails_and_cgs/**: Trail and campground monitoring
-
-  - Trail closure tracking
-  - Campground availability
-  - Condition reports
-- **drip/**: Email delivery system
-
-  - Subscriber management
-  - Email template handling
-  - Delivery scheduling
-  - Subscription updates
-- **image_otd/**: Daily image selection and processing
-
-  - Integration with Flickr API
-  - Image resizing and optimization
-- **peak/**: Daily peak feature
-
-  - Random peak selection
-  - Satellite imagery from Mapbox
-  - Location mapping
-- **product_otd/**: Daily product showcase
-
-  - BigCommerce integration
-  - Product information formatting
-- **sunrise_timelapse/**: Sunrise video processing
-
-  - Timelapse compilation
-  - Thumbnail generation
-  - FTP upload management
-- **shared/**: Utility functions
-
-  - FTP operations
-  - JSON handling
-  - Retry mechanisms
-
-## Data Flow
-
-1. Data Collection:
-
-   - Multiple API endpoints queried concurrently
-   - Real-time information gathered
-   - Images and videos processed
-2. Data Processing:
-
-   - Information formatted for email
-   - Images resized and optimized
-   - Content sanitized and validated
-3. Distribution:
-
-   - Content uploaded to FTP server
-   - JSON data prepared for Drip
-   - Emails triggered through Drip API
+---
 
 ## Credits
 
