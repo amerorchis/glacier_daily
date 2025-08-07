@@ -37,9 +37,6 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     serve_api()
 
     # See if this fixes the issue with timelapse not showing.
-    record_drip_event(
-        "andrew@glacier.org"
-    )  # Send just to andrew first to see if that triggers cache refresh.
     sleep(630 if not test else 0)
 
     # Send the email to each subscriber using Drip API.
@@ -56,10 +53,10 @@ if __name__ == "__main__":  # pragma: no cover
     )
     args = parser.parse_args()
 
-    environ = os.environ.get("TERM")
+    environment = os.environ.get("TERM")
 
-    if environ is None:
+    if environment is None:
         main()
-    elif environ == "xterm-256color":
+    elif environment == "xterm-256color":
         print(args.tag)
         main(args.tag, test=True)
