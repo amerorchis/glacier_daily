@@ -40,7 +40,6 @@ def test_main_runs_all_steps(monkeypatch):
         "sleep_to_sunrise",
         "get_subs:TestTag",
         "serve_api",
-        "record_drip_event:andrew@glacier.org:Glacier Daily Update trigger",
         "sleep:0",
         "bulk_workflow_trigger:['test@example.com']",
     ]
