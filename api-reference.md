@@ -102,7 +102,7 @@ Multiple endpoints on `carto.nps.gov`:
 
 - Purpose: Notices/announcements
 - Authentication: Service account credentials required
-- Configuration: Accesses spreadsheet ID '1Z3jyEj8grDiNKRbYIJWjXG970N7dZO0VLx5pPFZoh2Q'
+- Configuration: Accesses spreadsheet ID designated in email.env
 
 ## Local Data Sources
 
