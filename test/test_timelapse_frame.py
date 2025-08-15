@@ -141,10 +141,8 @@ def test_process_video_too_early(mock_sunrise_time):
     assert result == ("", "")
 
 
-@patch("sunrise_timelapse.vid_frame.retrieve_from_json", return_value=(False, None))
-@patch("sunrise_timelapse.vid_frame.sunrise_timelapse_complete_time", return_value=0)
 @patch("sunrise_timelapse.vid_frame.made_today", return_value=False)
-def test_process_video_no_video(mock_made_today, mock_sunrise, mock_retrieve):
+def test_process_video_no_video(mock_made_today):
     """Test handling when no video is available"""
     result = process_video()
     assert result == (None, None)

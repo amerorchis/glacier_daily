@@ -2,16 +2,12 @@
 This module retrieves notices from a Google Sheets document and formats them for display.
 """
 
-import os
 from datetime import datetime, timedelta
 
 import gspread
-from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
 
 from shared.retry import retry
-
-load_dotenv("email.env")
 
 default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Notices could not be retrieved.</p>'
 
@@ -31,14 +27,14 @@ def get_notices():
             "https://www.googleapis.com/auth/drive",
         ]
         credentials = Credentials.from_service_account_file(
-            os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), scopes=scopes
+            "notices/sheets-api-389117-34906b5fba7f.json", scopes=scopes
         )
 
         # Create a client
         client = gspread.authorize(credentials)
 
         # Open a spreadsheet
-        spreadsheet = client.open_by_key(os.getenv("NOTICES_SPREADSHEET_ID"))
+        spreadsheet = client.open_by_key("1Z3jyEj8grDiNKRbYIJWjXG970N7dZO0VLx5pPFZoh2Q")
 
         # Access a worksheet
         worksheet = spreadsheet.sheet1
@@ -75,7 +71,3 @@ def get_notices():
             pass
 
     return '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
-
-
-if __name__ == "__main__":
-    print(get_notices())
