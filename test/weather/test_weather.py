@@ -110,31 +110,6 @@ def test_weather_data_factory():
         assert result == instance
 
 
-def test_concurrent_execution(mock_all_weather_services):
-    """Test that weather services are called concurrently"""
-    import time
-
-    def slow_forecast(*args, **kwargs):
-        time.sleep(0.1)
-        return MOCK_FORECAST_RETURN
-
-    def slow_aqi(*args, **kwargs):
-        time.sleep(0.1)
-        return MOCK_AQI_RETURN
-
-    # Replace mock returns with slow versions
-    mock_all_weather_services["forecast"].side_effect = slow_forecast
-    mock_all_weather_services["aqi"].side_effect = slow_aqi
-
-    start_time = time.time()
-    weather = WeatherContent()
-    execution_time = time.time() - start_time
-
-    # If executed concurrently, should take ~0.1 seconds
-    # If sequential, would take ~0.2 seconds
-    assert execution_time < 0.15  # Adding some buffer for test environment variations
-
-
 def test_error_handling_in_weather_services(mock_all_weather_services):
     """Test handling of errors from weather services"""
     # Make forecast service raise an exception

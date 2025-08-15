@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
+from shared.datetime_utils import format_date_readable
 from shared.ftp import upload_file
 from weather.season import get_season
 from weather.weather import weather_data
@@ -122,7 +123,7 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
         draw.text((x, y + 24), cond, font=condition_font, fill=(0, 0, 0))
 
     # Add date
-    day = datetime.now().strftime("%B %-d, %Y").upper()
+    day = format_date_readable(datetime.now()).upper()
     text_width = draw.textlength(day, font=default_font)
     x = 149 + ((347 - text_width) / 2)
     draw.text((x, 74), day, font=default_font, fill="#FFFFFF")

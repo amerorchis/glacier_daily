@@ -13,6 +13,8 @@ from astral import LocationInfo
 from astral.sun import sun
 from requests.exceptions import RequestException
 
+from shared.datetime_utils import format_time_with_timezone
+
 
 class ForecastError(Exception):
     """Base class for forecast-related errors."""
@@ -331,7 +333,7 @@ class Forecast:
     @classmethod
     def strftime(cls, time: datetime) -> str:
         """Format datetime object to string."""
-        return time.strftime("%-I:%M %p %Z")
+        return format_time_with_timezone(time)
 
     @property
     def max_kp(self) -> float:

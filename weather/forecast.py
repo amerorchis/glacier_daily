@@ -14,6 +14,8 @@ from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
 from urllib3.util.retry import Retry
 
+from shared.datetime_utils import cross_platform_strftime
+
 # Constants
 BASE_URL = "https://api.open-meteo.com/v1/forecast"
 CACHE_DURATION = 3600  # Cache duration in seconds
@@ -128,8 +130,12 @@ class WeatherAPI:
         """Format daylight information string."""
         wg = forecast_data[0]["daily"]
 
-        sunrise = datetime.fromisoformat(wg["sunrise"][0]).strftime(TIME_FORMAT).lower()
-        sunset = datetime.fromisoformat(wg["sunset"][0]).strftime(TIME_FORMAT).lower()
+        sunrise = cross_platform_strftime(
+            datetime.fromisoformat(wg["sunrise"][0]), TIME_FORMAT
+        ).lower()
+        sunset = cross_platform_strftime(
+            datetime.fromisoformat(wg["sunset"][0]), TIME_FORMAT
+        ).lower()
 
         duration_hours = floor(wg["daylight_duration"][0] / (60 * 60))
         duration_minutes = floor(
