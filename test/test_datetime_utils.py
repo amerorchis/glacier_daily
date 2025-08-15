@@ -28,7 +28,7 @@ class TestCrossPlatformStrftime:
         """Test that Unix platforms use native strftime with %-modifiers."""
         dt = datetime(2025, 1, 5, 13, 30, 0)
 
-        with patch("platform.system", return_value="Linux"):
+        with patch("shared.datetime_utils.platform.system", return_value="Linux"):
             result = cross_platform_strftime(dt, "%B %-d, %Y")
             # On Unix, should use native strftime
             assert result == "January 5, 2025"
@@ -37,7 +37,7 @@ class TestCrossPlatformStrftime:
         """Test that Windows platform properly removes leading zeros."""
         dt = datetime(2025, 1, 5, 13, 30, 0)
 
-        with patch("platform.system", return_value="Windows"):
+        with patch("shared.datetime_utils.platform.system", return_value="Windows"):
             # Test day without leading zero
             result = cross_platform_strftime(dt, "%B %-d, %Y")
             assert result == "January 5, 2025"
@@ -54,7 +54,7 @@ class TestCrossPlatformStrftime:
         """Test Windows platform with edge cases like day 10 (double digit)."""
         dt = datetime(2025, 12, 15, 2, 5, 0)
 
-        with patch("platform.system", return_value="Windows"):
+        with patch("shared.datetime_utils.platform.system", return_value="Windows"):
             # Test with double-digit day (should not remove zeros)
             result = cross_platform_strftime(dt, "%B %-d, %Y")
             assert result == "December 15, 2025"
@@ -72,12 +72,12 @@ class TestCrossPlatformStrftime:
         dt = datetime(2025, 1, 5, 13, 30, 0)
 
         # Test with Unix
-        with patch("platform.system", return_value="Linux"):
+        with patch("shared.datetime_utils.platform.system", return_value="Linux"):
             result = cross_platform_strftime(dt, "%Y-%m-%d")
             assert result == "2025-01-05"
 
         # Test with Windows
-        with patch("platform.system", return_value="Windows"):
+        with patch("shared.datetime_utils.platform.system", return_value="Windows"):
             result = cross_platform_strftime(dt, "%Y-%m-%d")
             assert result == "2025-01-05"
 
@@ -85,7 +85,7 @@ class TestCrossPlatformStrftime:
         """Test complex format strings with multiple %-modifiers."""
         dt = datetime(2025, 1, 5, 9, 5, 0)
 
-        with patch("platform.system", return_value="Windows"):
+        with patch("shared.datetime_utils.platform.system", return_value="Windows"):
             result = cross_platform_strftime(dt, "%A, %B %-d, %Y at %-I:%M %p")
             assert result == "Sunday, January 5, 2025 at 9:05 AM"
 
@@ -181,7 +181,7 @@ class TestFormatTimeWithTimezone:
 class TestWindowsSpecificBehavior:
     """Test Windows-specific datetime formatting behavior."""
 
-    @patch("platform.system", return_value="Windows")
+    @patch("shared.datetime_utils.platform.system", return_value="Windows")
     def test_windows_leading_zero_removal(self, mock_system):
         """Test that leading zeros are properly removed on Windows."""
         dt = datetime(2025, 1, 5, 1, 5, 0)
@@ -198,7 +198,7 @@ class TestWindowsSpecificBehavior:
             result = cross_platform_strftime(dt, format_str)
             assert result == expected, f"Failed for format {format_str}"
 
-    @patch("platform.system", return_value="Windows")
+    @patch("shared.datetime_utils.platform.system", return_value="Windows")
     def test_windows_no_leading_zero_needed(self, mock_system):
         """Test Windows behavior when no leading zero removal is needed."""
         dt = datetime(2025, 12, 15, 11, 45, 0)
@@ -214,7 +214,7 @@ class TestWindowsSpecificBehavior:
             result = cross_platform_strftime(dt, format_str)
             assert result == expected, f"Failed for format {format_str}"
 
-    @patch("platform.system", return_value="Windows")
+    @patch("shared.datetime_utils.platform.system", return_value="Windows")
     def test_windows_zero_values(self, mock_system):
         """Test Windows behavior with values that would become empty after lstrip('0')."""
         # This is an edge case where stripping all zeros would leave empty string

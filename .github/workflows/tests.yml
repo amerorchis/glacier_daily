@@ -56,18 +56,39 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           mkdir -p email_images/today/
+          mkdir -p email_images/base/
 
       - name: Create directory (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path email_images/today/
+          New-Item -ItemType Directory -Force -Path email_images/base/
 
       - name: Install font (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y fonts-open-sans
+          # Copy system font to expected location
+          cp /usr/share/fonts/truetype/open-sans/OpenSans-Regular.ttf email_images/base/ || echo "Font copy failed, using fallback"
+
+      - name: Setup font (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # Install OpenSans font on macOS
+          brew install --cask font-open-sans || echo "Font installation failed, skipping"
+          # Copy to expected location if available
+          cp /Library/Fonts/OpenSans-Regular.ttf email_images/base/OpenSans-Regular.ttf || echo "OpenSans font not found, tests may fail"
+
+      - name: Setup font (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          # Download OpenSans font for Windows
+          Invoke-WebRequest -Uri "https://fonts.google.com/download?family=Open%20Sans" -OutFile "opensans.zip"
+          Expand-Archive -Path "opensans.zip" -DestinationPath "opensans"
+          Copy-Item "opensans/static/OpenSans-Regular.ttf" "email_images/base/OpenSans-Regular.ttf" -ErrorAction SilentlyContinue
 
       - name: Create service account file (Unix)
         if: runner.os != 'Windows'
