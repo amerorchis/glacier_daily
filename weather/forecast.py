@@ -22,7 +22,7 @@ CACHE_DURATION = 3600  # Cache duration in seconds
 RETRY_ATTEMPTS = 5
 BACKOFF_FACTOR = 0.2
 FEET_TO_METERS = 3.281
-TIME_FORMAT = "%-I:%M%p"
+TIME_FORMAT = "%-I:%M %p"
 
 
 @dataclass

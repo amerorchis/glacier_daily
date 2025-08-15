@@ -127,15 +127,15 @@ def test_datetime_to_string_standard():
     test_cases = [
         (
             tz.localize(datetime(2024, 7, 15, 19, 30)),
-            "Monday, July 15, 2024, 7:30PM MDT",
+            "Monday, July 15, 2024, 7:30 pm MDT",
         ),
         (
             tz.localize(datetime(2024, 12, 25, 18, 45)),
-            "Wednesday, December 25, 2024, 6:45PM MST",
+            "Wednesday, December 25, 2024, 6:45 pm MST",
         ),
         (
             tz.localize(datetime(2024, 1, 1, 12, 0)),
-            "Monday, January 1, 2024, 12:00PM MST",
+            "Monday, January 1, 2024, 12:00 pm MST",
         ),
     ]
 

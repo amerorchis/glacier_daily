@@ -239,11 +239,11 @@ class TestRealWorldUseCases:
         """Test the format used in gnpc_datetime module."""
         dt = pytz.timezone("America/Denver").localize(datetime(2025, 1, 5, 13, 30, 0))
         result = (
-            cross_platform_strftime(dt, "%A, %B %-d, %Y, %-I:%M%p %Z")
+            cross_platform_strftime(dt, "%A, %B %-d, %Y, %-I:%M %p %Z")
             .lower()
             .replace("mst", "MST")
         )
-        assert "sunday, january 5, 2025, 1:30pm MST" == result
+        assert "sunday, january 5, 2025, 1:30 pm MST" == result
 
     def test_weather_time_format(self):
         """Test the format used in weather modules."""
