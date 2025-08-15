@@ -28,38 +28,67 @@ jobs:
           uv run pre-commit run --all-files --show-diff-on-failure --verbose
 
   unit-and-integration-test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9']
+    runs-on: ${{ matrix.os }}
     steps:
 
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install uv
+      - name: Install uv (Unix)
+        if: runner.os != 'Windows'
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install uv (Windows)
+        if: runner.os == 'Windows'
+        run: irm https://astral.sh/uv/install.ps1 | iex
 
       - name: Install dependencies
         run: |
           uv sync --extra dev
 
-      - name: Create directory
+      - name: Create directory (Unix)
+        if: runner.os != 'Windows'
         run: |
           mkdir -p email_images/today/
 
-      - name: Install font
+      - name: Create directory (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          New-Item -ItemType Directory -Force -Path email_images/today/
+
+      - name: Install font (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y fonts-open-sans
 
-      - name: Create service account file
+      - name: Create service account file (Unix)
+        if: runner.os != 'Windows'
         run: |
           mkdir -p notices
           echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 -d > notices/sheets-api.json
 
-      - name: Set python path
+      - name: Create service account file (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          New-Item -ItemType Directory -Force -Path notices
+          [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${{ secrets.GOOGLE_SERVICE_ACCOUNT }}")) | Out-File -FilePath notices/sheets-api.json -Encoding utf8
+
+      - name: Set python path (Unix)
+        if: runner.os != 'Windows'
         run: |
           PYTHONPATH=$PYTHONPATH:$(pwd)
+
+      - name: Set python path (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $env:PYTHONPATH += ";$(Get-Location)"
 
       - name: Run tests
         env:
@@ -86,10 +115,11 @@ jobs:
           NOTICES_SPREADSHEET_ID: ${{ secrets.NOTICES_SPREADSHEET_ID }}
           TEST_SECRET: ${{ secrets.TEST_SECRET }}
         run: |
-          echo "Running test suite with coverage..."
+          echo "Running test suite with coverage on ${{ matrix.os }}..."
           uv run pytest test/ --cov=. --cov-report xml --tb=short
 
       - name: Upload results to Codecov
+        if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

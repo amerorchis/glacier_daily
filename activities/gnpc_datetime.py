@@ -8,6 +8,8 @@ from datetime import datetime
 
 import pytz
 
+from shared.datetime_utils import cross_platform_strftime
+
 
 def convert_gnpc_datetimes(date_string: str):
     """
@@ -76,6 +78,8 @@ def datetime_to_string(dt_obj: datetime):
         raise TypeError("Input must be a datetime object")
 
     try:
-        return dt_obj.strftime("%A, %B %-d, %Y, %-I:%M%p %Z")
+        formatted = cross_platform_strftime(dt_obj, "%A, %B %-d, %Y, %-I:%M%p %Z")
+        # Based on the test expectations, keep the original format (title case for days/months, uppercase PM)
+        return formatted
     except (ValueError, AttributeError) as e:
         raise ValueError(f"Invalid datetime format: {str(e)}")

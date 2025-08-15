@@ -8,6 +8,8 @@ from typing import Dict
 
 from jinja2 import Environment, FileSystemLoader
 
+from shared.datetime_utils import format_short_date, format_time_12hr
+
 
 class DailyUpdate:
     """An object to encapsulate the information"""
@@ -20,7 +22,10 @@ class DailyUpdate:
         """
         for k, v in data.items():
             setattr(self, k, v)
-        self.timestring = datetime.now().strftime("%-m/%-d/%-y at %-I:%M%p MT")
+        self.timestring = (
+            format_short_date(datetime.now())
+            + f" at {format_time_12hr(datetime.now())} MT"
+        )
 
 
 class myClass:

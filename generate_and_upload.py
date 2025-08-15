@@ -18,6 +18,7 @@ from peak.peak import peak
 from product_otd.product import get_product
 from roads.hiker_biker import get_hiker_biker_status
 from roads.roads import get_road_status
+from shared.datetime_utils import cross_platform_strftime, format_date_readable
 from shared.ftp import upload_file
 from sunrise_timelapse.vid_frame import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
@@ -54,7 +55,7 @@ def gen_data():
 
     drip_template_fields = {
         "date": datetime.now().strftime("%Y-%m-%d"),
-        "today": datetime.now().strftime("%B %-d, %Y"),
+        "today": format_date_readable(datetime.now()),
         "events": events_future.result(),
         "weather1": weather.message1,
         "weather_image": weather_image(weather.results),
@@ -98,7 +99,9 @@ def write_data_to_json(data: dict, doctype: str) -> str:
     }
 
     data["date"] = datetime.now().strftime("%Y-%m-%d")
-    data["time_generated"] = datetime.now().strftime("%-I:%M %p")
+    data["time_generated"] = cross_platform_strftime(
+        datetime.now(), "%-I:%M %p"
+    ).lower()
     data["gnpc-events"] = get_gnpc_events()
     filepath = f"server/{doctype}"
     with open(filepath, "w", encoding="utf-8") as f:
