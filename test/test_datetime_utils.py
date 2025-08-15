@@ -26,6 +26,12 @@ class TestCrossPlatformStrftime:
 
     def test_unix_platform_uses_native_strftime(self):
         """Test that Unix platforms use native strftime with %-modifiers."""
+        # Skip this test on Windows since it tests Unix-specific behavior
+        import platform
+
+        if platform.system() == "Windows":
+            pytest.skip("Skipping Unix strftime test on Windows")
+
         dt = datetime(2025, 1, 5, 13, 30, 0)
 
         with patch("shared.datetime_utils.platform.system", return_value="Linux"):
