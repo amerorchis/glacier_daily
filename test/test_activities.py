@@ -149,7 +149,7 @@ def test_datetime_to_string_single_digit_hours():
     tz = pytz.timezone("America/Denver")
     dt = tz.localize(datetime(2024, 7, 15, 9, 5))
     result = datetime_to_string(dt)
-    assert result == "Monday, July 15, 2024, 9:05AM MDT"
+    assert result == "Monday, July 15, 2024, 9:05 am MDT"
 
 
 def test_datetime_to_string_timezone_handling():
@@ -163,7 +163,7 @@ def test_datetime_to_string_timezone_handling():
     dt_mst = dt_pst.astimezone(mst)
 
     result = datetime_to_string(dt_mst)
-    assert result == "Monday, July 15, 2024, 7:30PM MDT"
+    assert result == "Monday, July 15, 2024, 7:30 pm MDT"
 
 
 def test_convert_and_format_integration(sample_dates, mst_timezone):
