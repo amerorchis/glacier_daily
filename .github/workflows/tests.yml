@@ -55,7 +55,7 @@ jobs:
       - name: Create service account file
         run: |
           mkdir -p notices
-          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 -d > notices/sheets-api-389117-34906b5fba7f.json
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 -d > notices/sheets-api.json
 
       - name: Set python path
         run: |
@@ -82,6 +82,8 @@ jobs:
           MAPBOX_ACCOUNT: ${{ secrets.MAPBOX_ACCOUNT }}
           MAPBOX_STYLE: ${{ secrets.MAPBOX_STYLE }}
           SUNSETHUE_KEY: ${{ secrets.SUNSETHUE_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          NOTICES_SPREADSHEET_ID: ${{ secrets.NOTICES_SPREADSHEET_ID }}
           TEST_SECRET: ${{ secrets.TEST_SECRET }}
         run: |
           echo "Running test suite with coverage..."
