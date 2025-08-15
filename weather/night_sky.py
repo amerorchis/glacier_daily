@@ -12,6 +12,7 @@ import requests
 from astral import LocationInfo
 from astral.sun import sun
 from requests.exceptions import RequestException
+from timezonefinder import TimezoneFinder
 
 
 class ForecastError(Exception):
@@ -262,8 +263,8 @@ class Forecast:
         self,
         latitude: float,
         longitude: float,
-        timezone: str,
         start_time: Optional[datetime] = None,
+        timezone: Optional[str] = None,
     ) -> Dict[datetime, float]:
         """Get Kp forecast for next dark period at given location."""
         # Set default start time to now
@@ -274,7 +275,8 @@ class Forecast:
 
         # Set default timezone based on longitude
         if timezone is None:
-            raise ValueError("timezone must be provided")
+            tf = TimezoneFinder()
+            timezone = tf.timezone_at(lat=latitude, lng=longitude)
 
         # Get next dark period
         dark_period = self.get_next_dark_period(latitude, longitude, start_time)
@@ -359,9 +361,7 @@ def aurora_forecast(cloud_cover: float = 0.0) -> str:
     f = Forecast()
 
     cloudy = cloud_cover >= 0.3
-    wg_forecast = f.get_forecast_by_location(
-        latitude=48.528, longitude=-113.989, timezone="US/Mountain"
-    )
+    wg_forecast = f.get_forecast_by_location(latitude=48.528, longitude=-113.989)
 
     v_time = max(wg_forecast, key=wg_forecast.get)
     v = wg_forecast[v_time]
