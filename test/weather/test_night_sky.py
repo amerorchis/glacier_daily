@@ -127,7 +127,10 @@ def test_get_forecast_by_location(sample_forecast):
     """Test location-based forecast retrieval"""
     test_time = datetime(2025, 1, 10, 12, 0, tzinfo=pytz.UTC)
     forecast = sample_forecast.get_forecast_by_location(
-        latitude=48.528, longitude=-113.989, start_time=test_time
+        latitude=48.528,
+        longitude=-113.989,
+        start_time=test_time,
+        timezone="US/Mountain",
     )
 
     assert isinstance(forecast, dict)

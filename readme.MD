@@ -27,11 +27,11 @@ An automated system that generates and distributes daily email updates about con
 ```bash
 # Clone and setup
 git clone [repository-url]
-cd glacier-daily-update
+cd glacier-daily
 uv sync
 
 # Create required directories
-mkdir -p email_images/today/ notices/
+mkdir -p email_images/today/
 
 # Configure environment variables in email.env (see Configuration section)
 ```
@@ -62,6 +62,7 @@ BC_TOKEN=your_bigcommerce_token
 BC_STORE_HASH=your_store_hash
 FTP_USERNAME=your_ftp_username
 FTP_PASSWORD=your_ftp_password
+ENVIRONMENT="development"
 ```
 
 ---
@@ -81,7 +82,7 @@ FTP_PASSWORD=your_ftp_password
    ```
 
 3. **Set up Google Sheets API:**
-   - Place service account JSON file in `notices/sheets-api-389117-34906b5fba7f.json`
+   - Create Google service account JSON and update file location.
 
 ### Code Quality
 
