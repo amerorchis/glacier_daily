@@ -78,8 +78,27 @@ def datetime_to_string(dt_obj: datetime):
         raise TypeError("Input must be a datetime object")
 
     try:
-        formatted = cross_platform_strftime(dt_obj, "%A, %B %-d, %Y, %-I:%M%p %Z")
-        # Based on the test expectations, keep the original format (title case for days/months, uppercase PM)
-        return formatted
+        formatted = cross_platform_strftime(
+            dt_obj, "%A, %B %-d, %Y, %-I:%M %p %Z"
+        ).lower()
+        # Keep proper case for day/month names and uppercase timezone
+        parts = formatted.split()
+        if len(parts) >= 6:  # "monday, july 5, 2025, 1:30 pm mst"
+            # Capitalize day and month
+            parts[0] = parts[0].capitalize().rstrip(",") + ","  # "Monday,"
+            parts[1] = parts[1].capitalize()  # "July"
+            # Keep timezone uppercase
+            if parts[-1].lower() in [
+                "mst",
+                "mdt",
+                "pst",
+                "pdt",
+                "est",
+                "edt",
+                "cst",
+                "cdt",
+            ]:
+                parts[-1] = parts[-1].upper()
+        return " ".join(parts)
     except (ValueError, AttributeError) as e:
         raise ValueError(f"Invalid datetime format: {str(e)}")

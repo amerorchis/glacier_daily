@@ -73,8 +73,8 @@ class TestWeatherAPI:
         """Test daylight information formatting."""
         mock_data = [MOCK_API_RESPONSE]
         result = weather_api._format_daylight_info(mock_data)
-        assert "sunrise is at 7:30am" in result
-        assert "sunset is at 5:30pm" in result
+        assert "sunrise is at 7:30 am" in result
+        assert "sunset is at 5:30 pm" in result
         assert "10 hours" in result
         assert "0 minutes" in result
 
