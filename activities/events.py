@@ -61,20 +61,8 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             "Meet at ",
         ]
         sortable = time_sortable(event["times"][0]["timestart"])
-        start = (
-            event["times"][0]["timestart"]
-            .replace(" ", "")
-            .replace(":00", "")
-            .lower()
-            .lstrip("0")
-        )
-        end = (
-            event["times"][0]["timeend"]
-            .replace(" ", "")
-            .replace(":00", "")
-            .lower()
-            .lstrip("0")
-        )
+        start = event["times"][0]["timestart"].replace(":00", "").lower().lstrip("0")
+        end = event["times"][0]["timeend"].replace(":00", "").lower().lstrip("0")
         name = (
             event["title"]
             .replace("Campground", "CG")
@@ -94,7 +82,7 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
         link = f'http://www.nps.gov/planyourvisit/event-details.htm?id={event["id"]}'
         return {
             "sortable": sortable,
-            "string": f'<li>{start}-{end}: {name}, {loc} <a href="{link}">(link)</a></li>',
+            "string": f'<li style="font-size:12px; line-height:18px; color:#333333;">{start} - {end}: {name}, {loc} <a href="{link}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>',
         }
 
     def seasonal_message(now_dt):
@@ -125,24 +113,7 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
         if raw_events:
             events = [process_event(event) for event in raw_events]
             events.sort(key=lambda x: x["sortable"])
-            message = """
-            <style>
-                ul.events-list {
-                    margin: 0 0 25px;
-                    padding-left: 20px;
-                    padding-top: 0px;
-                    font-size: 12px;
-                    line-height: 18px;
-                    color: #333333;
-                }
-                ul.events-list li a {
-                    font-size: 10px;
-                    color: #333333;
-                    font-style: italic;
-                    text-decoration: underline;
-                }
-            </style>
-            <ul class="events-list">\n"""
+            message = '<ul style="margin:0 0 25px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
             message += "\n".join(event["string"] for event in events)
             return message + "</ul>"
 
