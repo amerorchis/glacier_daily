@@ -69,6 +69,8 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
             .replace(" (St. Mary)", "")
             .replace(" (Apgar)", "")
         )
+        if "Native America Speaks - " in name:
+            name = name.split(" - ")[0]
         loc = (
             event["location"]
             .split("(")[0]
