@@ -11,7 +11,7 @@ from astral import LocationInfo, sun
 
 def sunrise_timelapse_complete_time():
     """
-    Calculate the sunrise time and add 50 minutes.
+    Calculate the sunrise time and add 52 minutes.
     """
     # Create West Glacier LI object
     wg = LocationInfo(
@@ -28,7 +28,8 @@ def sunrise_timelapse_complete_time():
     now = datetime.now(tz=ZoneInfo("America/Denver"))
 
     # Sunrise time minus now plus 52 minutes
-    timelapse_ready_in = s["sunrise"] - now + timedelta(minutes=52)
+    buffer_after_sunrise = 52
+    timelapse_ready_in = s["sunrise"] - now + timedelta(minutes=buffer_after_sunrise)
 
     return timelapse_ready_in.total_seconds()
 
