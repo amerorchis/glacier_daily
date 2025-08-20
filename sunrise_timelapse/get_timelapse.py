@@ -7,11 +7,11 @@ from datetime import datetime
 from typing import Optional, Tuple
 
 import requests
-from dotenv import load_dotenv
 
-load_dotenv("email.env")
-
+from shared.env_loader import load_env
 from shared.retrieve_from_json import retrieve_from_json
+
+load_env()
 from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
 
 

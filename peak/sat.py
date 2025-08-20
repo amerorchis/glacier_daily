@@ -8,12 +8,12 @@ from io import BytesIO
 
 import PIL
 import requests
-from dotenv import load_dotenv
 from PIL import Image
 
-load_dotenv("email.env")
-
+from shared.env_loader import load_env
 from shared.ftp import upload_file
+
+load_env()
 
 
 def upload_peak() -> str:

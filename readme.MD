@@ -50,19 +50,12 @@ uv run python generate_and_upload.py
 
 ### Configuration
 
-Create `email.env` with your API keys and credentials:
-```
-NPS=your_nps_api_key
-DRIP_TOKEN=your_drip_token
-DRIP_ACCOUNT=your_drip_account_id
-flickr_key=your_flickr_key
-flickr_secret=your_flickr_secret
-MAPBOX_TOKEN=your_mapbox_token
-BC_TOKEN=your_bigcommerce_token
-BC_STORE_HASH=your_store_hash
-FTP_USERNAME=your_ftp_username
-FTP_PASSWORD=your_ftp_password
-ENVIRONMENT="development"
+Create `email.env` with your API keys and credentials. Use `TEMPLATE.env` as a reference for all required environment variables:
+
+```bash
+# Copy template and add your credentials
+cp TEMPLATE.env email.env
+# Edit email.env with your actual API keys and credentials
 ```
 
 ---
@@ -101,6 +94,8 @@ uv run pre-commit run --all-files
 ```
 
 ### Testing
+
+Tests automatically use `TEMPLATE.env` (with empty API keys) to ensure no real credentials are needed:
 
 ```bash
 # Run full test suite with coverage
