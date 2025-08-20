@@ -11,13 +11,13 @@ from io import BytesIO
 from re import sub
 
 import requests
-from dotenv import load_dotenv
 from PIL import Image
 
-load_dotenv("email.env")
-
+from shared.env_loader import load_env
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json
+
+load_env()
 
 
 def upload_potd():

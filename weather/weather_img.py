@@ -139,7 +139,7 @@ def weather_image(results: List[Tuple[str, int, int, str]]) -> str:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from dotenv import load_dotenv
+    from shared.env_loader import load_env
 
-    load_dotenv("email.env")
+    load_env()
     print(weather_image(weather_data().results))

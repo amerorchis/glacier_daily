@@ -9,14 +9,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
-from dotenv import load_dotenv
 from PIL import Image, UnidentifiedImageError
 
-load_dotenv("email.env")
-
 from image_otd.flickr import FlickrAPIError, get_flickr
+from shared.env_loader import load_env
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json
+
+load_env()
 
 
 class ImageProcessingError(Exception):

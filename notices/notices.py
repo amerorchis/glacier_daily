@@ -6,12 +6,12 @@ import os
 from datetime import datetime, timedelta
 
 import gspread
-from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
 
+from shared.env_loader import load_env
 from shared.retry import retry
 
-load_dotenv("email.env")
+load_env()
 
 default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Notices could not be retrieved.</p>'
 

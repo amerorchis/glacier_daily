@@ -125,7 +125,7 @@ def weather_data() -> WeatherContent:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from dotenv import load_dotenv
+    from shared.env_loader import load_env
 
-    load_dotenv("email.env")
+    load_env()
     print(weather_data().message2)

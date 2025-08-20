@@ -49,9 +49,8 @@ import drip.update_subscriber as update_subscriber
 
 def test_start_and_end_calls_update_subscriber(monkeypatch):
     calls = []
-    monkeypatch.setattr(
-        update_subscriber, "update_subscriber", lambda u: calls.append(u)
-    )
+    # Patch the function in the scheduled_subs module namespace, not the original module
+    monkeypatch.setattr(scheduled_subs, "update_subscriber", lambda u: calls.append(u))
     scheduled_subs.start(["a@example.com"])
     if calls:
         assert calls[0]["email"] == "a@example.com"

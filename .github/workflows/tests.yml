@@ -63,19 +63,6 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path email_images/today/
 
-      - name: Create service account file (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          mkdir -p notices
-          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT }}" | base64 -d > notices/sheets-api.json
-
-      - name: Create service account file (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path notices
-          [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${{ secrets.GOOGLE_SERVICE_ACCOUNT }}")) | Out-File -FilePath notices/sheets-api.json -Encoding utf8
-
       - name: Set python path (Unix)
         if: runner.os != 'Windows'
         run: |
@@ -89,28 +76,28 @@ jobs:
 
       - name: Run tests
         env:
-          NPS: ${{ secrets.NPS }}
-          DRIP_TOKEN: ${{ secrets.DRIP_TOKEN }}
-          DRIP_ACCOUNT: ${{ secrets.DRIP_ACCOUNT }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          ALERTS_PWD: ${{ secrets.ALERTS_PWD }}
-          BC_TOKEN: ${{ secrets.BC_TOKEN }}
-          BC_STORE_HASH: ${{ secrets.BC_STORE_HASH }}
-          flickr_key: ${{ secrets.flickr_key }}
-          flickr_secret: ${{ secrets.flickr_secret }}
-          glaciernps_uid: ${{ secrets.glaciernps_uid }}
-          webcam_ftp_user: ${{ secrets.webcam_ftp_user }}
-          webcam_ftp_pword: ${{ secrets.webcam_ftp_pword }}
-          timelapse_server: ${{ secrets.timelapse_server }}
-          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
-          MAPBOX_ACCOUNT: ${{ secrets.MAPBOX_ACCOUNT }}
-          MAPBOX_STYLE: ${{ secrets.MAPBOX_STYLE }}
-          SUNSETHUE_KEY: ${{ secrets.SUNSETHUE_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          NOTICES_SPREADSHEET_ID: ${{ secrets.NOTICES_SPREADSHEET_ID }}
-          TEST_SECRET: ${{ secrets.TEST_SECRET }}
+          NPS: ""
+          DRIP_TOKEN: ""
+          DRIP_ACCOUNT: ""
+          FTP_PASSWORD: ""
+          FTP_USERNAME: ""
+          FTP_SERVER: ""
+          ALERTS_PWD: ""
+          BC_TOKEN: ""
+          BC_STORE_HASH: ""
+          flickr_key: ""
+          flickr_secret: ""
+          glaciernps_uid: ""
+          webcam_ftp_user: ""
+          webcam_ftp_pword: ""
+          timelapse_server: ""
+          MAPBOX_TOKEN: ""
+          MAPBOX_ACCOUNT: ""
+          MAPBOX_STYLE: ""
+          SUNSETHUE_KEY: ""
+          GOOGLE_APPLICATION_CREDENTIALS: ""
+          NOTICES_SPREADSHEET_ID: ""
+          ENVIRONMENT: "development"
         run: |
           echo "Running test suite with coverage on ${{ matrix.os }}..."
           uv run pytest test/ --cov=. --cov-report xml --tb=short

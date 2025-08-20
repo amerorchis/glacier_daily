@@ -31,7 +31,21 @@ def mock_credentials():
         yield mock_creds
 
 
-def test_get_notices_with_current_notices(mock_gspread):
+@pytest.fixture
+def mock_env_vars():
+    with patch.dict(
+        "os.environ",
+        {
+            "GOOGLE_APPLICATION_CREDENTIALS": "fake_credentials.json",
+            "NOTICES_SPREADSHEET_ID": "fake_spreadsheet_id",
+        },
+    ):
+        yield
+
+
+def test_get_notices_with_current_notices(
+    mock_gspread, mock_credentials, mock_env_vars
+):
     # Setup current date for testing
     current_date = datetime.now()
     yesterday = (current_date - timedelta(days=1)).strftime("%m/%d/%Y")
@@ -55,7 +69,9 @@ def test_get_notices_with_current_notices(mock_gspread):
     assert result == expected
 
 
-def test_get_notices_with_no_current_notices(mock_gspread):
+def test_get_notices_with_no_current_notices(
+    mock_gspread, mock_credentials, mock_env_vars
+):
     # Setup dates outside current range
     past_start = (datetime.now() - timedelta(days=5)).strftime("%m/%d/%Y")
     past_end = (datetime.now() - timedelta(days=3)).strftime("%m/%d/%Y")
@@ -72,7 +88,7 @@ def test_get_notices_with_no_current_notices(mock_gspread):
     assert result == expected
 
 
-def test_get_notices_with_empty_sheet(mock_gspread):
+def test_get_notices_with_empty_sheet(mock_gspread, mock_credentials, mock_env_vars):
     # Mock empty worksheet
     mock_gspread.get_all_values.return_value = [["Start Date", "End Date", "Notice"]]
 
@@ -82,7 +98,7 @@ def test_get_notices_with_empty_sheet(mock_gspread):
     assert result == expected
 
 
-def test_get_notices_with_invalid_data(mock_gspread):
+def test_get_notices_with_invalid_data(mock_gspread, mock_credentials, mock_env_vars):
     # Mock invalid data format
     mock_data = [
         ["Start Date", "End Date", "Notice"],
@@ -96,7 +112,7 @@ def test_get_notices_with_invalid_data(mock_gspread):
     assert result == expected
 
 
-def test_get_notices_api_error(mock_gspread):
+def test_get_notices_api_error(mock_gspread, mock_credentials, mock_env_vars):
     # Create a mock Response object
     mock_response = Mock()
     mock_response.json.return_value = {
@@ -111,7 +127,9 @@ def test_get_notices_api_error(mock_gspread):
     assert result == expected
 
 
-def test_get_notices_with_incomplete_data(mock_gspread):
+def test_get_notices_with_incomplete_data(
+    mock_gspread, mock_credentials, mock_env_vars
+):
     current_date = datetime.now()
     yesterday = (current_date - timedelta(days=1)).strftime("%m/%d/%Y")
     tomorrow = (current_date + timedelta(days=1)).strftime("%m/%d/%Y")

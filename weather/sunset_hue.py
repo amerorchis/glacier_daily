@@ -53,7 +53,7 @@ def get_sunset_hue(test: bool = False) -> str:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from dotenv import load_dotenv
+    from shared.env_loader import load_env
 
-    load_dotenv("email.env")
+    load_env()
     get_sunset_hue(True)
