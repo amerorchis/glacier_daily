@@ -75,6 +75,29 @@ jobs:
           $env:PYTHONPATH += ";$(Get-Location)"
 
       - name: Run tests
+        env:
+          NPS: ""
+          DRIP_TOKEN: ""
+          DRIP_ACCOUNT: ""
+          FTP_PASSWORD: ""
+          FTP_USERNAME: ""
+          FTP_SERVER: ""
+          ALERTS_PWD: ""
+          BC_TOKEN: ""
+          BC_STORE_HASH: ""
+          flickr_key: ""
+          flickr_secret: ""
+          glaciernps_uid: ""
+          webcam_ftp_user: ""
+          webcam_ftp_pword: ""
+          timelapse_server: ""
+          MAPBOX_TOKEN: ""
+          MAPBOX_ACCOUNT: ""
+          MAPBOX_STYLE: ""
+          SUNSETHUE_KEY: ""
+          GOOGLE_APPLICATION_CREDENTIALS: ""
+          NOTICES_SPREADSHEET_ID: ""
+          ENVIRONMENT: "development"
         run: |
           echo "Running test suite with coverage on ${{ matrix.os }}..."
           uv run pytest test/ --cov=. --cov-report xml --tb=short
