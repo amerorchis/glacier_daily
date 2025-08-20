@@ -20,7 +20,7 @@ from roads.hiker_biker import get_hiker_biker_status
 from roads.roads import get_road_status
 from shared.datetime_utils import cross_platform_strftime, format_date_readable
 from shared.ftp import upload_file
-from sunrise_timelapse.vid_frame import process_video
+from sunrise_timelapse.get_timelapse import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
 from trails_and_cgs.trails import get_closed_trails
 from weather.weather import weather_data
@@ -47,7 +47,7 @@ def gen_data():
         product_future = executor.submit(get_product)
         notices_futures = executor.submit(get_notices)
 
-        sunrise_vid, sunrise_still = sunrise_future.result()
+        sunrise_vid, sunrise_still, sunrise_str = sunrise_future.result()
         potd_title, potd_image, potd_link, potd_desc = product_future.result()
         weather = weather_future.result()
         image_otd, image_otd_title, image_otd_link = image_future.result()
@@ -78,6 +78,7 @@ def gen_data():
         "image_otd_link": image_otd_link,
         "sunrise_vid": sunrise_vid,
         "sunrise_still": sunrise_still,
+        "sunrise_str": sunrise_str,
     }
 
     for key, value in drip_template_fields.items():

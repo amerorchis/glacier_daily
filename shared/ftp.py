@@ -6,6 +6,7 @@ import ftplib
 import os
 from datetime import datetime, timedelta
 from ftplib import FTP
+from typing import Optional
 
 
 def delete_on_first(ftp: FTP) -> None:
@@ -38,14 +39,16 @@ def delete_on_first(ftp: FTP) -> None:
                 ftp.delete(file)
 
 
-def upload_file(directory: str, filename: str, file: str) -> tuple[str, list[str]]:
+def upload_file(
+    directory: str, filename: str, file: Optional[str] = None
+) -> tuple[str, list[str]]:
     """
     Uploads a file to the specified directory on the FTP server and deletes old files if necessary.
 
     Args:
         directory (str): The directory on the FTP server where the file will be uploaded.
         filename (str): The name of the file to be uploaded.
-        file (str): The local path to the file to be uploaded.
+        file (Optional[str]): The local path to the file to be uploaded.
 
     Returns:
         tuple: A tuple containing the URL of the uploaded file and a list of files in the directory.
@@ -62,14 +65,16 @@ def upload_file(directory: str, filename: str, file: str) -> tuple[str, list[str
     delete_on_first(ftp)
 
     try:
-        # Open the local file in binary mode
-        with open(file, "rb") as f:
-            # Upload the file to the FTP server
-            ftp.storbinary("STOR " + filename, f)
+        if file:
+            # Open the local file in binary mode
+            with open(file, "rb") as f:
+                # Upload the file to the FTP server
+                ftp.storbinary("STOR " + filename, f)
         files = ftp.nlst()
 
+        filename = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
     except:
         print(f"Failed upload {filename}")
         files = []
 
-    return f"https://glacier.org/daily/{directory}/{filename}", files
+    return filename, files

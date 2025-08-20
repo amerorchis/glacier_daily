@@ -1,11 +1,7 @@
 import io
-import json
-import os
 from datetime import date, datetime
-from pathlib import Path
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
-import numpy as np
 import pytest
 import requests
 from PIL import Image

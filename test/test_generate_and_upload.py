@@ -27,7 +27,7 @@ def test_gen_data(monkeypatch):
     monkeypatch.setattr(gau, "events_today", lambda: "events")
     monkeypatch.setattr(gau, "get_image_otd", lambda: ("img", "img_title", "img_link"))
     monkeypatch.setattr(gau, "peak", lambda: ("peak", "peak_img", "peak_map"))
-    monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still"))
+    monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "descriptor"))
     monkeypatch.setattr(
         gau, "get_product", lambda: ("prod_title", "prod_img", "prod_link", "prod_desc")
     )
@@ -62,6 +62,7 @@ def test_gen_data(monkeypatch):
         "image_otd_link",
         "sunrise_vid",
         "sunrise_still",
+        "sunrise_str",
     ]:
         assert key in data
 

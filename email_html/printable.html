@@ -185,9 +185,9 @@
 
     {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
     <div class="section">
-        <h2>This Morning's Sunrise</h2>
+        <h2>{{ my.daily_update.sunrise_str | base64_decode }} Sunrise</h2>
         <a href="{{ my.daily_update.sunrise_vid | base64_decode }}"><img
-                src="{{ my.daily_update.sunrise_still | base64_decode }}" alt="This morning's sunrise"></a>
+                src="{{ my.daily_update.sunrise_still | base64_decode }}" alt="{{ my.daily_update.sunrise_str | base64_decode }} Sunrise"></a>
         <p>Find the timelapse video at <a href="https://glacier.org/daily-updates">glacier.org/daily-updates</a>.</p>
     </div>
     {% endif %}
