@@ -102,7 +102,8 @@ def select_video(
         # Fallback to latest
         for entry in video_entries:
             if entry.get("id") == "latest":
-                return entry.get("id"), entry.get("url"), "Latest"
+                id_ = entry.get("vid_src").split("/")[-1].rsplit("_", 2)[0]
+                return id_, entry.get("url"), "Latest"
 
         # If no latest found, return the first valid entry
         if video_entries:
@@ -171,10 +172,6 @@ def process_video(test: bool = False) -> Tuple[str, str, str]:
         if already_retrieved and len(keys) == 3:
             return keys[0], keys[1], keys[2]
 
-        if sunrise_timelapse_complete_time() > 0:
-            print("Too early for sunrise", file=sys.stderr)
-            return "", "", ""
-
         # Fetch remote data
         timelapse_data = fetch_glacier_data("timelapse")
         thumbnail_data = fetch_glacier_data("thumbnails")
@@ -194,7 +191,7 @@ def process_video(test: bool = False) -> Tuple[str, str, str]:
         thumbnail_url = find_matching_thumbnail(video_id, thumbnail_data)
 
         if not thumbnail_url:
-            print("No matching thumbnail found", file=sys.stderr)
+            print(f"No matching thumbnail found for video {video_id}", file=sys.stderr)
             return "", "", ""
 
         return video_url, thumbnail_url, descriptor
