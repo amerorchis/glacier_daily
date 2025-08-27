@@ -63,6 +63,9 @@ def test_upload_file(monkeypatch):
         def delete(self, f):
             self.deleted = f
 
+        def rename(self, old_name, new_name):
+            pass
+
     import types as _types
 
     monkeypatch.setattr(ftp_mod, "FTP", lambda server: DummyFTP())

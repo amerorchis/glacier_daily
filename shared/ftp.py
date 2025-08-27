@@ -44,6 +44,7 @@ def upload_file(
 ) -> tuple[str, list[str]]:
     """
     Uploads a file to the specified directory on the FTP server and deletes old files if necessary.
+    Uses atomic upload (temp file then rename) to prevent partial file reads.
 
     Args:
         directory (str): The directory on the FTP server where the file will be uploaded.
@@ -66,15 +67,23 @@ def upload_file(
 
     try:
         if file:
+            # Use temporary filename for atomic upload
+            temp_filename = f"{filename}.tmp"
+
             # Open the local file in binary mode
             with open(file, "rb") as f:
-                # Upload the file to the FTP server
-                ftp.storbinary("STOR " + filename, f)
+                # Upload to temporary filename first
+                ftp.storbinary("STOR " + temp_filename, f)
+
+            # Atomically rename from temp to final filename
+            ftp.rename(temp_filename, filename)
+
         files = ftp.nlst()
 
-        filename = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
+        url = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
     except:
         print(f"Failed upload {filename}")
         files = []
+        url = ""
 
-    return filename, files
+    return url, files
