@@ -37,7 +37,7 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     serve_api()
 
     # See if this fixes the issue with timelapse not showing.
-    sleep(630 if not test else 0)
+    sleep(10 if not test else 0)
 
     # Send the email to each subscriber using Drip API.
     bulk_workflow_trigger(subscribers)
