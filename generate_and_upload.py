@@ -7,7 +7,11 @@ import base64
 import concurrent.futures
 import json
 import os
+import sys
 from datetime import datetime
+from weakref import ref
+
+import requests
 
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
@@ -121,6 +125,53 @@ def send_to_server(file: str, directory: str) -> None:
     upload_file(directory, filename, file)
 
 
+def purge_cache():
+    """
+    Purge the Cloudflare cache for the site.
+    """
+    purge_key = os.getenv("CACHE_PURGE")
+    zone_id = os.getenv("ZONE_ID")
+    if not purge_key or not zone_id:
+        print(
+            "No CACHE_PURGE key or ZONE_ID set, skipping cache purge.", file=sys.stderr
+        )
+        return
+
+    url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {purge_key}",
+    }
+    data = {"purge_everything": True}
+
+    response = requests.post(url, headers=headers, json=data, timeout=5)
+    if response.status_code == 200:
+        print("Cache purged successfully.")
+    else:
+        print(
+            f"Failed to purge cache: {response.status_code} - {response.text}",
+            file=sys.stderr,
+        )
+
+
+def refresh_cache():
+    """
+    Refresh the Drip cache by hitting the endpoint.
+    """
+    url = "https://api.glacierconservancy.org/email.json"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            print("Cache refreshed successfully.")
+        else:
+            print(
+                f"Failed to refresh cache: {response.status_code} - {response.text}",
+                file=sys.stderr,
+            )
+    except requests.RequestException as e:
+        print(f"Error refreshing cache: {e}", file=sys.stderr)
+
+
 def serve_api():
     """
     Get the data, then upload it to server for API.
@@ -131,6 +182,8 @@ def serve_api():
     send_to_server(write_data_to_json(data, "email.json"), "api")
     send_to_server(web, "email")
     send_to_server(printable, "printable")
+    purge_cache()
+    refresh_cache()
 
 
 if __name__ == "__main__":  # pragma: no cover

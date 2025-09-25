@@ -102,3 +102,100 @@ def test_serve_api(monkeypatch, tmp_path):
     monkeypatch.setattr(gau, "send_to_server", lambda file, directory: None)
     # Should not raise
     gau.serve_api()
+
+
+def test_purge_cache_success(monkeypatch):
+    # Mock environment variables
+    monkeypatch.setenv("CACHE_PURGE", "test_key")
+    monkeypatch.setenv("ZONE_ID", "test_zone")
+
+    # Mock successful response
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+
+    with patch(
+        "generate_and_upload.requests.post", return_value=mock_response
+    ) as mock_post:
+        gau.purge_cache()
+
+        # Verify the API was called correctly
+        mock_post.assert_called_once_with(
+            "https://api.cloudflare.com/client/v4/zones/test_zone/purge_cache",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer test_key",
+            },
+            json={"purge_everything": True},
+            timeout=5,
+        )
+
+
+def test_purge_cache_failure(monkeypatch):
+    # Mock environment variables
+    monkeypatch.setenv("CACHE_PURGE", "test_key")
+    monkeypatch.setenv("ZONE_ID", "test_zone")
+
+    # Mock failed response
+    mock_response = MagicMock()
+    mock_response.status_code = 400
+    mock_response.text = "Bad Request"
+
+    with patch("generate_and_upload.requests.post", return_value=mock_response):
+        gau.purge_cache()  # Should not raise, just print error
+
+
+def test_purge_cache_missing_env_vars(monkeypatch):
+    # Ensure environment variables are not set
+    monkeypatch.delenv("CACHE_PURGE", raising=False)
+    monkeypatch.delenv("ZONE_ID", raising=False)
+
+    # Should return early without making any requests
+    with patch("generate_and_upload.requests.post") as mock_post:
+        gau.purge_cache()
+        mock_post.assert_not_called()
+
+
+def test_purge_cache_partial_env_vars(monkeypatch):
+    # Set only one environment variable
+    monkeypatch.setenv("CACHE_PURGE", "test_key")
+    monkeypatch.delenv("ZONE_ID", raising=False)
+
+    # Should return early without making any requests
+    with patch("generate_and_upload.requests.post") as mock_post:
+        gau.purge_cache()
+        mock_post.assert_not_called()
+
+
+def test_refresh_cache_success():
+    # Mock successful response
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+
+    with patch(
+        "generate_and_upload.requests.get", return_value=mock_response
+    ) as mock_get:
+        gau.refresh_cache()
+
+        # Verify the API was called correctly
+        mock_get.assert_called_once_with(
+            "https://api.glacierconservancy.org/email.json", timeout=10
+        )
+
+
+def test_refresh_cache_failure():
+    # Mock failed response
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+    mock_response.text = "Internal Server Error"
+
+    with patch("generate_and_upload.requests.get", return_value=mock_response):
+        gau.refresh_cache()  # Should not raise, just print error
+
+
+def test_refresh_cache_request_exception():
+    # Mock request exception
+    with patch(
+        "generate_and_upload.requests.get",
+        side_effect=gau.requests.RequestException("Connection error"),
+    ):
+        gau.refresh_cache()  # Should not raise, just print error
