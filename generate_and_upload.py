@@ -9,7 +9,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from weakref import ref
+from time import sleep
 
 import requests
 
@@ -183,6 +183,7 @@ def serve_api():
     send_to_server(web, "email")
     send_to_server(printable, "printable")
     purge_cache()
+    sleep(3)  # Wait for cache to purge
     refresh_cache()
 
 
