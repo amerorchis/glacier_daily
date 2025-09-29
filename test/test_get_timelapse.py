@@ -60,7 +60,10 @@ class TestFetchGlacierData:
         assert result == MOCK_TIMELAPSE_DATA
         mock_get.assert_called_once()
         args, kwargs = mock_get.call_args
-        assert "https://glacier.org/webcam/daily_timelapse_data.json" in args[0]
+        assert (
+            "http://timelapse.glacierconservancy.org/daily_timelapse_data.json"
+            in args[0]
+        )
         assert "User-Agent" in kwargs["headers"]
 
     @patch("requests.get")
@@ -76,7 +79,9 @@ class TestFetchGlacierData:
         assert result == MOCK_THUMBNAIL_DATA
         mock_get.assert_called_once()
         args, kwargs = mock_get.call_args
-        assert "https://glacier.org/webcam/sunrise_thumbnails.json" in args[0]
+        assert (
+            "http://timelapse.glacierconservancy.org/sunrise_thumbnails.json" in args[0]
+        )
         assert "User-Agent" in kwargs["headers"]
 
     def test_fetch_invalid_endpoint(self):
