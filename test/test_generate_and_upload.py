@@ -126,7 +126,7 @@ def test_purge_cache_success(monkeypatch):
                 "Authorization": "Bearer test_key",
             },
             json={"purge_everything": True},
-            timeout=5,
+            timeout=30,
         )
 
 
@@ -178,7 +178,7 @@ def test_refresh_cache_success():
 
         # Verify the API was called correctly
         mock_get.assert_called_once_with(
-            "https://api.glacierconservancy.org/email.json", timeout=10
+            "https://api.glacierconservancy.org/email.json", timeout=30
         )
 
 
