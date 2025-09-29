@@ -12,7 +12,6 @@ from shared.env_loader import load_env
 from shared.retrieve_from_json import retrieve_from_json
 
 load_env()
-from sunrise_timelapse.sleep_to_sunrise import sunrise_timelapse_complete_time
 
 
 class TimelapseError(Exception):
@@ -55,7 +54,7 @@ def fetch_glacier_data(endpoint_type: str) -> dict:
     try:
         cache_buster = str(int(datetime.now().timestamp()))
         filename = endpoint_map[endpoint_type]
-        url = f"https://glacier.org/webcam/{filename}?{cache_buster}"
+        url = f"http://timelapse.glacierconservancy.org/{filename}?{cache_buster}"
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
@@ -154,7 +153,7 @@ def find_matching_thumbnail(video_id: str, thumbnail_data: dict) -> Optional[str
         return None
 
 
-def process_video(test: bool = False) -> Tuple[str, str, str]:
+def process_video() -> Tuple[str, str, str]:
     """
     Process the sunrise timelapse by fetching remote data and selecting appropriate video and thumbnail.
     Args:
@@ -202,4 +201,4 @@ def process_video(test: bool = False) -> Tuple[str, str, str]:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    print(process_video(test=True))
+    print(process_video())
