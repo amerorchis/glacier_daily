@@ -144,7 +144,7 @@ def purge_cache():
     }
     data = {"purge_everything": True}
 
-    response = requests.post(url, headers=headers, json=data, timeout=5)
+    response = requests.post(url, headers=headers, json=data, timeout=30)
     if response.status_code == 200:
         print("Cache purged successfully.")
     else:
@@ -160,7 +160,7 @@ def refresh_cache():
     """
     url = "https://api.glacierconservancy.org/email.json"
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=30)
         if response.status_code == 200:
             print("Cache refreshed successfully.")
         else:
