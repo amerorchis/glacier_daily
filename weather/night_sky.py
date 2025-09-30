@@ -361,12 +361,40 @@ def aurora_forecast(cloud_cover: float = 0.0) -> str:
     f = Forecast()
 
     cloudy = cloud_cover >= 0.3
+
+    # Get the dark period and forecast
+    latitude, longitude = 48.528, -113.989
+    timezone = "US/Mountain"
+    tz = pytz.timezone(timezone)
+    start_time = datetime.now(pytz.UTC)
+
+    dark_period = f.get_next_dark_period(latitude, longitude, start_time)
     wg_forecast = f.get_forecast_by_location(
-        latitude=48.528, longitude=-113.989, timezone="US/Mountain"
+        latitude=latitude, longitude=longitude, timezone=timezone
     )
 
-    v_time = max(wg_forecast, key=wg_forecast.get)
-    v = wg_forecast[v_time]
+    # Interpolate 3-hour periods into hourly forecasts
+    hourly_forecast = {}
+    for period_start, kp_value in wg_forecast.items():
+        # Each period is 3 hours, create 3 one-hour periods
+        for hour_offset in range(3):
+            hour_time = period_start + timedelta(hours=hour_offset)
+            hourly_forecast[hour_time] = kp_value
+
+    # Filter to only hours that are actually dark
+    dark_hourly_forecast = {
+        time: kp
+        for time, kp in hourly_forecast.items()
+        if time >= dark_period.start and time < dark_period.end
+    }
+
+    if not dark_hourly_forecast:
+        # No dark hours in the forecast range
+        return "No aurora forecast available", ""
+
+    # Find the peak Kp during dark hours
+    v_time = max(dark_hourly_forecast, key=dark_hourly_forecast.get)
+    v = dark_hourly_forecast[v_time]
 
     cast = f"{v} Kp ({Forecast.get_aurora_strength(v)})"
     msg = ""

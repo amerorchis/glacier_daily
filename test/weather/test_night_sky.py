@@ -172,8 +172,21 @@ def test_aurora_forecast():
     """Test aurora forecast function with mocked Forecast"""
     with patch("weather.night_sky.Forecast") as MockForecast:
         mock_instance = MockForecast.return_value
+
+        # Mock the dark period (e.g., 8pm to 6am next day in Mountain time)
+        tz = pytz.timezone("US/Mountain")
+        dark_start = tz.localize(datetime(2025, 1, 10, 20, 0))  # 8pm
+        dark_end = tz.localize(datetime(2025, 1, 11, 6, 0))  # 6am next day
+        mock_instance.get_next_dark_period.return_value = DarkPeriod(
+            start=dark_start, end=dark_end
+        )
+
+        # Mock forecast with 3-hour periods that will be interpolated
         mock_instance.get_forecast_by_location.return_value = {
-            datetime(2025, 1, 10, 20, 0, tzinfo=pytz.UTC): 4.0
+            tz.localize(datetime(2025, 1, 10, 18, 0)): 4.0,  # 6pm-9pm period (Kp 4.0)
+            tz.localize(
+                datetime(2025, 1, 10, 21, 0)
+            ): 3.0,  # 9pm-midnight period (Kp 3.0)
         }
         MockForecast.get_aurora_strength = Forecast.get_aurora_strength
 

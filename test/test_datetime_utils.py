@@ -169,19 +169,19 @@ class TestFormatTimeWithTimezone:
         """Test time with timezone formatting."""
         dt = pytz.timezone("America/Denver").localize(datetime(2025, 1, 5, 13, 30, 0))
         result = format_time_with_timezone(dt)
-        assert result == "1:30 pm mst"
+        assert result == "1:30 pm MST"
 
     def test_timezone_formatting_summer(self):
         """Test time with timezone formatting in summer (MDT)."""
         dt = pytz.timezone("America/Denver").localize(datetime(2025, 7, 15, 13, 30, 0))
         result = format_time_with_timezone(dt)
-        assert result == "1:30 pm mdt"
+        assert result == "1:30 pm MDT"
 
     def test_utc_timezone(self):
         """Test UTC timezone formatting."""
         dt = pytz.UTC.localize(datetime(2025, 1, 5, 20, 30, 0))
         result = format_time_with_timezone(dt)
-        assert result == "8:30 pm utc"
+        assert result == "8:30 pm UTC"
 
 
 class TestWindowsSpecificBehavior:
