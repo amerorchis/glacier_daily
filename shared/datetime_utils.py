@@ -87,6 +87,13 @@ def format_short_date(dt: datetime) -> str:
 def format_time_with_timezone(dt: datetime) -> str:
     """Format time with timezone in standardized format (cross-platform).
 
-    Returns: "1:30 pm MST" instead of "01:30 PM MST"
+    Returns: "1:30 pm MST" (lowercase am/pm, uppercase timezone)
     """
-    return cross_platform_strftime(dt, "%-I:%M %p %Z").lower()
+    formatted = cross_platform_strftime(dt, "%-I:%M %p %Z")
+    # Split to lowercase only the AM/PM part, keep timezone uppercase
+    parts = formatted.rsplit(" ", 1)  # Split from right: ['1:30 PM', 'MST']
+    if len(parts) == 2:
+        time_part, tz_part = parts
+        time_part = time_part.lower()  # "1:30 pm"
+        return f"{time_part} {tz_part}"  # "1:30 pm MST"
+    return formatted.lower()  # Fallback if no timezone
