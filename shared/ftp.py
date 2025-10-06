@@ -81,8 +81,8 @@ def upload_file(
         files = ftp.nlst()
 
         url = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
-    except:
-        print(f"Failed upload {filename}")
+    except Exception as e:
+        print(f"Failed upload {filename}: {e}")
         files = []
         url = ""
 

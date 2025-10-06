@@ -15,6 +15,8 @@ def get_sunset_hue(test: bool = False) -> str:
     Returns:
         str: A formatted HTML string describing the sunset hue forecast, or an empty string if the forecast is not favorable.
     """
+    ERROR_RETURN = (0, "unknown", "")
+
     lat = "48.528556"
     long = "-113.991674"
     date = datetime.today().strftime("%Y-%m-%d")
@@ -28,12 +30,12 @@ def get_sunset_hue(test: bool = False) -> str:
     try:
         response = requests.get(url, headers=headers, data=payload, timeout=10)
     except requests.exceptions.Timeout:
-        return 0, "unknown", ""
+        return ERROR_RETURN
 
-    if response.status_code == 200:
-        r = response.json()
-    else:
-        return 0, "unknown", ""
+    if response.status_code != 200:
+        return ERROR_RETURN
+
+    r = response.json()
 
     quality, quality_text, cloud_cover = (
         r.get("data").get("quality", 0),
@@ -43,6 +45,9 @@ def get_sunset_hue(test: bool = False) -> str:
 
     if test:
         print(quality, quality_text, cloud_cover)
+
+    if not quality or not quality_text or not cloud_cover:
+        return ERROR_RETURN
 
     if quality < 0.41 or cloud_cover > 0.6:
         msg = ""
