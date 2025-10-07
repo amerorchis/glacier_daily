@@ -9,6 +9,7 @@ roads = {
         (48.52818, -113.97677): "the foot of Lake McDonald",
         (48.52169, -113.98857): "the foot of Lake McDonald",
         (48.67990, -113.81932): "Avalanche",
+        (48.69659, -113.71800): "Logan Pass",
         (48.70158, -113.66778): "Siyeh Bend",
         (48.67815, -113.65335): "Jackson Glacier Overlook",
         (48.69231, -113.52234): "Rising Sun",
