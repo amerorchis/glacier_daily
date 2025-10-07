@@ -67,7 +67,7 @@ class Place:
                     setattr(
                         self,
                         f"{direction}_loc",
-                        f"{coords[0]}, {coords[1]} (name of location not found).",
+                        f"{coords[0]}, {coords[1]} (name of location not found)",
                     )
                 min_dist = distance
 
