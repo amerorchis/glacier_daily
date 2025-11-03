@@ -46,7 +46,7 @@ def get_sunset_hue(test: bool = False) -> str:
     if test:
         print(quality, quality_text, cloud_cover)
 
-    if not quality or not quality_text or not cloud_cover:
+    if not quality_text:
         return ERROR_RETURN
 
     if quality < 0.41 or cloud_cover > 0.6:
@@ -61,4 +61,4 @@ if __name__ == "__main__":  # pragma: no cover
     from shared.env_loader import load_env
 
     load_env()
-    get_sunset_hue(True)
+    get_sunset_hue(test=True)
