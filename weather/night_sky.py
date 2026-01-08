@@ -250,13 +250,18 @@ class Forecast:
             )
             sunrise = tomorrow_sun["sunrise"]
         else:
-            # Use tomorrow's sunset and sunrise
+            # Use tomorrow's sunset and the day after's sunrise
             tomorrow = start_time + timedelta(days=1)
             tomorrow_sun = sun(
                 location.observer, date=tomorrow, tzinfo=start_time.tzinfo
             )
             sunset = tomorrow_sun["sunset"]
-            sunrise = tomorrow_sun["sunrise"]
+            # Get the day after tomorrow's sunrise
+            day_after = start_time + timedelta(days=2)
+            day_after_sun = sun(
+                location.observer, date=day_after, tzinfo=start_time.tzinfo
+            )
+            sunrise = day_after_sun["sunrise"]
 
         return DarkPeriod(start=sunset, end=sunrise)
 
