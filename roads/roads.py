@@ -156,6 +156,10 @@ def closed_roads() -> Dict[str, Road]:
     for i in roads_json:
         # Fix the weird way Two Med is shown sometimes
         road_name = i["properties"]["rdname"].replace("to Running Eagle", "Road")
+
+        # Normalize Cut Bank Creek Road variants (e.g., "Cut Bank Creek Road: Boundary to RS")
+        if road_name.startswith("Cut Bank Creek Road"):
+            road_name = "Cut Bank Creek Road"
         coordinates = (
             i["geometry"]["coordinates"]
             if len(i["geometry"]["coordinates"]) > 1

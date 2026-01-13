@@ -174,6 +174,52 @@ class TestClosedRoads:
             result = closed_roads()
             assert "Two Medicine Road" in result
 
+    def test_cut_bank_road_name_variants_normalized(self):
+        """Verify Cut Bank Creek Road variants are normalized to match dictionary key."""
+        mock_response = Mock()
+        mock_response.text = json.dumps(
+            {
+                "features": [
+                    {
+                        "properties": {
+                            "rdname": "Cut Bank Creek Road: Boundary to RS",
+                            "status": "closed",
+                            "reason": "seasonal",
+                        },
+                        "geometry": {
+                            "coordinates": [
+                                [-113.36777, 48.610241],  # park boundary
+                                [-113.376876, 48.605817],  # ranger station
+                            ]
+                        },
+                    },
+                    {
+                        "properties": {
+                            "rdname": "Cut Bank Creek Road",
+                            "status": "closed",
+                            "reason": "winter",
+                        },
+                        "geometry": {
+                            "coordinates": [
+                                [-113.376868, 48.605844],  # ranger station
+                                [-113.383718, 48.601878],  # campground
+                            ]
+                        },
+                    },
+                ]
+            }
+        )
+        mock_response.raise_for_status = Mock()
+
+        with patch("roads.roads.requests.get", return_value=mock_response):
+            result = closed_roads()
+            # Both segments should be processed under the same road
+            assert "Cut Bank Creek Road" in result
+            road = result["Cut Bank Creek Road"]
+            road.closure_string()
+            # Road should be entirely closed since both endpoints are boundary markers
+            assert road.entirely_closed
+
     def test_nested_coordinates_handled(self):
         """Verify single-element coordinate arrays are unwrapped correctly."""
         mock_response = Mock()
