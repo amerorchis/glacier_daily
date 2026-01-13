@@ -17,8 +17,9 @@ def make_fake_weather():
     return FakeWeather()
 
 
-def test_gen_data(monkeypatch):
-    # Patch all the data sources to return simple values
+@pytest.fixture
+def mock_all_data_sources(monkeypatch):
+    """Fixture to mock all data sources used by gen_data()."""
     monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
     monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
     monkeypatch.setattr(gau, "get_campground_status", lambda: "campgrounds")
@@ -35,9 +36,12 @@ def test_gen_data(monkeypatch):
     monkeypatch.setattr(gau, "html_safe", lambda x: x)
     monkeypatch.setattr(gau, "weather_image", lambda x: "weather_img")
 
+
+def test_gen_data_keys_present(mock_all_data_sources):
+    """Verify all expected keys are present in gen_data output."""
     data = gau.gen_data()
-    # Check that all expected keys are present
-    for key in [
+
+    expected_keys = [
         "date",
         "today",
         "events",
@@ -63,8 +67,98 @@ def test_gen_data(monkeypatch):
         "sunrise_vid",
         "sunrise_still",
         "sunrise_str",
-    ]:
-        assert key in data
+    ]
+
+    for key in expected_keys:
+        assert key in data, f"Expected key '{key}' not found in gen_data output"
+
+
+def test_gen_data_string_fields_are_strings(mock_all_data_sources):
+    """Verify string fields return str type (empty string is valid)."""
+    data = gau.gen_data()
+
+    # These fields should always be strings (possibly empty)
+    string_fields = [
+        "date",
+        "today",
+        "events",
+        "weather1",
+        "weather2",
+        "season",
+        "trails",
+        "campgrounds",
+        "roads",
+        "hikerbiker",
+        "notices",
+        "peak",
+        "product_link",
+        "product_title",
+        "product_desc",
+        "image_otd",
+        "image_otd_title",
+        "image_otd_link",
+        "sunrise_vid",
+        "sunrise_still",
+        "sunrise_str",
+        "weather_image",
+        "peak_map",
+    ]
+
+    for key in string_fields:
+        value = data.get(key)
+        assert isinstance(
+            value, str
+        ), f"Field '{key}' should be str, got {type(value).__name__}"
+
+
+def test_gen_data_nullable_image_fields(mock_all_data_sources):
+    """Verify image fields can be str or None."""
+    data = gau.gen_data()
+
+    # These fields may be None or str (URL or empty string)
+    nullable_fields = [
+        "peak_image",
+        "product_image",
+    ]
+
+    for key in nullable_fields:
+        value = data.get(key)
+        assert value is None or isinstance(
+            value, str
+        ), f"Field '{key}' should be str or None, got {type(value).__name__}"
+
+
+def test_gen_data_returns_dict(mock_all_data_sources):
+    """Verify gen_data returns a dictionary."""
+    data = gau.gen_data()
+    assert isinstance(
+        data, dict
+    ), f"gen_data should return dict, got {type(data).__name__}"
+
+
+def test_gen_data_with_empty_returns(monkeypatch):
+    """Verify gen_data handles modules that return empty values gracefully."""
+    # Simulate graceful degradation - some modules return empty
+    monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
+    monkeypatch.setattr(gau, "get_closed_trails", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "get_campground_status", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "get_road_status", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "events_today", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "get_image_otd", lambda: ("", "", ""))  # Empty tuple
+    monkeypatch.setattr(gau, "peak", lambda: ("", None, ""))  # None for image
+    monkeypatch.setattr(gau, "process_video", lambda: ("", "", ""))  # Empty
+    monkeypatch.setattr(
+        gau, "get_product", lambda: ("", None, "", "")
+    )  # None for image
+    monkeypatch.setattr(gau, "get_notices", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "html_safe", lambda x: x)
+    monkeypatch.setattr(gau, "weather_image", lambda x: "")  # Empty
+
+    # Should not raise even with empty values
+    data = gau.gen_data()
+    assert isinstance(data, dict)
+    assert "date" in data  # Should still have date
 
 
 def test_write_data_to_json(tmp_path, monkeypatch):
