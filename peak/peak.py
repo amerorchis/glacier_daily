@@ -3,11 +3,33 @@ Select a random peak, get an image of it, and return the info.
 """
 
 import csv
+import json
 import random
 from datetime import date
+from pathlib import Path
+from typing import Optional
 
 from peak.sat import peak_sat
 from shared.retrieve_from_json import retrieve_from_json
+
+SCRIPT_DIR = Path(__file__).parent
+WIKIPEDIA_JSON = SCRIPT_DIR / "peaks_wikipedia.json"
+
+
+def _get_peak_summary(name: str, lat: float, lon: float) -> Optional[str]:
+    """Get the Wikipedia summary for a peak if available."""
+    if not WIKIPEDIA_JSON.exists():
+        return None
+    with open(WIKIPEDIA_JSON, encoding="utf-8") as f:
+        data = json.load(f)
+    for peak_data in data.get("peaks", []):
+        if (
+            peak_data["name"] == name
+            and abs(peak_data["lat"] - lat) < 0.001
+            and abs(peak_data["lon"] - lon) < 0.001
+        ):
+            return peak_data.get("summary")
+    return None
 
 
 def peak(test=False):
@@ -38,7 +60,13 @@ def peak(test=False):
         f"data=!3m1!1e3!4m4!3m3!8m2!3d48.8361389!4d-113.6542778?entry=ttu"
     )
 
-    return f"{today['name']} - {today['elevation']} ft.", peak_img, google_maps
+    # Build peak text with optional summary
+    peak_text = f"{today['name']} - {today['elevation']} ft."
+    summary = _get_peak_summary(today["name"], float(today["lat"]), float(today["lon"]))
+    if summary:
+        peak_text += f" {summary}"
+
+    return peak_text, peak_img, google_maps
 
 
 if __name__ == "__main__":  # pragma: no cover

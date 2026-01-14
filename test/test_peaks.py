@@ -6,7 +6,7 @@ import pytest
 import requests
 from PIL import Image
 
-from peak.peak import peak
+from peak.peak import _get_peak_summary, peak
 from peak.sat import peak_sat, upload_peak
 
 
@@ -163,3 +163,72 @@ def test_peak_csv_read():
         assert " - " in peak_name  # Should contain name and elevation
         assert "ft." in peak_name
         assert "@" in peak_map  # Should contain coordinates
+
+
+class TestGetPeakSummary:
+    """Tests for the _get_peak_summary function"""
+
+    def test_returns_none_when_json_missing(self, tmp_path):
+        """Test that None is returned when JSON file doesn't exist"""
+        with patch("peak.peak.WIKIPEDIA_JSON", tmp_path / "nonexistent.json"):
+            result = _get_peak_summary("Test Peak", 48.0, -113.0)
+            assert result is None
+
+    def test_returns_summary_when_peak_found(self, tmp_path):
+        """Test that summary is returned when peak matches"""
+        json_file = tmp_path / "peaks_wikipedia.json"
+        json_file.write_text(
+            '{"peaks": [{"name": "Test Peak", "lat": 48.0, "lon": -113.0, '
+            '"summary": "A test summary."}]}'
+        )
+
+        with patch("peak.peak.WIKIPEDIA_JSON", json_file):
+            result = _get_peak_summary("Test Peak", 48.0, -113.0)
+            assert result == "A test summary."
+
+    def test_returns_none_when_peak_has_no_summary(self, tmp_path):
+        """Test that None is returned when peak exists but has no summary"""
+        json_file = tmp_path / "peaks_wikipedia.json"
+        json_file.write_text(
+            '{"peaks": [{"name": "Test Peak", "lat": 48.0, "lon": -113.0}]}'
+        )
+
+        with patch("peak.peak.WIKIPEDIA_JSON", json_file):
+            result = _get_peak_summary("Test Peak", 48.0, -113.0)
+            assert result is None
+
+    def test_returns_none_when_peak_not_found(self, tmp_path):
+        """Test that None is returned when no matching peak exists"""
+        json_file = tmp_path / "peaks_wikipedia.json"
+        json_file.write_text(
+            '{"peaks": [{"name": "Other Peak", "lat": 49.0, "lon": -114.0, '
+            '"summary": "Different peak."}]}'
+        )
+
+        with patch("peak.peak.WIKIPEDIA_JSON", json_file):
+            result = _get_peak_summary("Test Peak", 48.0, -113.0)
+            assert result is None
+
+    def test_matches_by_coordinates_within_tolerance(self, tmp_path):
+        """Test that peaks match within coordinate tolerance (0.001)"""
+        json_file = tmp_path / "peaks_wikipedia.json"
+        json_file.write_text(
+            '{"peaks": [{"name": "Test Peak", "lat": 48.0005, "lon": -113.0005, '
+            '"summary": "Matched within tolerance."}]}'
+        )
+
+        with patch("peak.peak.WIKIPEDIA_JSON", json_file):
+            result = _get_peak_summary("Test Peak", 48.0, -113.0)
+            assert result == "Matched within tolerance."
+
+    def test_no_match_when_coordinates_outside_tolerance(self, tmp_path):
+        """Test that peaks don't match when coords are outside tolerance"""
+        json_file = tmp_path / "peaks_wikipedia.json"
+        json_file.write_text(
+            '{"peaks": [{"name": "Test Peak", "lat": 48.01, "lon": -113.01, '
+            '"summary": "Should not match."}]}'
+        )
+
+        with patch("peak.peak.WIKIPEDIA_JSON", json_file):
+            result = _get_peak_summary("Test Peak", 48.0, -113.0)
+            assert result is None
