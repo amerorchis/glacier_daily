@@ -1,0 +1,77 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-actions
+
+      - name: Deploy to Raspberry Pi
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          command_timeout: 10m
+          script: |
+            set -e
+
+            echo "==> Starting deployment at $(date)"
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Save current commit for potential rollback
+            CURRENT_COMMIT=$(git rev-parse HEAD)
+            echo "Current commit: $CURRENT_COMMIT"
+
+            # Pull latest changes
+            echo "==> Pulling latest changes from GitHub"
+            git fetch origin
+            git reset --hard origin/main
+            NEW_COMMIT=$(git rev-parse HEAD)
+            echo "New commit: $NEW_COMMIT"
+
+            # Update dependencies
+            echo "==> Updating dependencies with uv"
+            /home/pi/.local/bin/uv sync
+
+            # Health check - run generate_and_upload.py to verify deployment
+            echo "==> Performing health check by running generate_and_upload.py"
+            if /home/pi/.local/bin/uv run python generate_and_upload.py; then
+              echo "Deployment successful"
+              echo "generate_and_upload.py completed successfully"
+              echo "Deployed commit: $NEW_COMMIT"
+              exit 0
+            else
+              echo "Health check failed - generate_and_upload.py failed"
+              echo "==> Rolling back to commit $CURRENT_COMMIT"
+              git reset --hard $CURRENT_COMMIT
+              /home/pi/.local/bin/uv sync
+              echo "Rolled back to previous version"
+              exit 1
+            fi
+
+      - name: Deployment Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "Deployment completed successfully"
+          else
+            echo "Deployment failed - check logs above"
+            echo "The application has been automatically rolled back to the previous working version"
+          fi

@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -24,25 +21,27 @@ jobs:
 
       - name: Run pre-commit hooks
         run: |
-          echo "Running code quality checks..."
           uv run pre-commit run --all-files --show-diff-on-failure --verbose
 
   unit-and-integration-test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9']
+        include:
+          - os: ubuntu-latest
+            shell: bash
+          - os: windows-latest
+            shell: pwsh
+          - os: macos-latest
+            shell: bash
+          - os: [self-hosted, gnpic]
+            shell: bash
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
 
       - name: Install uv (Unix)
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && !contains(matrix.os, 'self-hosted')
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: Install uv (Windows)
@@ -63,17 +62,6 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path email_images/today/
-
-      - name: Set python path (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          PYTHONPATH=$PYTHONPATH:$(pwd)
-
-      - name: Set python path (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $env:PYTHONPATH += ";$(Get-Location)"
 
       - name: Run tests
         env:
