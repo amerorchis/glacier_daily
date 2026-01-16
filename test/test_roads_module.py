@@ -397,10 +397,10 @@ class TestSegmentsOverlap:
         assert _segments_overlap(seg1, seg2) is False
 
     def test_adjacent_segments(self):
-        """Verify segments touching at a point overlap."""
+        """Verify segments touching at a single point do NOT overlap."""
         seg1 = (-113.9, -113.6)
-        seg2 = (-113.6, -113.4)  # Starts where seg1 ends
-        assert _segments_overlap(seg1, seg2) is True
+        seg2 = (-113.6, -113.4)  # Starts exactly where seg1 ends
+        assert _segments_overlap(seg1, seg2) is False
 
     def test_contained_segment(self):
         """Verify overlap when one segment contains another."""

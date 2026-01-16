@@ -46,14 +46,18 @@ def _segments_overlap(seg1: Tuple[float, float], seg2: Tuple[float, float]) -> b
     """
     Check if two segments (defined by west/east longitude bounds) overlap.
 
+    Segments that only share an endpoint are NOT considered overlapping.
+    This ensures that when a closed segment ends exactly where an open segment
+    begins, we still report the closure endpoint correctly.
+
     Args:
         seg1: (west_lon, east_lon) for first segment
         seg2: (west_lon, east_lon) for second segment
 
     Returns:
-        True if segments overlap
+        True if segments overlap (not just touch at an endpoint)
     """
-    return seg1[0] <= seg2[1] and seg2[0] <= seg1[1]
+    return seg1[0] < seg2[1] and seg2[0] < seg1[1]
 
 
 def _fetch_open_segments(road_name: str) -> Set[Tuple[float, float]]:
