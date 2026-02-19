@@ -1,0 +1,383 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Glacier Daily Update</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+    </style>
+    <![endif]-->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body style="font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; color: #3e2f13; -webkit-font-smoothing: antialiased;">
+    <div style="font-size:0px;line-height:1px;mso-line-height-rule:exactly;display:none;max-width:0px;max-height:0px;opacity:0;overflow:hidden;mso-hide:all;">
+        Here's what you need to know about Glacier National Park today - courtesy of the Glacier National Park Conservancy
+    </div>
+
+    <!-- Main Container -->
+    <table width="100%" bgcolor="#f5f5f5" cellpadding="0" cellspacing="0" border="0">
+        <tbody>
+            <tr>
+                <td align="center" style="padding: 30px 15px;">
+                    <table cellpadding="0" cellspacing="0" width="600" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 4px;">
+                        <tbody>
+                            <!-- Header -->
+                            <tr>
+                                <td style="padding: 40px 40px 0;">
+                                    {% if subscriber.email == 'for-web' %}
+                                    <p style="margin: 0 0 20px; font-size: 12px; color: #666666;">
+                                        <strong>Last Updated: {{ my.daily_update.timestring }}.</strong> Check <a href="https://www.nps.gov/glac/index.htm" style="color: #028CA9;">nps.gov/glac</a> for the latest.
+                                    </p>
+                                    {% endif %}
+                                    <a href="http://glacier.org/" style="display: inline-block;">
+                                        <img src="https://www.dripuploads.com/uploads/image_upload/image/3049526/embeddable_9e5a933a-16c8-4a46-a560-16a94a8ea61b.png"
+                                            width="200" height="49" alt="GNPC Logo"
+                                            style="display: block; border: 0;">
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <!-- Date Header -->
+                            <tr>
+                                <td style="padding: 30px 40px 10px;">
+                                    <p style="font-size: 36px; font-weight: 300; color: #3e2f13; margin: 0 0 8px; line-height: 1.1;">
+                                        {{ my.daily_update.today | base64_decode }}
+                                    </p>
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #028CA9; margin: 0; font-weight: 600;">
+                                        GLACIER NATIONAL PARK CONDITIONS
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Title Card Image -->
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/title_card.jpg"
+                                        width="520" alt="What you need to know"
+                                        style="display: block; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+
+                            <!-- Park Activities (Conditional) -->
+                            {% if my.daily_update.events != "" %}
+                                {% if my.daily_update.events | base64_decode != "502 Response" %}
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #a85900; margin: 0 0 8px; font-weight: 600;">
+                                        ACTIVITIES
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm" style="color: #3e2f13; text-decoration: none;">Park Activities Today</a>
+                                    </p>
+                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg"
+                                        width="520" alt="Events"
+                                        style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444;">
+                                        {{ my.daily_update.events | base64_decode }}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- Weather -->
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #028CA9; margin: 0 0 8px; font-weight: 600;">
+                                        WEATHER
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="https://www.weather.gov/" style="color: #3e2f13; text-decoration: none;">Today's Forecast</a>
+                                    </p>
+                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/weather.jpg"
+                                        width="520" alt="Weather"
+                                        style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">
+                                        {{ my.daily_update.weather1 | base64_decode }}
+                                    </p>
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="{{ my.daily_update.weather_image | base64_decode }}"
+                                                    width="405" alt="Today's weather forecast in Glacier"
+                                                    style="display: block; border: 0; border-radius: 4px; max-width: 100%;">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444; margin-top: 25px;">
+                                        {{ my.daily_update.weather2 | base64_decode }}
+                                    </div>
+                                    <p style="margin: 20px 0 0; font-size: 11px; color: #888888; font-style: italic;">
+                                        Air quality data from <a href="https://www.nps.gov/subjects/air/current-data.htm?site=glac&location=west-glacier-horse-stables&" style="color: #888888;">the National Park Service</a>.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+
+                            <!-- Trails, Roads & Campgrounds -->
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #546d41; margin: 0 0 8px; font-weight: 600;">
+                                        CONDITIONS
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm" style="color: #3e2f13; text-decoration: none;">Trails, Roads & Campgrounds</a>
+                                    </p>
+                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&roads&cgs.jpg"
+                                        width="520" alt="Trails"
+                                        style="display: block; margin: 0 0 25px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+
+                                    <!-- Trail Closures -->
+                                    <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
+                                        Trail Closures
+                                    </p>
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">
+                                        {{ my.daily_update.trails | base64_decode }}
+                                    </div>
+
+                                    <!-- Road Closures (Conditional) -->
+                                    {% if my.daily_update.roads != "" %}
+                                    <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
+                                        Road Closures
+                                    </p>
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">
+                                        {{ my.daily_update.roads | base64_decode }}
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Hiker/Biker (Conditional) -->
+                                    {% if my.daily_update.hikerbiker != "" %}{% if my.daily_update.hikerbiker %}
+                                    <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
+                                        Going-to-the-Sun Road Hiker/Biker Closures
+                                    </p>
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">
+                                        {{ my.daily_update.hikerbiker | base64_decode }}
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Campground Closures (Conditional) -->
+                                    {% if my.daily_update.campgrounds != "" %}
+                                    <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
+                                        Campground Status
+                                    </p>
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">
+                                        {{ my.daily_update.campgrounds | base64_decode }}
+                                    </div>
+                                    {% endif %}{% endif %}
+
+                                    <p style="margin: 0; font-size: 11px; color: #888888; font-style: italic; line-height: 1.5;">
+                                        Trail, road, and campground condition information provided by Glacier National Park's official website. Conditions can change throughout the day. Check the <a href="https://www.nps.gov/glac/planyourvisit/index.htm" style="color: #888888;">park's website</a> for the latest information.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+
+                            <!-- Notices -->
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #a85900; margin: 0 0 8px; font-weight: 600;">
+                                        NOTICES
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="https://glacier.org" style="color: #3e2f13; text-decoration: none;">Daily Updates</a>
+                                    </p>
+                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/notices.jpg"
+                                        width="520" alt="Daily Notices"
+                                        style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    <div style="font-size: 14px; line-height: 1.7; color: #444444;">
+                                        {{ my.daily_update.notices | base64_decode }}
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+
+                            <!-- Peak of the Day -->
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #6c8d3b; margin: 0 0 8px; font-weight: 600;">
+                                        FEATURED
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color: #3e2f13; text-decoration: none;">Glacier Peak of the Day</a>
+                                    </p>
+                                    <a href="{{ my.daily_update.peak_image | base64_decode }}" style="display: block;">
+                                        <img src="{{ my.daily_update.peak_image | base64_decode }}"
+                                            width="520" alt="Peak"
+                                            style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    </a>
+                                    <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 15px;">
+                                        {{ my.daily_update.peak | base64_decode }}
+                                    </p>
+                                    <p style="font-size: 12px; color: #666666; margin: 0;">
+                                        <a href="{{ my.daily_update.peak_image | base64_decode }}" style="color: #6c8d3b;">Full size image</a> · <a href="{{ my.daily_update.peak_map | base64_decode }}" style="color: #6c8d3b;">View on map</a>
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+
+                            <!-- Product of the Day -->
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #028CA9; margin: 0 0 8px; font-weight: 600;">
+                                        FROM THE SHOP
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="{{ my.daily_update.product_link | base64_decode }}" style="color: #3e2f13; text-decoration: none;">{{ my.daily_update.product_title | base64_decode }}</a>
+                                    </p>
+                                    <a href="{{ my.daily_update.product_link | base64_decode }}" style="display: block;">
+                                        <img src="{{ my.daily_update.product_image | base64_decode }}"
+                                            width="520" alt="Today's product of the day"
+                                            style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    </a>
+                                    <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 15px;">
+                                        {{ my.daily_update.product_desc | base64_decode }}
+                                    </p>
+                                    <p style="font-size: 12px; margin: 0;">
+                                        <a href="{{ my.daily_update.product_link | base64_decode }}" style="color: #a85900; font-weight: 600;">Shop now →</a>
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+
+                            <!-- Image of the Day (Conditional) -->
+                            {% if my.daily_update.image_otd | base64_decode != "Flickr API Error" %}
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #5eade0; margin: 0 0 8px; font-weight: 600;">
+                                        PHOTOGRAPHY
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="{{ my.daily_update.image_otd_link | base64_decode }}" style="color: #3e2f13; text-decoration: none;">Glacier Image of the Day</a>
+                                    </p>
+                                    <a href="{{ my.daily_update.image_otd_link | base64_decode }}" style="display: block;">
+                                        <img src="{{ my.daily_update.image_otd | base64_decode }}"
+                                            width="520" alt="Today's picture of the day"
+                                            style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    </a>
+                                    <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0;">
+                                        {% if my.daily_update.image_otd_title != "" %}{{ my.daily_update.image_otd_title | base64_decode }}<br>{% endif %}
+                                        <span style="font-size: 12px; color: #666666;">Image courtesy of <a href="{{ my.daily_update.image_otd_link | base64_decode }}" style="color: #666666;">Glacier National Park</a>.</span>
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Sunrise Timelapse (Conditional) -->
+                            {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
+                            <tr>
+                                <td style="padding: 30px 40px;">
+                                    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #a85900; margin: 0 0 8px; font-weight: 600;">
+                                        TIMELAPSE
+                                    </p>
+                                    <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0 0 20px; line-height: 1.3;">
+                                        <a href="{{ my.daily_update.sunrise_vid | base64_decode }}" style="color: #3e2f13; text-decoration: none;">{{ my.daily_update.sunrise_str | base64_decode }} Sunrise</a>
+                                    </p>
+                                    <a href="{{ my.daily_update.sunrise_vid | base64_decode }}" style="display: block;">
+                                        <img src="{{ my.daily_update.sunrise_still | base64_decode }}"
+                                            width="520" alt="{{ my.daily_update.sunrise_str | base64_decode }} sunrise"
+                                            style="display: block; margin: 0 0 15px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
+                                    </a>
+                                    <p style="font-size: 14px; color: #666666; margin: 0;">
+                                        Click to watch the timelapse video of the sunrise.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Divider -->
+                            <tr>
+                                <td style="padding: 0 40px;">
+                                    <div style="border-top: 1px solid #e0e0e0;"></div>
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Footer -->
+                            <tr>
+                                <td style="padding: 30px 40px 50px;">
+                                    <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
+                                        Glacier National Park Conservancy
+                                    </p>
+                                    {% if subscriber.email != 'for-web' %}
+                                    <p style="font-size: 12px; line-height: 1.7; color: #666666; margin: 0 0 15px;">
+                                        {{ inline_postal_address }}
+                                    </p>
+                                    <p style="font-size: 12px; line-height: 1.8; color: #666666; margin: 0;">
+                                        <a href="http://glacier.org/" style="color: #6c8d3b;">glacier.org</a> ·
+                                        <a href="https://glacier.org/glacier-daily-updates-signup/#iFrame1" style="color: #6c8d3b;">View in browser</a> ·
+                                        <a href="https://glacier.org/daily/print" style="color: #6c8d3b;">Printer Friendly</a>
+                                    </p>
+                                    <p style="font-size: 12px; line-height: 1.8; color: #666666; margin: 10px 0 0;">
+                                        <a href="http://api.glacier.org/dripactions?action=stopdaily&email={{ subscriber.email }}" style="color: #6c8d3b;">Stop Glacier Daily Updates</a> ·
+                                        <a href="http://api.glacier.org/dripactions?action=untilspring&email={{ subscriber.email }}" style="color: #6c8d3b;">Opt Out Until Next Spring</a>
+                                    </p>
+                                    <p style="font-size: 12px; line-height: 1.8; color: #666666; margin: 10px 0 0;">
+                                        <a href="{{ unsubscribe_url }}" style="color: #6c8d3b;">Unsubscribe from all GNPC mailings</a>
+                                    </p>
+                                    <p style="font-size: 11px; color: #999999; margin: 20px 0 0;">
+                                        Generated at: {{ my.daily_update.time_generated }}
+                                    </p>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Glacier!</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+    </style>
+    <![endif]-->
+</head>
+
+<body style="font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f7f2; margin: 0; padding: 0; color: #3e2f13; -webkit-font-smoothing: antialiased;">
+    <div style="font-size:0px;line-height:1px;mso-line-height-rule:exactly;display:none;max-width:0px;max-height:0px;opacity:0;overflow:hidden;mso-hide:all;">
+        Welcome to Glacier National Park! Here's some information to help you plan your day.
+    </div>
+
+    <!-- Main Container -->
+    <table role="presentation" width="100%" bgcolor="#f5f7f2" cellpadding="0" cellspacing="0" border="0">
+        <tbody>
+            <tr>
+                <td align="center" style="padding: 30px 15px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="600" border="0" style="max-width: 600px;">
+                        <tbody>
+                            <!-- Header Card -->
+                            <tr>
+                                <td>
+                                    <table role="presentation" width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 30px 30px 20px;">
+                                                <a href="http://glacier.org/" style="display: inline-block;">
+                                                    <img src="https://www.dripuploads.com/uploads/image_upload/image/3049526/embeddable_9e5a933a-16c8-4a46-a560-16a94a8ea61b.png"
+                                                        width="220" height="54" alt="GNPC Logo"
+                                                        style="display: block; border: 0;">
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0 30px 25px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td style="border-left: 4px solid #6c8d3b; padding-left: 15px;">
+                                                            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #028CA9; margin: 0 0 5px; font-weight: 600;">
+                                                                GLACIER NATIONAL PARK
+                                                            </p>
+                                                            <p style="font-size: 36px; font-weight: 700; color: #3e2f13; margin: 0; line-height: 1.1;">
+                                                                Welcome to Glacier!
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0 30px 25px;">
+                                                <p style="font-size: 16px; line-height: 1.6; color: #444444; margin: 0;">
+                                                    Here's some information to help you plan your day.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Spacer -->
+                            <tr><td style="height: 16px;"></td></tr>
+
+                            <!-- Park Activities Card (Conditional) -->
+                            {% if my.daily_update.events != "" %}
+                            <tr>
+                                <td>
+                                    <table role="presentation" width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 25px 30px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td style="border-left: 4px solid #a85900; padding-left: 15px;">
+                                                            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #a85900; margin: 0 0 3px; font-weight: 600;">
+                                                                TODAY
+                                                            </p>
+                                                            <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0;">
+                                                                <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm" style="color: #3e2f13; text-decoration: none;">Ranger-Led Activities</a>
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg"
+                                                    width="540" height="160" alt="Events"
+                                                    style="display: block; margin: 20px 0; border: 0; border-radius: 8px; width: 100%;">
+                                                <div style="font-size: 14px; line-height: 1.7; color: #444444;">
+                                                    {{ my.daily_update.events | base64_decode }}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr><td style="height: 16px;"></td></tr>
+                            {% endif %}
+
+                            <!-- Weather Card -->
+                            <tr>
+                                <td>
+                                    <table role="presentation" width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 25px 30px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td style="border-left: 4px solid #5eade0; padding-left: 15px;">
+                                                            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #028CA9; margin: 0 0 3px; font-weight: 600;">
+                                                                FORECAST
+                                                            </p>
+                                                            <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0;">
+                                                                <a href="https://www.weather.gov/" style="color: #3e2f13; text-decoration: none;">Today's Weather</a>
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <a href="https://www.weather.gov/" style="display: block;">
+                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/weather.jpg"
+                                                        width="540" height="160" alt="Weather"
+                                                        style="display: block; margin: 20px 0 0; border: 0; border-radius: 8px; width: 100%;">
+                                                </a>
+                                                <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 20px 0;">
+                                                    {{ my.daily_update.weather1 | base64_decode }}
+                                                </p>
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td align="center">
+                                                            <img src="{{ my.daily_update.weather_image | base64_decode }}"
+                                                                width="405" height="374" alt="Today's weather forecast in Glacier"
+                                                                style="display: block; border: 0; border-radius: 8px; max-width: 100%;">
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <div style="font-size: 14px; line-height: 1.7; color: #444444; margin-top: 20px;">
+                                                    {{ my.daily_update.weather2 | base64_decode }}
+                                                </div>
+                                                <p style="margin: 15px 0 0; font-size: 11px; color: #888888; font-style: italic;">
+                                                    Air quality data from <a href="https://www.nps.gov/subjects/air/current-data.htm?site=glac&location=west-glacier-horse-stables&" style="color: #888888;">the National Park Service</a>.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Spacer -->
+                            <tr><td style="height: 16px;"></td></tr>
+
+                            <!-- Sunrise Timelapse Card (Conditional) -->
+                            {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
+                            <tr>
+                                <td>
+                                    <table role="presentation" width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 25px 30px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td style="border-left: 4px solid #a85900; padding-left: 15px;">
+                                                            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #a85900; margin: 0 0 3px; font-weight: 600;">
+                                                                TIMELAPSE
+                                                            </p>
+                                                            <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0;">
+                                                                <a href="{{ my.daily_update.sunrise_vid | base64_decode }}" style="color: #3e2f13; text-decoration: none;">{{ my.daily_update.sunrise_str | base64_decode }} Sunrise</a>
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <a href="{{ my.daily_update.sunrise_vid | base64_decode }}" style="display: block;">
+                                                    <img src="{{ my.daily_update.sunrise_still | base64_decode }}"
+                                                        width="540" alt="{{ my.daily_update.sunrise_str | base64_decode }} sunrise"
+                                                        style="display: block; margin: 20px 0 15px; border: 0; border-radius: 8px; width: 100%;">
+                                                </a>
+                                                <p style="font-size: 14px; color: #888888; margin: 0; text-align: center;">
+                                                    Click to watch the timelapse video
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr><td style="height: 16px;"></td></tr>
+                            {% endif %}
+
+                            <!-- About GNPC Card -->
+                            <tr>
+                                <td>
+                                    <table role="presentation" width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 25px 30px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td style="border-left: 4px solid #6c8d3b; padding-left: 15px;">
+                                                            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #6c8d3b; margin: 0 0 3px; font-weight: 600;">
+                                                                ABOUT
+                                                            </p>
+                                                            <p style="font-size: 20px; font-weight: 700; color: #3e2f13; margin: 0;">
+                                                                <a href="https://glacier.org" style="color: #3e2f13; text-decoration: none;">Glacier Conservancy</a>
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 20px 0;">
+                                                    We are the official fundraising partner for Glacier National Park. With your support, we provide funding for vital projects and programs that preserve and protect the park.
+                                                </p>
+                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>
+                                                        <td bgcolor="#f5f7f2" style="border-radius: 6px; padding: 10px 16px; margin-right: 8px;">
+                                                            <a href="https://glacier.org/park-current-projects/" style="color: #546d41; text-decoration: none; font-size: 12px; font-weight: 600;">Learn More</a>
+                                                        </td>
+                                                        <td width="8"></td>
+                                                        <td bgcolor="#f5f7f2" style="border-radius: 6px; padding: 10px 16px;">
+                                                            <a href="https://glacier.org/glacier-daily-updates-signup/" style="color: #546d41; text-decoration: none; font-size: 12px; font-weight: 600;">Get Daily Updates</a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Spacer -->
+                            <tr><td style="height: 16px;"></td></tr>
+
+                            <!-- Footer Card -->
+                            <tr>
+                                <td>
+                                    <table role="presentation" width="100%" bgcolor="#3e2f13" cellpadding="0" cellspacing="0" border="0" style="border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 30px; text-align: center;">
+                                                <p style="font-size: 14px; font-weight: 700; color: #ffffff; margin: 0 0 12px;">
+                                                    Glacier National Park Conservancy
+                                                </p>
+                                                {% if subscriber.email != 'for-web' %}
+                                                <p style="font-size: 12px; line-height: 1.7; color: #c9c4bc; margin: 0 0 12px;">
+                                                    {{ inline_postal_address }}
+                                                </p>
+                                                <p style="font-size: 12px; line-height: 2; color: #c9c4bc; margin: 0;">
+                                                    <a href="http://glacier.org/" style="color: #ffffff;">glacier.org</a> ·
+                                                    <a href="https://glacier.org/glacier-daily-updates-signup/#iFrame1" style="color: #ffffff;">View in browser</a>
+                                                </p>
+                                                <p style="font-size: 12px; line-height: 2; color: #c9c4bc; margin: 10px 0 0;">
+                                                    <a href="{{ unsubscribe_url }}" style="color: #ffffff;">Unsubscribe</a>
+                                                </p>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>
