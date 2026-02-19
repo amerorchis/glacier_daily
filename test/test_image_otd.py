@@ -106,20 +106,7 @@ def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
             get_flickr()
 
 
-from pathlib import Path
-from unittest.mock import Mock, patch
-
-# test/test_image_otd.py
-import pytest
-from PIL import Image, UnidentifiedImageError
-
-from image_otd.flickr import FlickrImage
-from image_otd.image_otd import (
-    ImageProcessingError,
-    process_image,
-    resize_full,
-    upload_pic_otd,
-)
+from image_otd.image_otd import get_image_otd
 
 
 @pytest.fixture
@@ -245,3 +232,91 @@ def test_resize_full_processing_error(sample_image):
 
         with pytest.raises(ImageProcessingError):
             resize_full()
+
+
+def test_get_image_otd_success():
+    """Test get_image_otd wrapper returns resize_full result on success."""
+    with patch("image_otd.image_otd.resize_full") as mock_resize:
+        mock_resize.return_value = (
+            "http://example.com/img.jpg",
+            "Title",
+            "http://link",
+        )
+        result = get_image_otd()
+        assert result == ("http://example.com/img.jpg", "Title", "http://link")
+
+
+def test_get_image_otd_flickr_error_fallback():
+    """Test get_image_otd returns fallback on FlickrAPIError."""
+    with patch("image_otd.image_otd.resize_full") as mock_resize:
+        mock_resize.side_effect = FlickrAPIError("API down")
+        result = get_image_otd()
+        assert result == ("Flickr API Error", "", "")
+
+
+def test_get_flickr_url_error_429_retry(mock_env_vars, mock_flickr_response):
+    """Test that 429 URLError triggers backoff and raises after retries exhausted."""
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+        patch("image_otd.flickr.time.sleep") as mock_sleep,
+    ):
+        mock_api = Mock()
+        mock_api.photos.search.return_value = mock_flickr_response
+        MockFlickrAPI.return_value = mock_api
+
+        # Both attempts raise 429 URLError - exhausts retries
+        error_429_a = URLError("Too Many Requests")
+        error_429_a.code = 429
+        error_429_b = URLError("Too Many Requests")
+        error_429_b.code = 429
+
+        mock_urlopen.side_effect = [error_429_a, error_429_b]
+
+        with pytest.raises(FlickrAPIError, match="Too many requests"):
+            get_flickr()
+        assert mock_sleep.call_count == 1
+
+
+def test_get_flickr_no_photos_found(mock_env_vars):
+    """Test retry loop when initial search returns no photos."""
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+        patch("builtins.open", create=True) as mock_open,
+    ):
+        mock_api = Mock()
+        # First total query, then empty result, then result with photo
+        empty_response = {"photos": {"total": "100", "photo": []}}
+        valid_response = {
+            "photos": {
+                "total": "100",
+                "photo": [
+                    {
+                        "server": "s",
+                        "id": "123",
+                        "secret": "sec",
+                        "title": "Found",
+                    }
+                ],
+            }
+        }
+        mock_api.photos.search.side_effect = [
+            {"photos": {"total": "100", "photo": []}},  # per_page=1 total query
+            empty_response,  # first random page - empty
+            valid_response,  # retry - found
+        ]
+        MockFlickrAPI.return_value = mock_api
+
+        mock_response = Mock()
+        mock_response.status = 200
+        mock_response.read.return_value = b"data"
+        mock_urlopen.return_value.__enter__ = Mock(return_value=mock_response)
+        mock_urlopen.return_value.__exit__ = Mock(return_value=False)
+
+        mock_file = Mock()
+        mock_open.return_value.__enter__ = Mock(return_value=mock_file)
+        mock_open.return_value.__exit__ = Mock(return_value=False)
+
+        result = get_flickr()
+        assert result.title == "Found"
