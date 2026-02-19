@@ -1,3 +1,16 @@
+"""
+Module for testing the Drip API functionality.
+"""
+
+import types
+
+import drip.drip_actions as drip_actions
+import drip.html_friendly as html_friendly
+import drip.scheduled_subs as scheduled_subs
+import drip.subscriber_list as subscriber_list
+import drip.update_subscriber as update_subscriber
+
+
 def test_record_drip_event_success(monkeypatch):
     called = {}
 
@@ -12,8 +25,6 @@ def test_record_drip_event_success(monkeypatch):
 
         return R()
 
-    import types
-
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
     monkeypatch.setattr(
         drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
@@ -24,13 +35,28 @@ def test_record_drip_event_success(monkeypatch):
     assert called["timeout"] == 30
 
 
-"""
-Module for testing the Drip API functionality.
-"""
+def test_record_drip_event_failure(monkeypatch, capsys):
+    """Verify non-204 status prints to stderr."""
+
+    def fake_post(url, headers, data, timeout):
+        class R:
+            status_code = 400
+
+            def __repr__(self):
+                return "400 Bad Request"
+
+        return R()
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    monkeypatch.setattr(
+        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
+    )
+    drip_actions.record_drip_event("test@example.com", event="Test Event")
+    captured = capsys.readouterr()
+    assert "Failed to record event" in captured.err
 
 
 # --- html_friendly.py ---
-import drip.html_friendly as html_friendly
 
 
 def test_html_safe_ascii():
@@ -43,8 +69,6 @@ def test_html_safe_non_ascii():
 
 
 # --- scheduled_subs.py ---
-import drip.scheduled_subs as scheduled_subs
-import drip.update_subscriber as update_subscriber
 
 
 def test_start_and_end_calls_update_subscriber(monkeypatch):
@@ -52,12 +76,12 @@ def test_start_and_end_calls_update_subscriber(monkeypatch):
     # Patch the function in the scheduled_subs module namespace, not the original module
     monkeypatch.setattr(scheduled_subs, "update_subscriber", lambda u: calls.append(u))
     scheduled_subs.start(["a@example.com"])
-    if calls:
-        assert calls[0]["email"] == "a@example.com"
+    assert len(calls) == 1
+    assert calls[0]["email"] == "a@example.com"
     calls.clear()
     scheduled_subs.end(["b@example.com"])
-    if calls:
-        assert calls[0]["email"] == "b@example.com"
+    assert len(calls) == 1
+    assert calls[0]["email"] == "b@example.com"
 
 
 def test_update_scheduled_subs_logic(monkeypatch):
@@ -93,8 +117,6 @@ def test_update_subscriber_success(monkeypatch):
         def json(self):
             return {}
 
-    import types
-
     monkeypatch.setattr(
         update_subscriber,
         "requests",
@@ -113,8 +135,6 @@ def test_update_subscriber_failure(monkeypatch):
         def json(self):
             return {"errors": [{"code": "bad", "message": "fail"}]}
 
-    import types
-
     monkeypatch.setattr(
         update_subscriber,
         "requests",
@@ -127,7 +147,6 @@ def test_update_subscriber_failure(monkeypatch):
 
 
 # --- drip_actions.py ---
-import drip.drip_actions as drip_actions
 
 
 def test_get_subs_merges(monkeypatch):
@@ -154,14 +173,57 @@ def test_bulk_workflow_trigger(monkeypatch):
 
         return R()
 
-    import types
-
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
     monkeypatch.setattr(
         drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
     )
     drip_actions.bulk_workflow_trigger(["a@example.com", "b@example.com"])
     assert "url" in called
+
+
+def test_bulk_workflow_trigger_chunking(monkeypatch):
+    """Verify >1000 subscribers are chunked into batches of 1000."""
+    post_calls = []
+
+    def fake_post(url, headers, data, timeout):
+        post_calls.append(data)
+
+        class R:
+            status_code = 201
+
+            def json(self):
+                return {}
+
+        return R()
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    monkeypatch.setattr(
+        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
+    )
+    subs = [f"user{i}@example.com" for i in range(2500)]
+    drip_actions.bulk_workflow_trigger(subs)
+    assert len(post_calls) == 3  # 1000 + 1000 + 500
+
+
+def test_bulk_workflow_trigger_failure(monkeypatch, capsys):
+    """Verify non-201 status prints error."""
+
+    def fake_post(url, headers, data, timeout):
+        class R:
+            status_code = 422
+
+            def json(self):
+                return {"errors": [{"code": "invalid", "message": "bad data"}]}
+
+        return R()
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    monkeypatch.setattr(
+        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
+    )
+    drip_actions.bulk_workflow_trigger(["a@example.com"])
+    captured = capsys.readouterr()
+    assert "Failed to add subscribers" in captured.out
 
 
 def test_send_in_drip(monkeypatch):
@@ -176,8 +238,6 @@ def test_send_in_drip(monkeypatch):
 
         return R()
 
-    import types
-
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
     monkeypatch.setattr(
         drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
@@ -185,8 +245,28 @@ def test_send_in_drip(monkeypatch):
     drip_actions.send_in_drip("a@example.com")
 
 
+def test_send_in_drip_failure(monkeypatch, capsys):
+    """Verify non-201 status prints to stderr."""
+
+    def fake_post(url, headers, data, timeout):
+        class R:
+            status_code = 422
+
+            def json(self):
+                return {"errors": [{"code": "invalid", "message": "bad email"}]}
+
+        return R()
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    monkeypatch.setattr(
+        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
+    )
+    drip_actions.send_in_drip("bad@example.com")
+    captured = capsys.readouterr()
+    assert "Failed to subscribe" in captured.err
+
+
 # --- subscriber_list.py ---
-import drip.subscriber_list as subscriber_list
 
 
 def test_subscriber_list_success(monkeypatch):
@@ -202,8 +282,6 @@ def test_subscriber_list_success(monkeypatch):
 
         def raise_for_status(self):
             pass
-
-    import types
 
     monkeypatch.setattr(
         subscriber_list,
@@ -237,8 +315,6 @@ def test_subscriber_list_multipage(monkeypatch):
         def raise_for_status(self):
             pass
 
-    import types
-
     calls = []
 
     def fake_get(url, headers=None, params=None):
@@ -270,8 +346,6 @@ def test_subscriber_list_multipage(monkeypatch):
         def raise_for_status(self):
             pass
 
-    import types
-
     monkeypatch.setattr(
         subscriber_list,
         "requests",
@@ -284,6 +358,34 @@ def test_subscriber_list_multipage(monkeypatch):
     assert result == ["a@example.com"]
 
 
+def test_subscriber_list_returns_full_objects(monkeypatch):
+    """Verify non-email-only tags return full subscriber dicts."""
+
+    class FakeResponse:
+        def json(self):
+            return {
+                "subscribers": [
+                    {"email": "a@example.com", "tags": ["Daily Start Set"]}
+                ],
+                "meta": {"total_pages": 1},
+            }
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(
+        subscriber_list,
+        "requests",
+        types.SimpleNamespace(get=lambda *a, **k: FakeResponse()),
+    )
+    monkeypatch.setattr(
+        subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
+    )
+    result = subscriber_list.subscriber_list(tag="Daily Start Set")
+    assert isinstance(result[0], dict)
+    assert result[0]["email"] == "a@example.com"
+
+
 def test_subscriber_list_failure(monkeypatch):
     class FakeRequestException(Exception):
         pass
@@ -294,8 +396,6 @@ def test_subscriber_list_failure(monkeypatch):
 
         def json(self):
             return {"subscribers": [], "meta": {"total_pages": 1}}
-
-    import types
 
     fake_requests = types.SimpleNamespace(
         get=lambda *a, **k: FakeResponse(),

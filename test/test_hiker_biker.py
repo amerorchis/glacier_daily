@@ -181,3 +181,75 @@ def test_invalid_coordinates(mock_gtsr):
     hb = HikerBiker("Invalid Test", (0, 0), mock_gtsr)
     str_ = str(hb)
     assert "name of location not found" in str_
+
+
+def test_hiker_biker_request_exception_on_url(monkeypatch, mock_gtsr):
+    """Test that RequestException on one URL is handled, continues to next."""
+
+    def mock_closed_roads():
+        mock_gtsr.west_loc = ("Lake McDonald Lodge", 10.7)
+        mock_gtsr.east_loc = ("Rising Sun", 43.4)
+        return {"Going-to-the-Sun Road": mock_gtsr}
+
+    call_count = {"n": 0}
+
+    def mock_get(*a, **k):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise requests.exceptions.RequestException("timeout on first URL")
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = json.dumps({"features": []})
+        mock_response.raise_for_status = Mock()
+        return mock_response
+
+    with (
+        patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads),
+        patch("requests.get", side_effect=mock_get),
+    ):
+        result = get_hiker_biker_status()
+        assert result == ""
+        assert call_count["n"] == 2  # Both URLs attempted
+
+
+def test_hiker_biker_no_geometry(monkeypatch, mock_gtsr):
+    """Test that closures with null geometry are skipped."""
+    closure_data = {
+        "features": [
+            {
+                "properties": {"name": "Avalanche Hazard Closure", "status": "active"},
+                "geometry": None,
+            }
+        ]
+    }
+
+    def mock_closed_roads():
+        mock_gtsr.west_loc = ("Lake McDonald Lodge", 10.7)
+        mock_gtsr.east_loc = ("Rising Sun", 43.4)
+        return {"Going-to-the-Sun Road": mock_gtsr}
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.text = json.dumps(closure_data)
+    mock_response.raise_for_status = Mock()
+
+    with (
+        patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads),
+        patch("requests.get", return_value=mock_response),
+    ):
+        result = get_hiker_biker_status()
+        assert result == ""
+
+
+def test_closure_dist_unknown_side(mock_gtsr):
+    """Test that unknown side returns empty string."""
+    hb = HikerBiker("Test", (-113.80047, 48.75494), mock_gtsr)
+    result = hb.closure_dist("unknown", mock_gtsr)
+    assert result == ""
+
+
+def test_get_side_north_of_logan(mock_gtsr):
+    """Test that coordinates north of Logan Pass boundary return 'west'."""
+    # Latitude > north_boundary (48.6998) and longitude between boundaries
+    hb = HikerBiker("Test North", (-113.72, 48.71), mock_gtsr)
+    assert hb.get_side() == "west"

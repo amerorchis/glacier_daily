@@ -194,8 +194,46 @@ def test_serve_api(monkeypatch, tmp_path):
         gau, "write_data_to_json", lambda data, doctype: str(tmp_path / "email.json")
     )
     monkeypatch.setattr(gau, "send_to_server", lambda file, directory: None)
+    monkeypatch.setattr(gau, "purge_cache", lambda: None)
+    monkeypatch.setattr(gau, "refresh_cache", lambda: None)
+    monkeypatch.setattr(gau, "sleep", lambda _: None)
     # Should not raise
     gau.serve_api()
+
+
+def test_serve_api_gen_data_raises(monkeypatch):
+    """Verify serve_api propagates exceptions from gen_data."""
+
+    def failing_gen_data():
+        raise RuntimeError("data fetch failed")
+
+    monkeypatch.setattr(gau, "gen_data", failing_gen_data)
+    with pytest.raises(RuntimeError, match="data fetch failed"):
+        gau.serve_api()
+
+
+def test_gen_data_module_exception_handling(monkeypatch):
+    """Verify gen_data propagates exceptions from individual data modules."""
+
+    def failing_peak():
+        raise ConnectionError("API unreachable")
+
+    monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
+    monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
+    monkeypatch.setattr(gau, "get_campground_status", lambda: "campgrounds")
+    monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
+    monkeypatch.setattr(gau, "events_today", lambda: "events")
+    monkeypatch.setattr(gau, "get_image_otd", lambda: ("img", "title", "link"))
+    monkeypatch.setattr(gau, "peak", failing_peak)
+    monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
+    monkeypatch.setattr(gau, "get_product", lambda: ("t", "i", "l", "d"))
+    monkeypatch.setattr(gau, "get_notices", lambda: "notices")
+    monkeypatch.setattr(gau, "html_safe", lambda x: x)
+    monkeypatch.setattr(gau, "weather_image", lambda x: "weather_img")
+
+    with pytest.raises(ConnectionError, match="API unreachable"):
+        gau.gen_data()
 
 
 def test_purge_cache_success(monkeypatch):
@@ -293,3 +331,23 @@ def test_refresh_cache_request_exception():
         side_effect=gau.requests.RequestException("Connection error"),
     ):
         gau.refresh_cache()  # Should not raise, just print error
+
+
+def test_purge_cache_request_exception(monkeypatch):
+    """Verify purge_cache propagates RequestException (no try/except)."""
+    monkeypatch.setenv("CACHE_PURGE", "test_key")
+    monkeypatch.setenv("ZONE_ID", "test_zone")
+
+    with patch(
+        "generate_and_upload.requests.post",
+        side_effect=gau.requests.RequestException("Connection timeout"),
+    ):
+        with pytest.raises(gau.requests.RequestException, match="Connection timeout"):
+            gau.purge_cache()
+
+
+def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
+    """Verify that None values in gen_data output are replaced with empty strings."""
+    monkeypatch.setattr(gau, "peak", lambda: ("peak", None, "peak_map"))
+    data = gau.gen_data()
+    assert data["peak_image"] == ""

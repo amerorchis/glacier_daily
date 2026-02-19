@@ -85,5 +85,7 @@ def upload_file(
         print(f"Failed upload {filename}: {e}")
         files = []
         url = ""
+    finally:
+        ftp.quit()
 
     return url, files
