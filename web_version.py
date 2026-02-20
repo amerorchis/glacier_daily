@@ -3,28 +3,25 @@ This module generates a daily update for Glacier National Park and saves it as a
 The multiple class encapsulations are necessary for the template to work here and in Drip.
 """
 
-from datetime import datetime
-from typing import Dict
-
 from jinja2 import Environment, FileSystemLoader
 
-from shared.datetime_utils import format_short_date, format_time_12hr
+from shared.datetime_utils import format_short_date, format_time_12hr, now_mountain
 
 
 class DailyUpdate:
     """An object to encapsulate the information"""
 
-    def __init__(self, data: Dict[str, str]):
+    def __init__(self, data: dict[str, str]):
         """
         Initialize the DailyUpdate with data.
 
-        :param data: Dictionary containing the daily update data.
+        :param data: dictionary containing the daily update data.
         """
         for k, v in data.items():
             setattr(self, k, v)
         self.timestring = (
-            format_short_date(datetime.now())
-            + f" at {format_time_12hr(datetime.now())} MT"
+            format_short_date(now_mountain())
+            + f" at {format_time_12hr(now_mountain())} MT"
         )
 
 
@@ -47,19 +44,19 @@ class Subscriber:
 
 
 def web_version(
-    data: Dict[str, str],
+    data: dict[str, str],
     file_name: str = "server/today.html",
     template_path: str = "email_template.html",
 ) -> str:
     """
     Generate the web version of the daily update and save it as an HTML file.
 
-    :param data: Dictionary containing the daily update data.
+    :param data: dictionary containing the daily update data.
     :param file_name: The name of the file to save the HTML content.
     :param template_path: The path to the HTML template.
     :return: The name of the file where the HTML content is saved.
     """
-    env = Environment(loader=FileSystemLoader("email_html/"))
+    env = Environment(loader=FileSystemLoader("email_html/"))  # noqa: S701
     env.filters["base64_decode"] = lambda x: x
     template = env.get_template(template_path)
 

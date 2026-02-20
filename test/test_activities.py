@@ -8,8 +8,6 @@ import requests
 from activities.events import events_today
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 from activities.gnpc_events import (
-    GNPCError,
-    GNPCParsingError,
     GNPCRequestError,
     get_gnpc_events,
     scrape_events_page,
@@ -274,11 +272,13 @@ def test_scrape_events_page_success(mock_response):
 
 
 def test_scrape_events_page_request_error():
-    with patch("requests.get", side_effect=requests.RequestException("Network error")):
-        with pytest.raises(GNPCRequestError, match="Failed to access"):
-            scrape_events_page(
-                "https://glacier.org/glacier-conversations", "Glacier Conversation:"
-            )
+    with (
+        patch("requests.get", side_effect=requests.RequestException("Network error")),
+        pytest.raises(GNPCRequestError, match="Failed to access"),
+    ):
+        scrape_events_page(
+            "https://glacier.org/glacier-conversations", "Glacier Conversation:"
+        )
 
 
 def test_scrape_events_page_invalid_html():

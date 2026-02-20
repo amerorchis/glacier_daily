@@ -1,5 +1,3 @@
-import builtins
-import types
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -106,9 +104,9 @@ def test_gen_data_string_fields_are_strings(mock_all_data_sources):
 
     for key in string_fields:
         value = data.get(key)
-        assert isinstance(
-            value, str
-        ), f"Field '{key}' should be str, got {type(value).__name__}"
+        assert isinstance(value, str), (
+            f"Field '{key}' should be str, got {type(value).__name__}"
+        )
 
 
 def test_gen_data_nullable_image_fields(mock_all_data_sources):
@@ -123,17 +121,17 @@ def test_gen_data_nullable_image_fields(mock_all_data_sources):
 
     for key in nullable_fields:
         value = data.get(key)
-        assert value is None or isinstance(
-            value, str
-        ), f"Field '{key}' should be str or None, got {type(value).__name__}"
+        assert value is None or isinstance(value, str), (
+            f"Field '{key}' should be str or None, got {type(value).__name__}"
+        )
 
 
 def test_gen_data_returns_dict(mock_all_data_sources):
     """Verify gen_data returns a dictionary."""
     data = gau.gen_data()
-    assert isinstance(
-        data, dict
-    ), f"gen_data should return dict, got {type(data).__name__}"
+    assert isinstance(data, dict), (
+        f"gen_data should return dict, got {type(data).__name__}"
+    )
 
 
 def test_gen_data_with_empty_returns(monkeypatch):
@@ -168,7 +166,7 @@ def test_write_data_to_json(tmp_path, monkeypatch):
     out = gau.write_data_to_json(fake_data, "test.json")
     assert out.endswith("test.json")
     # Check file contents
-    with open(out, "r", encoding="utf-8") as f:
+    with open(out, encoding="utf-8") as f:
         content = f.read()
         assert "foo" in content and "baz" in content and "gnpc-events" in content
 
@@ -338,12 +336,14 @@ def test_purge_cache_request_exception(monkeypatch):
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.setenv("ZONE_ID", "test_zone")
 
-    with patch(
-        "generate_and_upload.requests.post",
-        side_effect=gau.requests.RequestException("Connection timeout"),
+    with (
+        patch(
+            "generate_and_upload.requests.post",
+            side_effect=gau.requests.RequestException("Connection timeout"),
+        ),
+        pytest.raises(gau.requests.RequestException, match="Connection timeout"),
     ):
-        with pytest.raises(gau.requests.RequestException, match="Connection timeout"):
-            gau.purge_cache()
+        gau.purge_cache()
 
 
 def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):

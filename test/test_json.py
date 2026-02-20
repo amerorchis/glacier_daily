@@ -1,6 +1,5 @@
 import base64
 import json
-from datetime import datetime
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -24,9 +23,9 @@ class MockDateTimeNow:
 def sample_json_data():
     return {
         "date": "2025-01-22",
-        "weather1": base64.b64encode("Test weather data".encode()).decode(),
-        "peak": base64.b64encode("Test peak data".encode()).decode(),
-        "roads": base64.b64encode("Test road data".encode()).decode(),
+        "weather1": base64.b64encode(b"Test weather data").decode(),
+        "peak": base64.b64encode(b"Test peak data").decode(),
+        "roads": base64.b64encode(b"Test road data").decode(),
     }
 
 
@@ -35,9 +34,8 @@ def test_successful_retrieval(sample_json_data):
 
     with (
         patch("builtins.open", mock_file),
-        patch("shared.retrieve_from_json.datetime", MockDateTimeNow),
+        patch("shared.retrieve_from_json.now_mountain", return_value=MockDateTime()),
     ):
-
         success, values = retrieve_from_json(["weather1", "peak", "roads"])
 
         assert success is True

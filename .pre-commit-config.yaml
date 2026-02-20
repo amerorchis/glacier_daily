@@ -8,12 +8,6 @@ repos:
     -   id: trailing-whitespace
         exclude: '\.(html|txt)$'
 
--   repo: https://github.com/psf/black
-    rev: 25.1.0
-    hooks:
-    -   id: black
-        exclude: '\.(html|txt)$'
-
 -   repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
     hooks:
@@ -24,9 +18,9 @@ repos:
     hooks:
       - id: actionlint
 
--   repo: https://github.com/pycqa/isort
-    rev: 6.0.1
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.7
     hooks:
-      - id: isort
-        name: isort (python)
-        args: ["--profile", "black", "--filter-files"]
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format

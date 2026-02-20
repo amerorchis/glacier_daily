@@ -2,17 +2,15 @@
 Retrieve and format the hiker/biker status.
 """
 
+import contextlib
 import json
 import sys
 import traceback
 
 import requests
-import urllib3
 
 from roads.HikerBiker import HikerBiker
 from roads.roads import NPSWebsiteError, closed_roads
-
-urllib3.disable_warnings()
 
 
 def hiker_biker() -> str:
@@ -35,8 +33,8 @@ def hiker_biker() -> str:
 
         for url in urls:
             try:
-                r = requests.get(url, verify=False, timeout=5)
-            except requests.exceptions.RequestException as e:
+                r = requests.get(url, timeout=5)
+            except requests.exceptions.RequestException:
                 print(
                     f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
                     file=sys.stderr,
@@ -86,10 +84,8 @@ def hiker_biker() -> str:
             return ""
 
         # Sort by side (term between : and -)
-        try:
+        with contextlib.suppress(IndexError):
             statuses.sort(key=lambda x: x.split(":")[1].split("-")[0], reverse=True)
-        except IndexError:
-            pass
 
         # Generate HTML for this section of the email.
         message = (
@@ -119,7 +115,14 @@ def get_hiker_biker_status() -> str:
     """
     try:
         return hiker_biker()
-    except Exception:
+    except (
+        requests.exceptions.RequestException,
+        KeyError,
+        ValueError,
+        TypeError,
+        json.JSONDecodeError,
+        NPSWebsiteError,
+    ):
         print(
             f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
             file=sys.stderr,

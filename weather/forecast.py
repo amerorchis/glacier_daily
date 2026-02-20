@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from math import floor
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import requests_cache
 from requests.adapters import HTTPAdapter
@@ -59,7 +59,7 @@ class WeatherAPI:
         return cache_session
 
     @staticmethod
-    def _load_locations() -> List[Location]:
+    def _load_locations() -> list[Location]:
         """Load location data."""
         locations_data = {
             "West Glacier": {
@@ -96,7 +96,7 @@ class WeatherAPI:
 
         return [Location(name=name, **data) for name, data in locations_data.items()]
 
-    def _build_params(self) -> Dict[str, Any]:
+    def _build_params(self) -> dict[str, Any]:
         """Build parameters for the API request."""
         return {
             "latitude": [loc.latitude for loc in self.locations],
@@ -116,7 +116,7 @@ class WeatherAPI:
             "elevation": [loc.altitude / FEET_TO_METERS for loc in self.locations],
         }
 
-    def _fetch_weather_codes(self) -> Dict[str, Dict[str, Dict[str, str]]]:
+    def _fetch_weather_codes(self) -> dict[str, dict[str, dict[str, str]]]:
         """Load weather code descriptions."""
         try:
             with open(Path("weather/descriptions.json"), encoding="utf8") as desc:
@@ -126,7 +126,7 @@ class WeatherAPI:
                 "Weather descriptions file not found. Ensure 'weather/descriptions.json' exists."
             ) from e
 
-    def _format_daylight_info(self, forecast_data: Dict[str, Any]) -> str:
+    def _format_daylight_info(self, forecast_data: dict[str, Any]) -> str:
         """Format daylight information string."""
         wg = forecast_data[0]["daily"]
 
@@ -149,9 +149,9 @@ class WeatherAPI:
 
     def _process_forecasts(
         self,
-        forecasts: List[Dict[str, Any]],
-        weather_codes: Dict[str, Dict[str, Dict[str, str]]],
-    ) -> List[Tuple[str, int, int, str]]:
+        forecasts: list[dict[str, Any]],
+        weather_codes: dict[str, dict[str, dict[str, str]]],
+    ) -> list[tuple[str, int, int, str]]:
         """Process forecast data into required format."""
 
         results = []
@@ -165,7 +165,7 @@ class WeatherAPI:
         return results
 
 
-def get_forecast() -> Tuple[List[Tuple[str, int, int, str]], str]:
+def get_forecast() -> tuple[list[tuple[str, int, int, str]], str]:
     """
     Fetch weather forecasts for various locations in Glacier National Park.
 

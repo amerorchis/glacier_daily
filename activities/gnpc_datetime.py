@@ -37,11 +37,16 @@ def convert_gnpc_datetimes(date_string: str):
             hour = int(match.group("hour"))
             minute = int(match.group("minute"))
 
-            # Handle 12-hour time conversion
-            if hour == 12:
-                hour = 12  # 12:00 stays as 12:00
-            else:
-                hour = hour + 12  # Other hours add 12 for PM
+            # Handle 12-hour to 24-hour time conversion
+            is_pm = "pm" in date_string.lower() or "p.m." in date_string.lower()
+            is_am = "am" in date_string.lower() or "a.m." in date_string.lower()
+
+            if is_am:
+                if hour == 12:
+                    hour = 0  # 12:00 AM is 00:00
+            elif (is_pm or not is_am) and hour != 12:
+                # Default to PM if neither specified (GNPC events are typically afternoon)
+                hour += 12
 
             # Validate month
             month_num = datetime.strptime(month, "%B").month
@@ -101,4 +106,4 @@ def datetime_to_string(dt_obj: datetime):
                 parts[-1] = parts[-1].upper()
         return " ".join(parts)
     except (ValueError, AttributeError) as e:
-        raise ValueError(f"Invalid datetime format: {str(e)}")
+        raise ValueError(f"Invalid datetime format: {str(e)}") from e

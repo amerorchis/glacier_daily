@@ -45,12 +45,12 @@ def peak(test=False):
         if already_retrieved:
             return keys
 
-    with open("peak/PeaksCSV.csv", "r", encoding="utf-8") as p:
+    with open("peak/PeaksCSV.csv", encoding="utf-8") as p:
         peaks = list(csv.DictReader(p))
 
     # Select a random one with current date as seed
     random.seed(date.today().strftime("%Y%m%d"))
-    today = random.choice(peaks)
+    today = random.choice(peaks)  # noqa: S311
 
     peak_img = peak_sat(today) if not test else None
 

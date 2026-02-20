@@ -3,11 +3,11 @@ Select the best thumbnail frame from the timelapse video.
 """
 
 import sys
-from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional
 
 import requests
 
+from shared.datetime_utils import now_mountain
 from shared.env_loader import load_env
 from shared.retrieve_from_json import retrieve_from_json
 
@@ -52,7 +52,7 @@ def fetch_glacier_data(endpoint_type: str) -> dict:
         return {}
 
     try:
-        cache_buster = str(int(datetime.now().timestamp()))
+        cache_buster = str(int(now_mountain().timestamp()))
         filename = endpoint_map[endpoint_type]
         url = f"http://timelapse.glacierconservancy.org/{filename}?{cache_buster}"
         headers = {
@@ -69,7 +69,7 @@ def fetch_glacier_data(endpoint_type: str) -> dict:
 
 def select_video(
     timelapse_data: dict,
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Select video based on today's date first, then fallback to latest.
 
@@ -77,13 +77,13 @@ def select_video(
         timelapse_data (dict): JSON data from timelapse endpoint
 
     Returns:
-        Tuple[Optional[str], Optional[str], Optional[str]]: (video_id, video_url, descriptor)
+        tuple[Optional[str], Optional[str], Optional[str]]: (video_id, video_url, descriptor)
     """
     if not timelapse_data:
         return None, None, None
 
     try:
-        today = datetime.now()
+        today = now_mountain()
         today_id = f"{today.month}_{today.day}_{today.year}_sunrise_timelapse"
 
         # Skip the first entry which is just the date
@@ -153,14 +153,14 @@ def find_matching_thumbnail(video_id: str, thumbnail_data: dict) -> Optional[str
         return None
 
 
-def process_video() -> Tuple[str, str, str]:
+def process_video() -> tuple[str, str, str]:
     """
     Process the sunrise timelapse by fetching remote data and selecting appropriate video and thumbnail.
     Args:
         test (bool): Whether to use test mode (kept for backward compatibility, not used).
 
     Returns:
-        Tuple[str, str, str]: (video_url, thumbnail_url, descriptor_string)
+        tuple[str, str, str]: (video_url, thumbnail_url, descriptor_string)
         Returns ("", "", "") if any error occurs.
     """
     try:

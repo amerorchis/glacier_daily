@@ -152,9 +152,11 @@ class TestGetSunsetHue:
             "data": {"quality": 0.8, "quality_text": None, "cloud_cover": 0.3}
         }
 
-        with patch("weather.sunset_hue.requests.get", return_value=mock_response):
-            with pytest.raises(AttributeError):
-                get_sunset_hue()
+        with (
+            patch("weather.sunset_hue.requests.get", return_value=mock_response),
+            pytest.raises(AttributeError),
+        ):
+            get_sunset_hue()
 
     def test_missing_data_fields_handled(self, mock_env):
         """Verify default values used when data fields are missing."""

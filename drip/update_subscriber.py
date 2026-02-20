@@ -33,7 +33,7 @@ def update_subscriber(updates: dict):
 
     data = {"subscribers": [updates]}
 
-    response = requests.post(url, headers=headers, data=json.dumps(data))
+    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
     r = response.json()
 
     if response.status_code == 200:

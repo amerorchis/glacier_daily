@@ -8,9 +8,11 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import requests
+
+from shared.datetime_utils import now_mountain
 
 
 @dataclass
@@ -54,11 +56,11 @@ class WeatherAlertService:
         if not match:
             return None
 
-        time_str = f"{match.group(2)} {datetime.now().year}"
+        time_str = f"{match.group(2)} {now_mountain().year}"
         return datetime.strptime(time_str, "%B %d at %I:%M%p %Y")
 
     @staticmethod
-    def parse_nested_bullets(text: str) -> Tuple[str, List[str]]:
+    def parse_nested_bullets(text: str) -> tuple[str, list[str]]:
         """Parse alert text into headline and bullet points."""
         # Split main title from description
         parts = text.split(": ", 1)
@@ -68,7 +70,7 @@ class WeatherAlertService:
         headline, description = parts
 
         # Find bullet points using regex
-        bullet_points = re.findall(r"\* (.+?)(?=\n\n|\* |$)", description, re.DOTALL)
+        bullet_points = re.findall(r"\* ([^\n]+?)(?=\n\n|\* |$)", description)
 
         # Clean up the bullet points
         cleaned_bullets = []
@@ -85,7 +87,7 @@ class WeatherAlertService:
 
         return headline, cleaned_bullets
 
-    def format_html_message(self, alerts: List[WeatherAlert]) -> str:
+    def format_html_message(self, alerts: list[WeatherAlert]) -> str:
         """Format alerts into HTML message with nested bullet points."""
         if not alerts:
             return ""
@@ -111,7 +113,7 @@ class WeatherAlertService:
 
         return message + "</ul>"
 
-    def fetch_alerts(self) -> List[Dict]:
+    def fetch_alerts(self) -> list[dict]:
         """Fetch alerts with retry logic."""
         for _ in range(self.MAX_RETRIES):
             response = requests.get(
@@ -125,7 +127,7 @@ class WeatherAlertService:
             sleep(self.RETRY_DELAY)
         return []
 
-    def filter_local_alerts(self, alerts: List[Dict]) -> List[Dict]:
+    def filter_local_alerts(self, alerts: list[dict]) -> list[dict]:
         """Filter alerts for local zones."""
         affected_zones = [alert["properties"]["affectedZones"] for alert in alerts]
         return [
@@ -134,13 +136,13 @@ class WeatherAlertService:
             if any(zone in affected_zones[i] for zone in self.ZONES)
         ]
 
-    def process_alerts(self, alerts: List[Dict]) -> List[WeatherAlert]:
+    def process_alerts(self, alerts: list[dict]) -> list[WeatherAlert]:
         """Process and deduplicate alerts."""
         processed_alerts = []
         seen_headlines = set()
 
         for alert in alerts[: self.MAX_ALERTS]:  # Apply temporary limit
-            text = f'{alert["headline"]}: {alert["description"]}'.replace(r"\n", "")
+            text = f"{alert['headline']}: {alert['description']}".replace(r"\n", "")
             issued_time = self.parse_alert_time(text)
             if not issued_time:
                 continue

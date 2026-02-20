@@ -143,21 +143,21 @@ class TestRetryDecorator:
 
         assert f() == ""
 
-    def test_prints_retry_message(self, monkeypatch, capsys):
-        """Verify retry attempts are logged to stdout."""
+    def test_prints_retry_message(self, monkeypatch, caplog):
+        """Verify retry attempts are logged."""
         monkeypatch.setattr("shared.retry.sleep", lambda x: None)
 
         @retry_mod.retry(times=2, exceptions=(ValueError,), default="fail")
         def f():
             raise ValueError()
 
-        f()
-        captured = capsys.readouterr()
+        with caplog.at_level("WARNING"):
+            f()
 
-        # Should print message for each retry attempt
-        assert "attempt" in captured.out.lower()
-        assert "1 of 2" in captured.out
-        assert "2 of 2" in captured.out
+        # Should log message for each retry attempt
+        assert "attempt" in caplog.text.lower()
+        assert "1 of 2" in caplog.text
+        assert "2 of 2" in caplog.text
 
     def test_single_retry(self, monkeypatch):
         """Verify single retry attempt works correctly."""

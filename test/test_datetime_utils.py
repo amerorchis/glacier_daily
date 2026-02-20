@@ -27,7 +27,6 @@ class TestCrossPlatformStrftime:
     def test_unix_platform_uses_native_strftime(self):
         """Test that Unix platforms use native strftime with %-modifiers."""
         # Skip this test on Windows since it tests Unix-specific behavior
-        import platform
 
         if platform.system() == "Windows":
             pytest.skip("Skipping Unix strftime test on Windows")
@@ -243,7 +242,7 @@ class TestRealWorldUseCases:
             .lower()
             .replace("mst", "MST")
         )
-        assert "sunday, january 5, 2025, 1:30 pm MST" == result
+        assert result == "sunday, january 5, 2025, 1:30 pm MST"
 
     def test_weather_time_format(self):
         """Test the format used in weather modules."""

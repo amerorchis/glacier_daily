@@ -4,12 +4,16 @@ This module provides functions to interact with the Drip email marketing platfor
 
 import json
 import os
-import sys
 
 import requests
 
 from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
+
+DRIP_BATCH_SIZE = 1000
 
 
 def record_drip_event(email: str, event: str = "Glacier Daily Update trigger") -> None:
@@ -46,12 +50,9 @@ def record_drip_event(email: str, event: str = "Glacier Daily Update trigger") -
     response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
 
     if response.status_code == 204:
-        print(f"Drip: Event '{event}' recorded successfully for {email}!")
+        logger.info(f"Drip: Event '{event}' recorded successfully for {email}!")
     else:
-        print(
-            f"Failed to record event for {email}. Error message: {response}",
-            file=sys.stderr,
-        )
+        logger.error(f"Failed to record event for {email}. Error message: {response}")
 
 
 def get_subs(tag: str) -> list:
@@ -102,9 +103,12 @@ def bulk_workflow_trigger(sub_list: list) -> None:
 
     event = "Glacier Daily Update trigger"
 
-    chunks_of_1000 = [sub_list[i : i + 1000] for i in range(0, len(sub_list), 1000)]
+    chunks = [
+        sub_list[i : i + DRIP_BATCH_SIZE]
+        for i in range(0, len(sub_list), DRIP_BATCH_SIZE)
+    ]
 
-    for subs in chunks_of_1000:
+    for subs in chunks:
         subs_json = list()
         for i in subs:
             update = {
@@ -118,20 +122,29 @@ def bulk_workflow_trigger(sub_list: list) -> None:
         response = requests.post(
             url, headers=headers, data=json.dumps(data), timeout=30
         )
-        r = response.json()
+
+        try:
+            r = response.json()
+        except json.JSONDecodeError:
+            logger.error(
+                f"Failed to parse JSON response from Drip bulk workflow. "
+                f"Status: {response.status_code}, Body: {response.text[:200]}"
+            )
+            continue
 
         if response.status_code == 201:
-            print("Drip: Bulk workflow add successful!")
+            logger.info("Drip: Bulk workflow add successful!")
         else:
-            print(
-                "Failed to add subscribers to the campaign. Error message:",
-                r["errors"][0]["code"],
-                " - ",
-                r["errors"][0]["message"],
+            logger.error(
+                f"Failed to add subscribers to the campaign. Error message: "
+                f"{r['errors'][0]['code']} - {r['errors'][0]['message']}"
             )
 
 
-def send_in_drip(email: str, campaign_id: str = "169298893") -> None:
+def send_in_drip(
+    email: str,
+    campaign_id: str = os.environ.get("DRIP_CAMPAIGN_ID", "169298893"),
+) -> None:
     """
     Send an email to a single subscriber using Drip.
 
@@ -161,17 +174,22 @@ def send_in_drip(email: str, campaign_id: str = "169298893") -> None:
     }
 
     response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
-    r = response.json()
+
+    try:
+        r = response.json()
+    except json.JSONDecodeError:
+        logger.error(
+            f"Failed to parse JSON response from Drip send. "
+            f"Status: {response.status_code}, Body: {response.text[:200]}"
+        )
+        return
 
     if response.status_code == 201:
-        print(f"Drip: Email sent successfully to {email}!")
+        logger.info(f"Drip: Email sent successfully to {email}!")
     else:
-        print(
-            f"Failed to subscribe {email} to the campaign. Error message:",
-            r["errors"][0]["code"],
-            " - ",
-            r["errors"][0]["message"],
-            file=sys.stderr,
+        logger.error(
+            f"Failed to subscribe {email} to the campaign. Error message: "
+            f"{r['errors'][0]['code']} - {r['errors'][0]['message']}"
         )
 
 

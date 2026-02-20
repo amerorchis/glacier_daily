@@ -8,10 +8,13 @@ from zoneinfo import ZoneInfo
 
 from astral import LocationInfo, sun
 
+MAX_WAIT_SECONDS = 3 * 60 * 60  # 3 hours
+SUNRISE_BUFFER_MINUTES = 52
+
 
 def sunrise_timelapse_complete_time():
     """
-    Calculate the sunrise time and add 52 minutes.
+    Calculate the sunrise time and add SUNRISE_BUFFER_MINUTES minutes.
     """
     # Create West Glacier LI object
     wg = LocationInfo(
@@ -27,9 +30,8 @@ def sunrise_timelapse_complete_time():
 
     now = datetime.now(tz=ZoneInfo("America/Denver"))
 
-    # Sunrise time minus now plus 52 minutes
-    buffer_after_sunrise = 52
-    timelapse_ready_in = s["sunrise"] - now + timedelta(minutes=buffer_after_sunrise)
+    # Sunrise time minus now plus buffer for timelapse completion
+    timelapse_ready_in = s["sunrise"] - now + timedelta(minutes=SUNRISE_BUFFER_MINUTES)
 
     return timelapse_ready_in.total_seconds()
 
@@ -41,9 +43,14 @@ def sleep_time():
 
     timelapse_ready_in = sunrise_timelapse_complete_time()
 
-    if timelapse_ready_in > 0:
+    if timelapse_ready_in > MAX_WAIT_SECONDS:
         print(
-            f"Waiting {round(timelapse_ready_in/60)} minutes for timelapse to finish."
+            f"WARNING: Computed sleep time ({round(timelapse_ready_in / 60)} minutes) exceeds maximum wait of "
+            f"{MAX_WAIT_SECONDS // 3600} hours. Skipping sleep."
+        )
+    elif timelapse_ready_in > 0:
+        print(
+            f"Waiting {round(timelapse_ready_in / 60)} minutes for timelapse to finish."
         )
         sleep(timelapse_ready_in)
 

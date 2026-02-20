@@ -3,8 +3,7 @@ This module fetches and processes various weather-related data including forecas
 """
 
 import concurrent.futures
-import os
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from weather.forecast import get_forecast
 from weather.night_sky import aurora_forecast
@@ -19,7 +18,7 @@ class WeatherContent:
     Object for all of the data related to the weather forecast.
     """
 
-    AQI_CATEGORIES: List[Tuple[int, str]] = [
+    AQI_CATEGORIES: list[tuple[int, str]] = [
         (50, "good."),
         (100, "moderate."),
         (
@@ -41,7 +40,7 @@ class WeatherContent:
         """
         Initialize WeatherContent instance and fetch weather data.
         """
-        self.results: Optional[List[Tuple[str, int, int, str]]] = None
+        self.results: Optional[list[tuple[str, int, int, str]]] = None
         self.message1: str = ""
         self.message2: str = ""
         self.season: Optional[str] = None

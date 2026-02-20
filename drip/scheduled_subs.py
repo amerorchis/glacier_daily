@@ -11,6 +11,8 @@ except ModuleNotFoundError:
     from update_subscriber import update_subscriber
 from datetime import datetime, timedelta
 
+from shared.datetime_utils import now_mountain
+
 
 def start(subs: list):
     """
@@ -62,8 +64,8 @@ def update_scheduled_subs():
     start_today = list()
     end_today = list()
     date_format = "%Y-%m-%d"
-    yesterday = datetime.now() - timedelta(days=1)
-    tomorrow = datetime.now() + timedelta(days=1)
+    yesterday = (now_mountain() - timedelta(days=1)).replace(tzinfo=None)
+    tomorrow = (now_mountain() + timedelta(days=1)).replace(tzinfo=None)
 
     for i in scheduled:
         tags = i["tags"]

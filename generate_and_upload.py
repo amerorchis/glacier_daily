@@ -1,14 +1,13 @@
-#!/usr/bin/env python3.9
+#!/home/pi/.local/bin/uv run --python 3.9 python
 """
 Generate all of the data with a ThreadPoolExecutor, then upload it to the glacier.org
 server with FTP.
 """
+
 import base64
 import concurrent.futures
 import json
 import os
-import sys
-from datetime import datetime
 from time import sleep
 
 import requests
@@ -22,14 +21,21 @@ from peak.peak import peak
 from product_otd.product import get_product
 from roads.hiker_biker import get_hiker_biker_status
 from roads.roads import get_road_status
-from shared.datetime_utils import cross_platform_strftime, format_date_readable
+from shared.datetime_utils import (
+    cross_platform_strftime,
+    format_date_readable,
+    now_mountain,
+)
 from shared.ftp import upload_file
+from shared.logging_config import get_logger
 from sunrise_timelapse.get_timelapse import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
 from trails_and_cgs.trails import get_closed_trails
 from weather.weather import weather_data
 from weather.weather_img import weather_image
 from web_version import web_version
+
+logger = get_logger(__name__)
 
 
 def gen_data():
@@ -58,8 +64,8 @@ def gen_data():
         peak_name, peak_img, peak_map = peak_future.result()
 
     drip_template_fields = {
-        "date": datetime.now().strftime("%Y-%m-%d"),
-        "today": format_date_readable(datetime.now()),
+        "date": now_mountain().strftime("%Y-%m-%d"),
+        "today": format_date_readable(now_mountain()),
         "events": events_future.result(),
         "weather1": weather.message1,
         "weather_image": weather_image(weather.results),
@@ -98,14 +104,11 @@ def write_data_to_json(data: dict, doctype: str) -> str:
     """
     Make a JSON file with the data, then return the filepath.
     """
-    data = {
-        i: base64.b64encode(data[i].encode("utf-8")).decode("utf-8")
-        for i in data.keys()
-    }
+    data = {i: base64.b64encode(data[i].encode("utf-8")).decode("utf-8") for i in data}
 
-    data["date"] = datetime.now().strftime("%Y-%m-%d")
+    data["date"] = now_mountain().strftime("%Y-%m-%d")
     data["time_generated"] = cross_platform_strftime(
-        datetime.now(), "%-I:%M %p"
+        now_mountain(), "%-I:%M %p"
     ).lower()
     data["gnpc-events"] = get_gnpc_events()
     filepath = f"server/{doctype}"
@@ -132,9 +135,7 @@ def purge_cache():
     purge_key = os.getenv("CACHE_PURGE")
     zone_id = os.getenv("ZONE_ID")
     if not purge_key or not zone_id:
-        print(
-            "No CACHE_PURGE key or ZONE_ID set, skipping cache purge.", file=sys.stderr
-        )
+        logger.warning("No CACHE_PURGE key or ZONE_ID set, skipping cache purge.")
         return
 
     url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"
@@ -146,12 +147,9 @@ def purge_cache():
 
     response = requests.post(url, headers=headers, json=data, timeout=30)
     if response.status_code == 200:
-        print("Cache purged successfully.")
+        logger.info("Cache purged successfully.")
     else:
-        print(
-            f"Failed to purge cache: {response.status_code} - {response.text}",
-            file=sys.stderr,
-        )
+        logger.error(f"Failed to purge cache: {response.status_code} - {response.text}")
 
 
 def refresh_cache():
@@ -162,14 +160,13 @@ def refresh_cache():
     try:
         response = requests.get(url, timeout=30)
         if response.status_code == 200:
-            print("Cache refreshed successfully.")
+            logger.info("Cache refreshed successfully.")
         else:
-            print(
-                f"Failed to refresh cache: {response.status_code} - {response.text}",
-                file=sys.stderr,
+            logger.error(
+                f"Failed to refresh cache: {response.status_code} - {response.text}"
             )
     except requests.RequestException as e:
-        print(f"Error refreshing cache: {e}", file=sys.stderr)
+        logger.error(f"Error refreshing cache: {e}")
 
 
 def serve_api():
@@ -188,6 +185,10 @@ def serve_api():
 
 
 if __name__ == "__main__":  # pragma: no cover
+    from shared.logging_config import setup_logging
+
+    setup_logging()
+
     environment = os.getenv("ENVIRONMENT", "development")
     if environment == "development":
         gen_data()

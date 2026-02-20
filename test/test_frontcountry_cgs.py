@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
 import requests
 
 import trails_and_cgs.frontcountry_cgs as cgs_mod
@@ -53,9 +52,8 @@ def test_campground_seasonal_closure_after_august(monkeypatch):
     monkeypatch.setattr(
         cgs_mod.requests, "get", lambda *a, **k: _make_cg_response(rows)
     )
-    with patch.object(cgs_mod, "datetime") as mock_dt:
-        mock_dt.now.return_value = datetime(2024, 9, 15)
-        html = cgs_mod.campground_alerts()
+    monkeypatch.setattr(cgs_mod, "now_mountain", lambda: datetime(2024, 9, 15))
+    html = cgs_mod.campground_alerts()
     assert "Closed for the season" in html
     assert "Sprague Creek" in html
 
@@ -66,8 +64,7 @@ def test_campground_seasonal_closure_before_august(monkeypatch):
     monkeypatch.setattr(
         cgs_mod.requests, "get", lambda *a, **k: _make_cg_response(rows)
     )
-    with patch.object(cgs_mod, "datetime") as mock_dt:
-        mock_dt.now.return_value = datetime(2024, 5, 15)
+    with patch.object(cgs_mod, "now_mountain", return_value=datetime(2024, 5, 15)):
         html = cgs_mod.campground_alerts()
     assert "Not yet open" in html
 

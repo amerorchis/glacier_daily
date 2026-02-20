@@ -6,13 +6,13 @@ then return a description, link to product, and link to photo.
 import json
 import os
 import random
-from datetime import datetime
 from io import BytesIO
 from re import sub
 
 import requests
 from PIL import Image
 
+from shared.datetime_utils import now_mountain
 from shared.env_loader import load_env
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json
@@ -24,7 +24,7 @@ def upload_potd():
     """
     Upload the product image to the glacier.org ftp server.
     """
-    today = datetime.now()
+    today = now_mountain()
     filename = f"{today.month}_{today.day}_{today.year}_product_otd.jpg"
     file = "email_images/today/product_otd.jpg"
     directory = "product"
@@ -45,20 +45,26 @@ def resize_image(url):
     aspect_ratio = width / height
 
     # Calculate the new width and height to fit within the canvas
+    CANVAS_WIDTH = 255
+    CANVAS_HEIGHT = 150
     scale_multiplier = 2
-    new_width = min(width, 255 * scale_multiplier)
+    new_width = min(width, CANVAS_WIDTH * scale_multiplier)
     new_height = int(new_width / aspect_ratio)
 
     # Check if the new height exceeds the canvas height
-    if new_height > (150 * scale_multiplier):
-        new_height = 150 * scale_multiplier
+    if new_height > (CANVAS_HEIGHT * scale_multiplier):
+        new_height = CANVAS_HEIGHT * scale_multiplier
         new_width = int(new_height * aspect_ratio)
 
     # Resize the image
     resized_image = image.resize((new_width, new_height))
 
     # Create a new blank canvas with white background
-    canvas = Image.new("RGB", (255 * scale_multiplier, 150 * scale_multiplier), "white")
+    canvas = Image.new(
+        "RGB",
+        (CANVAS_WIDTH * scale_multiplier, CANVAS_HEIGHT * scale_multiplier),
+        "white",
+    )
 
     # Calculate the position to paste the resized image
     x = (canvas.width - resized_image.width) // 2
@@ -101,8 +107,8 @@ def get_product():
     total_products = products["meta"]["pagination"]["total"]
 
     # Select one of these products
-    random.seed(datetime.today().strftime("%Y:%m:%d"))
-    product_otd = random.randrange(1, total_products + 1)
+    random.seed(now_mountain().strftime("%Y:%m:%d"))
+    product_otd = random.randrange(1, total_products + 1)  # noqa: S311
 
     # Function to retrieve a product.
     def retrieve_potd(product_otd):
@@ -159,7 +165,7 @@ def get_product():
         }
 
     # Keep searching for products if they don't have images.
-    while True:
+    for _attempt in range(50):
         try:
             product_data = retrieve_potd(product_otd)
             if product_data["image_url"]:
@@ -167,8 +173,11 @@ def get_product():
             else:
                 raise ValueError("Product not found")
 
-        except ValueError:
-            product_otd = random.randint(1, total_products)
+        except (ValueError, IndexError, KeyError):
+            product_otd = random.randint(1, total_products)  # noqa: S311
+    else:
+        # All attempts exhausted without finding a product with an image
+        return ("", "", "", "")
 
     # Resize and upload the image retrieved
     resize_image(product_data["image_url"])

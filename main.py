@@ -1,23 +1,24 @@
-#!/usr/bin/env python3.9
+#!/home/pi/.local/bin/uv run --python 3.9 python
 
 """
 This script performs the Glacier Daily Update by retrieving subscribers,
 generating data, uploading it to a website, and sending emails to subscribers.
 """
 
-import os
+import argparse
 from time import sleep
 
 from dotenv import load_dotenv
 
 load_dotenv("email.env")
 
-import argparse
-from typing import List
-
-from drip.drip_actions import bulk_workflow_trigger, get_subs, record_drip_event
+from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
+from shared.config_validation import validate_config
+from shared.logging_config import get_logger, setup_logging
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
+
+logger = get_logger(__name__)
 
 
 def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
@@ -27,11 +28,14 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     Args:
         tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
     """
+    setup_logging()
+    validate_config()
+
     sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
 
     # Retrieve subscribers from Drip.
-    subscribers: List[str] = get_subs(tag)
-    print("Subscribers found")
+    subscribers: list[str] = get_subs(tag)
+    logger.info("Subscribers found")
 
     # Generated data and upload to website.
     serve_api()
@@ -53,10 +57,5 @@ if __name__ == "__main__":  # pragma: no cover
     )
     args = parser.parse_args()
 
-    environment = os.environ.get("TERM")
-
-    if environment is None:
-        main()
-    elif environment == "xterm-256color":
-        print(args.tag)
-        main(args.tag, test=True)
+    test_mode = args.tag != "Glacier Daily Update"
+    main(args.tag, test=test_mode)

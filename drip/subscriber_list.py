@@ -3,9 +3,12 @@ This module provides a function to retrieve a list of subscribers from the Drip 
 """
 
 import os
-import sys
 
 import requests
+
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def subscriber_list(tag="Glacier Daily Update") -> list:
@@ -34,7 +37,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
     params = {"status": "active", "tags": tag, "per_page": "1000", "page": page}
 
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
         subs.extend([data["subscribers"][i] for i in range(len(data["subscribers"]))])
@@ -43,7 +46,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
         while data["meta"]["total_pages"] > page:
             page += 1
             params["page"] = page
-            response = requests.get(url, headers=headers, params=params)
+            response = requests.get(url, headers=headers, params=params, timeout=30)
             response.raise_for_status()
             data = response.json()
             subs.extend(
@@ -58,5 +61,5 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
 
     except requests.exceptions.RequestException as e:
         # Handle errors
-        print(f"Failed to retrieve subscribers with tag(s) {tag}. {e}", file=sys.stderr)
+        logger.error(f"Failed to retrieve subscribers with tag(s) {tag}. {e}")
         return []

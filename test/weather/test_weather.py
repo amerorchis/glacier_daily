@@ -28,7 +28,6 @@ def mock_all_weather_services():
         patch("weather.weather.get_sunset_hue") as mock_sunset,
         patch("weather.weather.aurora_forecast") as mock_aurora,
     ):
-
         # Set up mock returns
         mock_forecast.return_value = MOCK_FORECAST_RETURN
         mock_aqi.return_value = MOCK_AQI_RETURN
@@ -116,7 +115,7 @@ def test_error_handling_in_weather_services(mock_all_weather_services):
     mock_all_weather_services["forecast"].side_effect = Exception("API Error")
 
     with pytest.raises(Exception) as exc_info:
-        weather = WeatherContent()
+        WeatherContent()
 
     assert "API Error" in str(exc_info.value)
 

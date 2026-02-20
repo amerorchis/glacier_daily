@@ -1,6 +1,6 @@
 # Glacier Daily Update Emails
 
-[![codecov](https://codecov.io/github/amerorchis/glacier_daily/graph/badge.svg?token=JS85YV7E68)](https://codecov.io/github/amerorchis/glacier_daily) [![Tests](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml/badge.svg)](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![codecov](https://codecov.io/github/amerorchis/glacier_daily/graph/badge.svg?token=JS85YV7E68)](https://codecov.io/github/amerorchis/glacier_daily) [![Tests](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml/badge.svg)](https://github.com/amerorchis/glacier_daily/actions/workflows/tests.yml) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 An automated system that generates and distributes daily email updates about conditions at Glacier National Park. The system aggregates data from multiple sources and delivers personalized updates to subscribers through the Drip email platform.
 
@@ -81,13 +81,12 @@ cp TEMPLATE.env email.env
 
 This project uses automated code formatting and quality checks:
 
-- **Black** for Python code formatting
-- **isort** for import sorting
+- **Ruff** for Python code formatting, linting, and import sorting
 - **Pre-commit hooks** for automated checks
 
 ```bash
 # Format code manually
-uv run black .
+uv run ruff format .
 
 # Run all quality checks
 uv run pre-commit run --all-files

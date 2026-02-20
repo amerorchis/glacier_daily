@@ -74,13 +74,7 @@ def test_delete_on_first_skips_directories(monkeypatch):
         def delete(self, f):
             deleted.append(f)
 
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 1), strptime=datetime.strptime
-        ),
-    )
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
     ftp_mod.delete_on_first(DummyFTP())
     assert "a_directory" not in deleted
     assert "old_file" in deleted

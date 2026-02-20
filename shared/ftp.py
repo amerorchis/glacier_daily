@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from ftplib import FTP
 from typing import Optional
 
+from shared.datetime_utils import now_mountain
+
 
 def delete_on_first(ftp: FTP) -> None:
     """
@@ -16,7 +18,7 @@ def delete_on_first(ftp: FTP) -> None:
     Args:
         ftp (FTP): An instance of the FTP class connected to the server.
     """
-    current_date = datetime.now()
+    current_date = now_mountain()
 
     if current_date.day == 1:
         print("First of the Month: Deleting files over 6 months old.")
@@ -59,7 +61,7 @@ def upload_file(
     server = "ftp.glacier.org"
 
     # Connect to the FTP server
-    ftp = FTP(server)
+    ftp = FTP(server)  # noqa: S321
     ftp.login(username, password)
 
     ftp.cwd(directory)

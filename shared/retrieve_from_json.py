@@ -4,7 +4,8 @@ Get any values that have been retrieved already from today's JSON file.
 
 import base64
 import json
-from datetime import datetime
+
+from shared.datetime_utils import now_mountain
 
 
 def retrieve_from_json(keys_to_retrieve: list) -> tuple:
@@ -17,12 +18,12 @@ def retrieve_from_json(keys_to_retrieve: list) -> tuple:
         tuple: (bool, list of decoded values if exists, else None)
     """
     try:
-        with open("server/email.json", "r", encoding="utf8") as f:
+        with open("server/email.json", encoding="utf8") as f:
             data = json.load(f)
 
         # Check if date matches today
         stored_date = data.get("date")
-        today = datetime.now().strftime("%Y-%m-%d")
+        today = now_mountain().strftime("%Y-%m-%d")
 
         if stored_date == today:
             # Retrieve and decode the requested values

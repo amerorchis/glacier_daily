@@ -1,6 +1,5 @@
 import io
 import json
-from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -59,12 +58,11 @@ class TestGetProduct:
         """Test successful product retrieval"""
         with (
             patch("requests.get") as mock_get,
-            patch("product_otd.product.resize_image") as mock_resize,
+            patch("product_otd.product.resize_image"),
             patch("product_otd.product.upload_potd") as mock_upload,
             patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
             patch("random.randrange", return_value=1),
         ):
-
             # Mock API responses
             mock_get.side_effect = [
                 Mock(status_code=200, text=json.dumps(mock_product_response)),
@@ -106,7 +104,6 @@ class TestGetProduct:
             patch("requests.get") as mock_get,
             patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
         ):
-
             mock_get.return_value = Mock(status_code=500)
 
             with pytest.raises(requests.exceptions.RequestException):
@@ -123,7 +120,6 @@ class TestResizeImage:
             patch("PIL.Image.open") as mock_open,
             patch("PIL.Image.new") as mock_new,
         ):
-
             # Mock request response
             mock_response = Mock()
             mock_response.content = mock_image
@@ -156,7 +152,7 @@ class TestResizeImage:
             mock_response.content = b"invalid image data"
             mock_get.return_value = mock_response
 
-            with pytest.raises(Exception):
+            with pytest.raises(OSError):
                 resize_image("https://example.com/test.jpg")
 
 

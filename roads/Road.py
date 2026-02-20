@@ -58,12 +58,12 @@ class Road(Place):
         """
         if self.orientation == "EW":
             print(
-                f"West: {self.west[1],self.west[0]}\nEast: {self.east[1],self.east[0]}"
+                f"West: {self.west[1], self.west[0]}\nEast: {self.east[1], self.east[0]}"
             )
 
         else:
             print(
-                f"North: {self.north[1],self.north[0]}\nSouth: {self.south[1],self.south[0]}"
+                f"North: {self.north[1], self.north[0]}\nSouth: {self.south[1], self.south[0]}"
             )
 
     def closure_string(self):

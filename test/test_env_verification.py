@@ -4,8 +4,6 @@ Test to verify that pytest uses TEMPLATE.env instead of email.env
 
 import os
 
-import pytest
-
 
 def test_env_loader_uses_template_env():
     """Verify that during testing, empty API keys from TEMPLATE.env are loaded."""
@@ -18,7 +16,7 @@ def test_env_loader_uses_template_env():
 
     # All API keys should be empty strings (from TEMPLATE.env)
     assert os.getenv("DRIP_TOKEN") == ""
-    assert os.getenv("flickr_key") == ""
+    assert os.getenv("flickr_key") == ""  # noqa: SIM112
     assert os.getenv("BC_TOKEN") == ""
     assert os.getenv("MAPBOX_TOKEN") == ""
     assert os.getenv("NPS") == ""

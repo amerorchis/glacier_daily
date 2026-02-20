@@ -123,6 +123,6 @@ def test_truthy_values(generated_data, required_truthy_keys):
     non_truthy_keys = {
         key for key in required_truthy_keys if not generated_data.get(key)
     }
-    assert (
-        not non_truthy_keys
-    ), f"Following keys have non-truthy values: {non_truthy_keys}"
+    assert not non_truthy_keys, (
+        f"Following keys have non-truthy values: {non_truthy_keys}"
+    )

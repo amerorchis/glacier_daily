@@ -31,9 +31,9 @@ class TestWeatherContentInterface:
         from weather.weather import WeatherContent
 
         weather = WeatherContent()
-        assert hasattr(
-            weather, "message1"
-        ), "WeatherContent must have 'message1' attribute"
+        assert hasattr(weather, "message1"), (
+            "WeatherContent must have 'message1' attribute"
+        )
         assert isinstance(weather.message1, str), "message1 should be a string"
 
     def test_has_message2_attribute(self, mock_weather_dependencies):
@@ -41,9 +41,9 @@ class TestWeatherContentInterface:
         from weather.weather import WeatherContent
 
         weather = WeatherContent()
-        assert hasattr(
-            weather, "message2"
-        ), "WeatherContent must have 'message2' attribute"
+        assert hasattr(weather, "message2"), (
+            "WeatherContent must have 'message2' attribute"
+        )
         assert isinstance(weather.message2, str), "message2 should be a string"
 
     def test_has_season_attribute(self, mock_weather_dependencies):
@@ -53,22 +53,22 @@ class TestWeatherContentInterface:
         weather = WeatherContent()
         assert hasattr(weather, "season"), "WeatherContent must have 'season' attribute"
         # season can be None or string
-        assert weather.season is None or isinstance(
-            weather.season, str
-        ), "season should be None or string"
+        assert weather.season is None or isinstance(weather.season, str), (
+            "season should be None or string"
+        )
 
     def test_has_results_attribute(self, mock_weather_dependencies):
         """Verify WeatherContent has results attribute as used by weather_image()."""
         from weather.weather import WeatherContent
 
         weather = WeatherContent()
-        assert hasattr(
-            weather, "results"
-        ), "WeatherContent must have 'results' attribute"
+        assert hasattr(weather, "results"), (
+            "WeatherContent must have 'results' attribute"
+        )
         # results can be None or list
-        assert weather.results is None or isinstance(
-            weather.results, list
-        ), "results should be None or list"
+        assert weather.results is None or isinstance(weather.results, list), (
+            "results should be None or list"
+        )
 
 
 class TestModuleReturnTypes:
@@ -135,9 +135,9 @@ class TestTupleUnpacking:
 
             result = get_image_otd()
             assert isinstance(result, tuple), "get_image_otd should return tuple"
-            assert (
-                len(result) == 3
-            ), "get_image_otd should return 3-tuple (url, title, link)"
+            assert len(result) == 3, (
+                "get_image_otd should return 3-tuple (url, title, link)"
+            )
 
     def test_peak_returns_3_tuple(self):
         """Verify peak returns a 3-tuple."""
@@ -163,9 +163,9 @@ class TestTupleUnpacking:
 
             result = get_product()
             assert isinstance(result, tuple), "get_product should return tuple"
-            assert (
-                len(result) == 4
-            ), "get_product should return 4-tuple (title, img, link, desc)"
+            assert len(result) == 4, (
+                "get_product should return 4-tuple (title, img, link, desc)"
+            )
 
     def test_process_video_returns_3_tuple(self):
         """Verify process_video returns a 3-tuple."""
@@ -177,9 +177,9 @@ class TestTupleUnpacking:
 
             result = process_video()
             assert isinstance(result, tuple), "process_video should return tuple"
-            assert (
-                len(result) == 3
-            ), "process_video should return 3-tuple (vid, still, desc)"
+            assert len(result) == 3, (
+                "process_video should return 3-tuple (vid, still, desc)"
+            )
 
 
 class TestHtmlSafeIntegration:
@@ -231,17 +231,17 @@ class TestWeatherImageIntegration:
         mock_draw = Mock()
         mock_draw.textlength = Mock(return_value=50.0)  # Mock text width
 
-        with patch("weather.weather_img._validate_input"):
-            with patch("weather.weather_img._get_base_image", return_value=mock_image):
-                with patch(
-                    "weather.weather_img.ImageDraw.Draw", return_value=mock_draw
-                ):
-                    with patch("weather.weather_img._get_font", return_value=Mock()):
-                        with patch(
-                            "weather.weather_img.upload_weather",
-                            return_value="https://example.com/img.png",
-                        ):
-                            from weather.weather_img import weather_image
+        with (
+            patch("weather.weather_img._validate_input"),
+            patch("weather.weather_img._get_base_image", return_value=mock_image),
+            patch("weather.weather_img.ImageDraw.Draw", return_value=mock_draw),
+            patch("weather.weather_img._get_font", return_value=Mock()),
+            patch(
+                "weather.weather_img.upload_weather",
+                return_value="https://example.com/img.png",
+            ),
+        ):
+            from weather.weather_img import weather_image
 
-                            result = weather_image([("West Glacier", 70, 45, "Sunny")])
-                            assert isinstance(result, str)
+            result = weather_image([("West Glacier", 70, 45, "Sunny")])
+            assert isinstance(result, str)

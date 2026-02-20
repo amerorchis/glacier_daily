@@ -3,7 +3,6 @@ A super class for Roads and Hiker/Biker that finds the nearest named location fr
 """
 
 from math import atan2, cos, radians, sin, sqrt
-from typing import Tuple
 
 from roads.places import places
 
@@ -53,7 +52,7 @@ class Place:
         R = 6371.0
         return R * c
 
-    def find_min_distance(self, direction: str, coords: Tuple[float, float]) -> None:
+    def find_min_distance(self, direction: str, coords: tuple[float, float]) -> None:
         """
         Locates the named place that has the minimum distance from the given coordinates.
         """
