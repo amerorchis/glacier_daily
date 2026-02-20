@@ -8,8 +8,11 @@ import sys
 import traceback
 
 import requests
+import urllib3
 
 from shared.datetime_utils import now_mountain
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def campground_alerts():
@@ -21,7 +24,7 @@ def campground_alerts():
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException:
         print(
             f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",

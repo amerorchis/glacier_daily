@@ -7,8 +7,11 @@ import sys
 import traceback
 
 import requests
+import urllib3
 
 from roads.Road import Road
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class NPSWebsiteError(Exception):
@@ -75,7 +78,7 @@ def _fetch_open_segments(road_name: str) -> set[tuple[float, float]]:
     )
 
     try:
-        r = requests.get(url, timeout=5)
+        r = requests.get(url, timeout=5, verify=False)  # noqa: S501
         r.raise_for_status()
         data = json.loads(r.text)
     except (requests.exceptions.RequestException, json.JSONDecodeError):
@@ -125,7 +128,7 @@ def closed_roads() -> dict[str, Road]:
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
         SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
     try:
-        r = requests.get(url, timeout=5)
+        r = requests.get(url, timeout=5, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
         print(
             f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",

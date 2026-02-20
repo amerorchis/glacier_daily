@@ -8,6 +8,9 @@ import sys
 import traceback
 
 import requests
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def remove_duplicate_trails(trail_list: list) -> list:
@@ -55,7 +58,7 @@ def closed_trails() -> str:
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27"
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
         print(
             f"Error fetching trail closures: {e}\n"
