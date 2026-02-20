@@ -33,3 +33,10 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+
+      - id: encrypt-secrets
+        name: encrypt secrets
+        entry: bash -c 'if [ -f email.env ] && command -v sops >/dev/null 2>&1; then sops encrypt --input-type dotenv --output-type dotenv email.env > email.enc.env && git add email.enc.env; fi'
+        language: system
+        always_run: true
+        pass_filenames: false

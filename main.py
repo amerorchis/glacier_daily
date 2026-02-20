@@ -12,6 +12,7 @@ from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
 from shared.logging_config import get_logger, setup_logging
+from shared.settings import get_settings
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 
 logger = get_logger(__name__)
@@ -27,6 +28,7 @@ def main(
         tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
         force (bool): Clear cached data and re-fetch everything fresh.
     """
+    get_settings()  # Load email.env so ENVIRONMENT is available
     setup_logging()
     validate_config()
 

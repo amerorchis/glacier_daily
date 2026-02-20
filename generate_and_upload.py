@@ -223,6 +223,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     from shared.logging_config import setup_logging
 
+    get_settings()  # Load email.env so ENVIRONMENT is available
     setup_logging()
 
     _parser = _argparse.ArgumentParser(description="Generate and upload data")
