@@ -7,6 +7,7 @@ import json
 import sys
 import traceback
 
+import certifi
 import requests
 
 from shared.datetime_utils import now_mountain
@@ -21,7 +22,7 @@ def campground_alerts():
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=10, verify=certifi.where())
     except requests.exceptions.RequestException:
         print(
             f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",

@@ -7,6 +7,7 @@ import json
 import sys
 import traceback
 
+import certifi
 import requests
 
 
@@ -55,7 +56,7 @@ def closed_trails() -> str:
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27"
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=10, verify=certifi.where())
     except requests.exceptions.RequestException as e:
         print(
             f"Error fetching trail closures: {e}\n"
