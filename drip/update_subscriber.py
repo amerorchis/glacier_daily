@@ -3,10 +3,11 @@ This module provides a function to update subscriber information in the Drip ema
 """
 
 import json
-import os
 import urllib.parse
 
 import requests
+
+from shared.settings import get_settings
 
 
 def update_subscriber(updates: dict):
@@ -21,13 +22,11 @@ def update_subscriber(updates: dict):
     """
     email = updates.get("email", "")
     email = urllib.parse.quote(email, safe="@")
-    drip_token = os.environ["DRIP_TOKEN"]
-    account_id = os.environ["DRIP_ACCOUNT"]
-    api_key = drip_token
-    url = f"https://api.getdrip.com/v2/{account_id}/subscribers"
+    settings = get_settings()
+    url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/subscribers"
 
     headers = {
-        "Authorization": "Bearer " + api_key,
+        "Authorization": "Bearer " + settings.DRIP_TOKEN,
         "Content-Type": "application/vnd.api+json",
     }
 

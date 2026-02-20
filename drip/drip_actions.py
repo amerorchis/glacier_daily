@@ -3,13 +3,13 @@ This module provides functions to interact with the Drip email marketing platfor
 """
 
 import json
-import os
 
 import requests
 
 from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
 from shared.logging_config import get_logger
+from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
@@ -27,13 +27,11 @@ def record_drip_event(email: str, event: str = "Glacier Daily Update trigger") -
     Returns:
         None
     """
-    drip_token = os.environ["DRIP_TOKEN"]
-    account_id = os.environ["DRIP_ACCOUNT"]
-    api_key = drip_token
+    settings = get_settings()
 
-    url = f"https://api.getdrip.com/v2/{account_id}/events"
+    url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/events"
     headers = {
-        "Authorization": "Bearer " + api_key,
+        "Authorization": "Bearer " + settings.DRIP_TOKEN,
         "Content-Type": "application/vnd.api+json",
         "User-Agent": "Glacier Daily API (glacier.org)",
     }
@@ -90,13 +88,11 @@ def bulk_workflow_trigger(sub_list: list) -> None:
     Returns:
         None
     """
-    drip_token = os.environ["DRIP_TOKEN"]
-    account_id = os.environ["DRIP_ACCOUNT"]
-    api_key = drip_token
+    settings = get_settings()
 
-    url = f"https://api.getdrip.com/v2/{account_id}/events/batches"
+    url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/events/batches"
     headers = {
-        "Authorization": "Bearer " + api_key,
+        "Authorization": "Bearer " + settings.DRIP_TOKEN,
         "Content-Type": "application/vnd.api+json",
         "User-Agent": "Glacier Daily API (glacier.org)",
     }
@@ -143,25 +139,25 @@ def bulk_workflow_trigger(sub_list: list) -> None:
 
 def send_in_drip(
     email: str,
-    campaign_id: str = os.environ.get("DRIP_CAMPAIGN_ID", "169298893"),
+    campaign_id: str = "",
 ) -> None:
     """
     Send an email to a single subscriber using Drip.
 
     Args:
         email (str): The subscriber's email address.
-        campaign_id (str): The campaign ID. Defaults to '169298893'.
+        campaign_id (str): The campaign ID. Defaults to settings.DRIP_CAMPAIGN_ID.
 
     Returns:
         None
     """
-    drip_token = os.environ["DRIP_TOKEN"]
-    account_id = os.environ["DRIP_ACCOUNT"]
-    api_key = drip_token
+    settings = get_settings()
+    if not campaign_id:
+        campaign_id = settings.DRIP_CAMPAIGN_ID
 
-    url = f"https://api.getdrip.com/v2/{account_id}/workflows/{campaign_id}/subscribers"
+    url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/workflows/{campaign_id}/subscribers"
     headers = {
-        "Authorization": "Bearer " + api_key,
+        "Authorization": "Bearer " + settings.DRIP_TOKEN,
         "Content-Type": "application/vnd.api+json",
     }
 

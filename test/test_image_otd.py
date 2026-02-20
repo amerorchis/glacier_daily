@@ -18,7 +18,7 @@ from image_otd.image_otd import (
 
 
 @pytest.fixture
-def mock_env_vars():
+def mock_env_vars(mock_required_settings):
     env_vars = {
         "flickr_key": "test_key",
         "flickr_secret": "test_secret",
@@ -77,7 +77,7 @@ def test_get_flickr_success(mock_env_vars, mock_flickr_response):
 def test_get_flickr_missing_env_var():
     with (
         patch.dict("os.environ", {}, clear=True),
-        pytest.raises(FlickrAPIError, match="Missing environment variable"),
+        pytest.raises(FlickrAPIError, match="Missing required environment variables"),
     ):
         get_flickr()
 

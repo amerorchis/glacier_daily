@@ -2,7 +2,6 @@
 This module retrieves and processes daily events from the National Park Service API for Glacier National Park.
 """
 
-import os
 import sys
 import traceback
 from datetime import datetime
@@ -11,6 +10,7 @@ import requests
 from requests.exceptions import JSONDecodeError, ReadTimeout
 
 from shared.datetime_utils import now_mountain
+from shared.settings import get_settings
 
 
 def time_sortable(time: str):
@@ -107,8 +107,7 @@ def events_today(now=None):
 
     try:
         endpoint = f"http://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"
-        key = os.environ["NPS"]
-        headers = {"X-Api-Key": key}
+        headers = {"X-Api-Key": get_settings().NPS}
 
         raw_events, pages = fetch_events(endpoint, headers)
         for page in range(2, pages + 1):

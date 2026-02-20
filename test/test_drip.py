@@ -11,7 +11,13 @@ import drip.subscriber_list as subscriber_list
 import drip.update_subscriber as update_subscriber
 
 
-def test_record_drip_event_success(monkeypatch):
+def _set_drip_env(monkeypatch):
+    """Helper to set the Drip env vars used by tests."""
+    monkeypatch.setenv("DRIP_TOKEN", "t")
+    monkeypatch.setenv("DRIP_ACCOUNT", "a")
+
+
+def test_record_drip_event_success(monkeypatch, mock_required_settings):
     called = {}
 
     def fake_post(url, headers, data, timeout):
@@ -26,16 +32,14 @@ def test_record_drip_event_success(monkeypatch):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     drip_actions.record_drip_event("test@example.com", event="Test Event")
     assert called["url"].endswith("/v2/a/events")
     assert "Test Event" in called["data"]
     assert called["timeout"] == 30
 
 
-def test_record_drip_event_failure(monkeypatch, caplog):
+def test_record_drip_event_failure(monkeypatch, mock_required_settings, caplog):
     """Verify non-204 status logs an error."""
 
     def fake_post(url, headers, data, timeout):
@@ -48,9 +52,7 @@ def test_record_drip_event_failure(monkeypatch, caplog):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     with caplog.at_level("ERROR"):
         drip_actions.record_drip_event("test@example.com", event="Test Event")
     assert "Failed to record event" in caplog.text
@@ -110,7 +112,7 @@ def test_update_scheduled_subs_logic(monkeypatch):
 
 
 # --- update_subscriber.py ---
-def test_update_subscriber_success(monkeypatch):
+def test_update_subscriber_success(monkeypatch, mock_required_settings):
     class FakeResponse:
         status_code = 200
 
@@ -122,13 +124,11 @@ def test_update_subscriber_success(monkeypatch):
         "requests",
         types.SimpleNamespace(post=lambda *a, **k: FakeResponse()),
     )
-    monkeypatch.setattr(
-        update_subscriber.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     update_subscriber.update_subscriber({"email": "test@example.com"})
 
 
-def test_update_subscriber_failure(monkeypatch):
+def test_update_subscriber_failure(monkeypatch, mock_required_settings):
     class FakeResponse:
         status_code = 400
 
@@ -140,9 +140,7 @@ def test_update_subscriber_failure(monkeypatch):
         "requests",
         types.SimpleNamespace(post=lambda *a, **k: FakeResponse()),
     )
-    monkeypatch.setattr(
-        update_subscriber.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     update_subscriber.update_subscriber({"email": "fail@example.com"})
 
 
@@ -158,7 +156,7 @@ def test_get_subs_merges(monkeypatch):
     assert set(result) == {"a", "c"}
 
 
-def test_bulk_workflow_trigger(monkeypatch):
+def test_bulk_workflow_trigger(monkeypatch, mock_required_settings):
     called = {}
 
     def fake_post(url, headers, data, timeout):
@@ -174,14 +172,12 @@ def test_bulk_workflow_trigger(monkeypatch):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     drip_actions.bulk_workflow_trigger(["a@example.com", "b@example.com"])
     assert "url" in called
 
 
-def test_bulk_workflow_trigger_chunking(monkeypatch):
+def test_bulk_workflow_trigger_chunking(monkeypatch, mock_required_settings):
     """Verify >1000 subscribers are chunked into batches of 1000."""
     post_calls = []
 
@@ -197,15 +193,13 @@ def test_bulk_workflow_trigger_chunking(monkeypatch):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     subs = [f"user{i}@example.com" for i in range(2500)]
     drip_actions.bulk_workflow_trigger(subs)
     assert len(post_calls) == 3  # 1000 + 1000 + 500
 
 
-def test_bulk_workflow_trigger_failure(monkeypatch, caplog):
+def test_bulk_workflow_trigger_failure(monkeypatch, mock_required_settings, caplog):
     """Verify non-201 status logs an error."""
 
     def fake_post(url, headers, data, timeout):
@@ -218,15 +212,13 @@ def test_bulk_workflow_trigger_failure(monkeypatch, caplog):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     with caplog.at_level("ERROR"):
         drip_actions.bulk_workflow_trigger(["a@example.com"])
     assert "Failed to add subscribers" in caplog.text
 
 
-def test_send_in_drip(monkeypatch):
+def test_send_in_drip(monkeypatch, mock_required_settings):
     def fake_post(url, headers, data, timeout):
         assert timeout == 30
 
@@ -239,13 +231,11 @@ def test_send_in_drip(monkeypatch):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     drip_actions.send_in_drip("a@example.com")
 
 
-def test_send_in_drip_failure(monkeypatch, caplog):
+def test_send_in_drip_failure(monkeypatch, mock_required_settings, caplog):
     """Verify non-201 status logs an error."""
 
     def fake_post(url, headers, data, timeout):
@@ -258,9 +248,7 @@ def test_send_in_drip_failure(monkeypatch, caplog):
         return R()
 
     monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    monkeypatch.setattr(
-        drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     with caplog.at_level("ERROR"):
         drip_actions.send_in_drip("bad@example.com")
     assert "Failed to subscribe" in caplog.text
@@ -269,7 +257,7 @@ def test_send_in_drip_failure(monkeypatch, caplog):
 # --- subscriber_list.py ---
 
 
-def test_subscriber_list_success(monkeypatch):
+def test_subscriber_list_success(monkeypatch, mock_required_settings):
     class FakeResponse:
         def __init__(self):
             self._page = 1
@@ -288,14 +276,12 @@ def test_subscriber_list_success(monkeypatch):
         "requests",
         types.SimpleNamespace(get=lambda *a, **k: FakeResponse()),
     )
-    monkeypatch.setattr(
-        subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     result = subscriber_list.subscriber_list()
     assert result == ["a@example.com"]
 
 
-def test_subscriber_list_multipage(monkeypatch):
+def test_subscriber_list_multipage(monkeypatch, mock_required_settings):
     class FakeResponse:
         def __init__(self, page):
             self.page = page
@@ -326,9 +312,7 @@ def test_subscriber_list_multipage(monkeypatch):
     monkeypatch.setattr(
         subscriber_list, "requests", types.SimpleNamespace(get=fake_get)
     )
-    monkeypatch.setattr(
-        subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     result = subscriber_list.subscriber_list()
     assert set(result) == {"a@example.com", "b@example.com"}
     assert calls == [1, 2]
@@ -351,14 +335,11 @@ def test_subscriber_list_multipage(monkeypatch):
         "requests",
         types.SimpleNamespace(get=lambda *a, **k: FakeSimpleResponse()),
     )
-    monkeypatch.setattr(
-        subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
     result = subscriber_list.subscriber_list()
     assert result == ["a@example.com"]
 
 
-def test_subscriber_list_returns_full_objects(monkeypatch):
+def test_subscriber_list_returns_full_objects(monkeypatch, mock_required_settings):
     """Verify non-email-only tags return full subscriber dicts."""
 
     class FakeResponse:
@@ -378,15 +359,13 @@ def test_subscriber_list_returns_full_objects(monkeypatch):
         "requests",
         types.SimpleNamespace(get=lambda *a, **k: FakeResponse()),
     )
-    monkeypatch.setattr(
-        subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     result = subscriber_list.subscriber_list(tag="Daily Start Set")
     assert isinstance(result[0], dict)
     assert result[0]["email"] == "a@example.com"
 
 
-def test_subscriber_list_failure(monkeypatch):
+def test_subscriber_list_failure(monkeypatch, mock_required_settings):
     class FakeRequestException(Exception):
         pass
 
@@ -402,8 +381,6 @@ def test_subscriber_list_failure(monkeypatch):
         exceptions=types.SimpleNamespace(RequestException=FakeRequestException),
     )
     monkeypatch.setattr(subscriber_list, "requests", fake_requests)
-    monkeypatch.setattr(
-        subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
-    )
+    _set_drip_env(monkeypatch)
     result = subscriber_list.subscriber_list()
     assert result == []

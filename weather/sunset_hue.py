@@ -2,10 +2,11 @@
 Get and format a forecast as to the colorfulness of the sunset.
 """
 
-import os
 from datetime import datetime
 
 import requests
+
+from shared.settings import get_settings
 
 
 def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
@@ -25,7 +26,7 @@ def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
     url = f"https://api.sunsethue.com/event?latitude={lat}&longitude={long}&date={date}&type={forecast_type}"
 
     payload = {}
-    headers = {"x-api-key": os.environ.get("SUNSETHUE_KEY")}
+    headers = {"x-api-key": get_settings().SUNSETHUE_KEY}
 
     try:
         response = requests.get(url, headers=headers, data=payload, timeout=10)
@@ -58,7 +59,7 @@ def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from shared.env_loader import load_env
+    from dotenv import load_dotenv
 
-    load_env()
+    load_dotenv("email.env")
     get_sunset_hue(test=True)
