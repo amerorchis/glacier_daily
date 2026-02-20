@@ -45,12 +45,12 @@ def sleep_time():
 
     if timelapse_ready_in > MAX_WAIT_SECONDS:
         print(
-            f"WARNING: Computed sleep time ({round(timelapse_ready_in/60)} minutes) exceeds maximum wait of "
+            f"WARNING: Computed sleep time ({round(timelapse_ready_in / 60)} minutes) exceeds maximum wait of "
             f"{MAX_WAIT_SECONDS // 3600} hours. Skipping sleep."
         )
     elif timelapse_ready_in > 0:
         print(
-            f"Waiting {round(timelapse_ready_in/60)} minutes for timelapse to finish."
+            f"Waiting {round(timelapse_ready_in / 60)} minutes for timelapse to finish."
         )
         sleep(timelapse_ready_in)
 

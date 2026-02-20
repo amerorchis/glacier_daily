@@ -174,7 +174,6 @@ class TestSelectVideo:
         return_value=datetime(2025, 8, 21),
     )
     def test_select_video_first_fallback(self, mock_now):
-
         # Data without 'latest' entry
         data_no_latest = [
             {"date": "2025-08-20 07:19:06.770128"},

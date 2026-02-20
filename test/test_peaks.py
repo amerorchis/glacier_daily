@@ -88,7 +88,6 @@ def test_peak_sat_image_generation(mock_env_vars, sample_peak_data):
         patch("PIL.Image.open") as mock_open,
         patch("peak.sat.upload_peak", return_value="https://example.com/peak.jpg"),
     ):
-
         result = peak_sat(sample_peak_data)
 
         # Verify Mapbox API was called correctly

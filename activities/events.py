@@ -83,7 +83,7 @@ def events_today(now=None):
         )
         for deletion in deletions:
             loc = loc.replace(deletion, "")
-        link = f'http://www.nps.gov/planyourvisit/event-details.htm?id={event["id"]}'
+        link = f"http://www.nps.gov/planyourvisit/event-details.htm?id={event['id']}"
         return {
             "sortable": sortable,
             "string": f'<li style="font-size:12px; line-height:18px; color:#333333;">{start} - {end}: {name}, {loc} <a href="{link}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>',

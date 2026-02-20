@@ -52,7 +52,7 @@ def get_sunset_hue(test: bool = False) -> str:
     if quality < 0.41 or cloud_cover > 0.6:
         msg = ""
     else:
-        msg = f'The sunset is forecast to be {quality_text} this evening{"." if quality_text == "good" else "!"}'
+        msg = f"The sunset is forecast to be {quality_text} this evening{'.' if quality_text == 'good' else '!'}"
 
     return cloud_cover, quality_text, msg
 

@@ -142,7 +142,7 @@ class WeatherAlertService:
         seen_headlines = set()
 
         for alert in alerts[: self.MAX_ALERTS]:  # Apply temporary limit
-            text = f'{alert["headline"]}: {alert["description"]}'.replace(r"\n", "")
+            text = f"{alert['headline']}: {alert['description']}".replace(r"\n", "")
             issued_time = self.parse_alert_time(text)
             if not issued_time:
                 continue

@@ -267,10 +267,10 @@ def fetch_all_wikipedia_data() -> list[dict]:
         # Skip if already processed
         if key in existing:
             results.append(existing[key])
-            print(f"[{i+1}/{len(peaks)}] {peak['name']} - cached")
+            print(f"[{i + 1}/{len(peaks)}] {peak['name']} - cached")
             continue
 
-        print(f"[{i+1}/{len(peaks)}] {peak['name']} - fetching...", end=" ")
+        print(f"[{i + 1}/{len(peaks)}] {peak['name']} - fetching...", end=" ")
 
         article = find_wikipedia_article(session, peak)
 

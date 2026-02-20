@@ -215,7 +215,7 @@ def format_road_closures(roads: list[Road]) -> str:
     if len(entirely_closed) > 1:
         entirely_closed[-1] = f"and {entirely_closed[-1]}"
 
-        statuses.append(f'{", ".join(entirely_closed)} are closed in their entirety.')
+        statuses.append(f"{', '.join(entirely_closed)} are closed in their entirety.")
 
     elif len(entirely_closed) == 1:
         statuses.append(f"{entirely_closed[0]} is closed in its entirety.")

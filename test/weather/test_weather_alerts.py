@@ -133,9 +133,9 @@ class TestWeatherAlertService:
                 "affectedZones": ["https://api.weather.gov/zones/forecast/MTZ301"],
             }
         ]
-        alerts[0][
-            "headline"
-        ] = "High Wind Watch issued January 13 at 1:13PM MST"  # Add issued time
+        alerts[0]["headline"] = (
+            "High Wind Watch issued January 13 at 1:13PM MST"  # Add issued time
+        )
         result = weather_service.process_alerts(alerts)
         assert len(result) == 1
         assert isinstance(result[0], WeatherAlert)

@@ -36,7 +36,6 @@ def test_successful_retrieval(sample_json_data):
         patch("builtins.open", mock_file),
         patch("shared.retrieve_from_json.now_mountain", return_value=MockDateTime()),
     ):
-
         success, values = retrieve_from_json(["weather1", "peak", "roads"])
 
         assert success is True

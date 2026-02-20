@@ -57,7 +57,7 @@ def campground_alerts():
                 closures.append(f"{name} CG: currently closed.")
 
         notice = (
-            f'{i["description"]}'
+            f"{i['description']}"
             if i["description"]
             and (
                 "camping only" in i["description"].lower()
@@ -89,9 +89,9 @@ def campground_alerts():
 
     if season_closures:
         seasonal = (
-            [f'Closed for the season: {", ".join(season_closures)}']
+            [f"Closed for the season: {', '.join(season_closures)}"]
             if now_mountain().month >= 8
-            else [f'Not yet open for the season: {", ".join(season_closures)}']
+            else [f"Not yet open for the season: {', '.join(season_closures)}"]
         )
         statuses.extend(seasonal)
 

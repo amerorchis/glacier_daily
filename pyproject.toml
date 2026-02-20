@@ -33,10 +33,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black>=25.1.0",
     "pre-commit>=4.2.0",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "ruff>=0.9.7",
 ]
 
 [project.scripts]
@@ -44,15 +44,6 @@ glacier-daily = "main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["activities", "drip", "image_otd", "notices", "peak", "product_otd", "roads", "shared", "sunrise_timelapse", "trails_and_cgs", "weather"]
-
-[tool.black]
-line-length = 88
-target-version = ['py39']
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
 
 [tool.ruff]
 target-version = "py39"
@@ -69,11 +60,14 @@ select = [
     "SIM",   # flake8-simplify
 ]
 ignore = [
-    "E501",  # line too long (handled by black)
+    "E501",  # line too long (handled by formatter)
     "S101",  # use of assert (needed in tests)
     "S603",  # subprocess without shell=True check
     "S607",  # starting a process with a partial executable path
 ]
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.lint.per-file-ignores]
 "test/**/*.py" = ["S"]   # disable security warnings in tests

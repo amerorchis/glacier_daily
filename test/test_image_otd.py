@@ -50,7 +50,6 @@ def test_get_flickr_success(mock_env_vars, mock_flickr_response):
         patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
         patch("builtins.open", create=True) as mock_open,
     ):
-
         # Setup mock FlickrAPI
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
@@ -98,7 +97,6 @@ def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
         patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
         patch("builtins.open", create=True),
     ):
-
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
         MockFlickrAPI.return_value = mock_api
@@ -161,7 +159,6 @@ def test_upload_pic_otd_success():
         patch("image_otd.image_otd.upload_file") as mock_upload,
         patch("image_otd.image_otd.Path.exists", return_value=True),
     ):
-
         mock_upload.return_value = ("http://example.com/image.jpg", None)
         result = upload_pic_otd()
 
@@ -192,7 +189,6 @@ def test_resize_full_new_image(sample_image):
         patch("image_otd.image_otd.process_image") as mock_process,
         patch("image_otd.image_otd.upload_pic_otd") as mock_upload,
     ):
-
         # Setup mocks
         mock_get_flickr.return_value = FlickrImage(
             sample_image, "test_title", "test_link"
@@ -213,7 +209,6 @@ def test_resize_full_flickr_error():
         patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
         patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
     ):
-
         mock_get_flickr.side_effect = FlickrAPIError("API Error")
 
         with pytest.raises(FlickrAPIError):
@@ -226,7 +221,6 @@ def test_resize_full_processing_error(sample_image):
         patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
         patch("image_otd.image_otd.process_image") as mock_process,
     ):
-
         mock_get_flickr.return_value = FlickrImage(
             sample_image, "test_title", "test_link"
         )
