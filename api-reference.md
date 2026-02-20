@@ -91,11 +91,6 @@ Multiple endpoints on `carto.nps.gov`:
   - Web content hosting
 - Authentication: FTP credentials required
 
-### Webcam FTP Server
-
-- Purpose: Sunrise timelapse videos
-- Authentication: Separate FTP credentials required
-
 ## Google Services
 
 ### Google Sheets API
@@ -144,11 +139,15 @@ BC_STORE_HASH=your_store_hash
 FTP_USERNAME=your_ftp_username
 FTP_PASSWORD=your_ftp_password
 
-# Webcam FTP
-webcam_ftp_user=your_webcam_ftp_username
-webcam_ftp_pword=your_webcam_ftp_password
-timelapse_server=your_timelapse_server
+# Google Services
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service_account.json
+NOTICES_SPREADSHEET_ID=your_spreadsheet_id
+
+# Cloudflare Cache (optional)
+CACHE_PURGE=your_cloudflare_api_key
+ZONE_ID=your_cloudflare_zone_id
 
 # Other
 SUNSETHUE_KEY=your_sunsethue_key
+ENVIRONMENT=development  # "development" or "production"
 ```

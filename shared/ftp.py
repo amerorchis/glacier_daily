@@ -2,6 +2,7 @@
 This module provides FTP functionalities including deleting old files and uploading new files.
 """
 
+import contextlib
 import ftplib
 import os
 from datetime import datetime, timedelta
@@ -39,6 +40,58 @@ def delete_on_first(ftp: FTP) -> None:
 
             if file_modification_date < six_months_ago:
                 ftp.delete(file)
+
+
+class FTPSession:
+    """Reusable FTP session that holds one connection open
+    for multiple uploads."""
+
+    def __init__(self) -> None:
+        self._ftp: Optional[FTP] = None
+        self._cleaned_dirs: set[str] = set()
+
+    def __enter__(self) -> "FTPSession":
+        username = os.environ["FTP_USERNAME"]
+        password = os.environ["FTP_PASSWORD"]
+        server = "ftp.glacier.org"
+        self._ftp = FTP(server)  # noqa: S321
+        self._ftp.login(username, password)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        if self._ftp:
+            with contextlib.suppress(OSError, *ftplib.all_errors):
+                self._ftp.quit()
+            self._ftp = None
+
+    def upload(
+        self, directory: str, filename: str, file: Optional[str] = None
+    ) -> tuple[str, list[str]]:
+        """Upload a file reusing the existing connection. Runs delete_on_first once per directory."""
+        assert self._ftp is not None, "FTPSession must be used as a context manager"
+
+        self._ftp.cwd("/")
+        self._ftp.cwd(directory)
+
+        if directory not in self._cleaned_dirs:
+            delete_on_first(self._ftp)
+            self._cleaned_dirs.add(directory)
+
+        try:
+            if file:
+                temp_filename = f"{filename}.tmp"
+                with open(file, "rb") as f:
+                    self._ftp.storbinary("STOR " + temp_filename, f)
+                self._ftp.rename(temp_filename, filename)
+
+            files = self._ftp.nlst()
+            url = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
+        except Exception as e:
+            print(f"Failed upload {filename}: {e}")
+            files = []
+            url = ""
+
+        return url, files
 
 
 def upload_file(

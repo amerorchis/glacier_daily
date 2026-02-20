@@ -15,10 +15,11 @@ import requests
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
 from drip.html_friendly import html_safe
-from image_otd.image_otd import get_image_otd
+from image_otd.image_otd import get_image_otd, prepare_pic_otd
 from notices.notices import get_notices
 from peak.peak import peak
-from product_otd.product import get_product
+from peak.sat import prepare_peak_upload
+from product_otd.product import get_product, prepare_potd_upload
 from roads.hiker_biker import get_hiker_biker_status
 from roads.roads import get_road_status
 from shared.datetime_utils import (
@@ -26,23 +27,27 @@ from shared.datetime_utils import (
     format_date_readable,
     now_mountain,
 )
-from shared.ftp import upload_file
+from shared.ftp import FTPSession, upload_file
 from shared.logging_config import get_logger
 from sunrise_timelapse.get_timelapse import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
 from trails_and_cgs.trails import get_closed_trails
 from weather.weather import weather_data
-from weather.weather_img import weather_image
+from weather.weather_img import prepare_weather_upload, weather_image
 from web_version import web_version
 
 logger = get_logger(__name__)
 
 
-def gen_data():
+def gen_data(ftp_session=None):
     """
     Use threads to gather the data from every module, then store it in a dictionary.
     Make sure text is all HTML safe, then return it.
+
+    When ftp_session is provided, image uploads are deferred out of threads
+    and performed sequentially on the shared connection.
     """
+    defer = ftp_session is not None
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         weather_future = executor.submit(weather_data)
@@ -51,10 +56,10 @@ def gen_data():
         roads_future = executor.submit(get_road_status)
         hiker_biker_future = executor.submit(get_hiker_biker_status)
         events_future = executor.submit(events_today)
-        image_future = executor.submit(get_image_otd)
-        peak_future = executor.submit(peak)
+        image_future = executor.submit(get_image_otd, skip_upload=defer)
+        peak_future = executor.submit(peak, skip_upload=defer)
         sunrise_future = executor.submit(process_video)
-        product_future = executor.submit(get_product)
+        product_future = executor.submit(get_product, skip_upload=defer)
         notices_futures = executor.submit(get_notices)
 
         sunrise_vid, sunrise_still, sunrise_str = sunrise_future.result()
@@ -63,12 +68,25 @@ def gen_data():
         image_otd, image_otd_title, image_otd_link = image_future.result()
         peak_name, peak_img, peak_map = peak_future.result()
 
+    weather_img = weather_image(weather.results or [], skip_upload=defer)
+
+    # Upload all images on the shared FTP session
+    if ftp_session:
+        if image_otd is None:
+            image_otd, _ = ftp_session.upload(*prepare_pic_otd())
+        if peak_img is None:
+            peak_img, _ = ftp_session.upload(*prepare_peak_upload())
+        if potd_image is None:
+            potd_image, _ = ftp_session.upload(*prepare_potd_upload())
+        if weather_img is None:
+            weather_img, _ = ftp_session.upload(*prepare_weather_upload())
+
     drip_template_fields = {
         "date": now_mountain().strftime("%Y-%m-%d"),
         "today": format_date_readable(now_mountain()),
         "events": events_future.result(),
         "weather1": weather.message1,
-        "weather_image": weather_image(weather.results or []),
+        "weather_image": weather_img,
         "weather2": weather.message2,
         "season": weather.season,
         "trails": trails_future.result(),
@@ -179,15 +197,20 @@ def clear_cache():
 def serve_api(force: bool = False):
     """
     Get the data, then upload it to server for API.
+    Uses a single FTP session for all uploads.
     """
     if force:
         clear_cache()
-    data = gen_data()
-    web = web_version(data)
-    printable = web_version(data, "server/printable.html", "printable.html")
-    send_to_server(write_data_to_json(data, "email.json"), "api")
-    send_to_server(web, "email")
-    send_to_server(printable, "printable")
+
+    with FTPSession() as ftp:
+        data = gen_data(ftp_session=ftp)
+        web = web_version(data)
+        printable = web_version(data, "server/printable.html", "printable.html")
+        json_file = write_data_to_json(data, "email.json")
+        ftp.upload("api", json_file.split("/")[-1], json_file)
+        ftp.upload("email", web.split("/")[-1], web)
+        ftp.upload("printable", printable.split("/")[-1], printable)
+
     purge_cache()
     sleep(3)  # Wait for cache to purge
     refresh_cache()

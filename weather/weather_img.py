@@ -5,6 +5,8 @@ The module creates weather maps with temperature and condition overlays for vari
 locations within the park, then uploads them to an FTP server.
 """
 
+from typing import Optional
+
 from PIL import Image, ImageDraw, ImageFont
 
 from shared.datetime_utils import format_date_readable, now_mountain
@@ -23,18 +25,22 @@ DIMENSIONS: dict[str, tuple[float, float]] = {
 }
 
 
+def prepare_weather_upload() -> tuple[str, str, str]:
+    """Return (directory, filename, local_path) for weather image upload."""
+    today = now_mountain()
+    filename = f"{today.month}_{today.day}_{today.year}_today_park_map.png"
+    return "weather", filename, "email_images/today/today_park_map.png"
+
+
 def upload_weather() -> str:
     """
-    Upload the product image to the glacier.org ftp server.
+    Upload the weather image to the glacier.org ftp server.
 
     Returns:
         str: Address of the uploaded image.
     """
-    today = now_mountain()
-    filename = f"{today.month}_{today.day}_{today.year}_today_park_map.png"
-    file = "email_images/today/today_park_map.png"
-    directory = "weather"
-    address, _ = upload_file(directory, filename, file)
+    directory, filename, local_path = prepare_weather_upload()
+    address, _ = upload_file(directory, filename, local_path)
     return address
 
 
@@ -74,7 +80,9 @@ def _get_base_image(season: str) -> Image.Image:
         raise FileNotFoundError(f"Base map not found: {image_path}") from e
 
 
-def weather_image(results: list[tuple[str, int, int, str]]) -> str:
+def weather_image(
+    results: list[tuple[str, int, int, str]], skip_upload: bool = False
+) -> Optional[str]:
     """
     Create a weather image based on the provided forecast results and upload it.
 
@@ -132,6 +140,8 @@ def weather_image(results: list[tuple[str, int, int, str]]) -> str:
     except OSError as e:
         raise OSError(f"Failed to save image: {e}") from e
 
+    if skip_upload:
+        return None
     return upload_weather()
 
 

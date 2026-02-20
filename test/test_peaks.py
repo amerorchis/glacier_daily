@@ -7,7 +7,7 @@ import requests
 from PIL import Image
 
 from peak.peak import _get_peak_summary, peak
-from peak.sat import peak_sat, upload_peak
+from peak.sat import peak_sat, prepare_peak_upload, upload_peak
 
 
 @pytest.fixture
@@ -136,6 +136,29 @@ def test_upload_peak(mock_env_vars):
             "peak", expected_filename, "email_images/today/peak.jpg"
         )
         assert result == "https://example.com/peak.jpg"
+
+
+def test_peak_sat_skip_upload(mock_env_vars, sample_peak_data):
+    """Test peak_sat with skip_upload=True returns None on success."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.content = b"test_image_content"
+
+    with (
+        patch("requests.get", return_value=mock_response),
+        patch("PIL.Image.open") as mock_open,
+    ):
+        result = peak_sat(sample_peak_data, skip_upload=True)
+        assert result is None
+        mock_open.return_value.save.assert_called_once()
+
+
+def test_prepare_peak_upload():
+    """Test prepare_peak_upload returns correct tuple."""
+    directory, filename, local_path = prepare_peak_upload()
+    assert directory == "peak"
+    assert filename.endswith("_peak.jpg")
+    assert local_path == "email_images/today/peak.jpg"
 
 
 def test_peak_with_invalid_coordinates(mock_env_vars):

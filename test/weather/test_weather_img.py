@@ -7,7 +7,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PIL import Image
 
-from weather.weather_img import _validate_input, upload_weather, weather_image
+from weather.weather_img import (
+    _validate_input,
+    prepare_weather_upload,
+    upload_weather,
+    weather_image,
+)
 
 
 @pytest.fixture
@@ -129,6 +134,35 @@ def test_weather_image_long_condition(
     # Verify font was recreated with smaller size
     assert mock_font.call_count > 1
     assert mock_image.save.called
+
+
+def test_prepare_weather_upload():
+    """Test prepare_weather_upload returns correct tuple."""
+    directory, filename, local_path = prepare_weather_upload()
+    assert directory == "weather"
+    assert filename.endswith("_today_park_map.png")
+    assert local_path == "email_images/today/today_park_map.png"
+
+
+@patch("weather.weather_img.Image.open")
+@patch("weather.weather_img.ImageDraw.Draw")
+@patch("weather.weather_img.ImageFont.truetype")
+@patch("weather.weather_img.get_season")
+def test_weather_image_skip_upload(
+    mock_season, mock_font, mock_draw, mock_open, sample_weather_data
+):
+    """Test weather_image with skip_upload=True returns None."""
+    mock_season.return_value = "summer"
+    mock_image = MagicMock()
+    mock_open.return_value = mock_image
+    mock_image.resize.return_value = mock_image
+    mock_draw_obj = MagicMock()
+    mock_draw.return_value = mock_draw_obj
+    mock_draw_obj.textlength.return_value = 50
+    mock_font.return_value = MagicMock()
+
+    result = weather_image(sample_weather_data, skip_upload=True)
+    assert result is None
 
 
 def test_empty_results():

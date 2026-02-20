@@ -20,15 +20,19 @@ from shared.retrieve_from_json import retrieve_from_json
 load_env()
 
 
+def prepare_potd_upload() -> tuple[str, str, str]:
+    """Return (directory, filename, local_path) for product image upload."""
+    today = now_mountain()
+    filename = f"{today.month}_{today.day}_{today.year}_product_otd.jpg"
+    return "product", filename, "email_images/today/product_otd.jpg"
+
+
 def upload_potd():
     """
     Upload the product image to the glacier.org ftp server.
     """
-    today = now_mountain()
-    filename = f"{today.month}_{today.day}_{today.year}_product_otd.jpg"
-    file = "email_images/today/product_otd.jpg"
-    directory = "product"
-    address, _ = upload_file(directory, filename, file)
+    directory, filename, local_path = prepare_potd_upload()
+    address, _ = upload_file(directory, filename, local_path)
     return address
 
 
@@ -77,7 +81,7 @@ def resize_image(url):
     canvas.save("email_images/today/product_otd.jpg")
 
 
-def get_product():
+def get_product(skip_upload: bool = False):
     """
     Grab a random product from the BigCommerce API.
     """
@@ -181,7 +185,8 @@ def get_product():
 
     # Resize and upload the image retrieved
     resize_image(product_data["image_url"])
-    image_url = upload_potd()
+
+    image_url = None if skip_upload else upload_potd()
 
     return (
         product_data["name"],

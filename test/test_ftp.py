@@ -3,7 +3,10 @@ import types as _types
 from datetime import datetime, timedelta
 from unittest.mock import mock_open, patch
 
+import pytest
+
 import shared.ftp as ftp_mod
+from shared.ftp import FTPSession
 
 
 def test_delete_on_first(monkeypatch):
@@ -251,3 +254,134 @@ def test_upload_file_no_file_param(monkeypatch):
     url, files = ftp_mod.upload_file("dir", "file.txt")
     assert url == ""
     assert "existing.txt" in files
+
+
+class TestFTPSession:
+    """Tests for the FTPSession context manager."""
+
+    def _make_dummy_ftp(self):
+        class DummyFTP:
+            def __init__(self):
+                self.cwd_calls = []
+                self.quit_called = False
+
+            def login(self, u, p):
+                pass
+
+            def cwd(self, d):
+                self.cwd_calls.append(d)
+
+            def storbinary(self, cmd, f):
+                pass
+
+            def nlst(self):
+                return ["file1"]
+
+            def quit(self):
+                self.quit_called = True
+
+            def size(self, f):
+                return 1
+
+            def sendcmd(self, cmd):
+                return "213 20240101000000"
+
+            def delete(self, f):
+                pass
+
+            def rename(self, old_name, new_name):
+                pass
+
+        return DummyFTP()
+
+    def test_session_upload(self, monkeypatch):
+        """Test basic upload through FTPSession."""
+        dummy = self._make_dummy_ftp()
+        monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
+        monkeypatch.setattr(
+            ftp_mod.os, "environ", {"FTP_USERNAME": "u", "FTP_PASSWORD": "p"}
+        )
+        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+
+        with (
+            FTPSession() as session,
+            patch("builtins.open", mock_open(read_data=b"data")),
+        ):
+            url, files = session.upload("dir", "file.txt", "local.txt")
+
+        assert url.startswith("https://glacier.org/")
+        assert "file1" in files
+        assert dummy.quit_called
+
+    def test_session_resets_cwd_to_root(self, monkeypatch):
+        """Test that each upload resets to root before changing directory."""
+        dummy = self._make_dummy_ftp()
+        monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
+        monkeypatch.setattr(
+            ftp_mod.os, "environ", {"FTP_USERNAME": "u", "FTP_PASSWORD": "p"}
+        )
+        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+
+        with (
+            FTPSession() as session,
+            patch("builtins.open", mock_open(read_data=b"data")),
+        ):
+            session.upload("dir1", "a.txt", "local.txt")
+            session.upload("dir2", "b.txt", "local.txt")
+
+        assert dummy.cwd_calls == ["/", "dir1", "/", "dir2"]
+
+    def test_delete_on_first_runs_once_per_dir(self, monkeypatch):
+        """Test that delete_on_first runs only once per directory."""
+        dummy = self._make_dummy_ftp()
+        monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
+        monkeypatch.setattr(
+            ftp_mod.os, "environ", {"FTP_USERNAME": "u", "FTP_PASSWORD": "p"}
+        )
+        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+
+        delete_count = {"count": 0}
+
+        def counting_delete(ftp):
+            delete_count["count"] += 1
+
+        monkeypatch.setattr(ftp_mod, "delete_on_first", counting_delete)
+
+        with (
+            FTPSession() as session,
+            patch("builtins.open", mock_open(read_data=b"data")),
+        ):
+            session.upload("dir1", "a.txt", "local.txt")
+            session.upload("dir1", "b.txt", "local.txt")
+            session.upload("dir2", "c.txt", "local.txt")
+
+        assert delete_count["count"] == 2
+
+    def test_session_closes_on_exception(self, monkeypatch):
+        """Test that FTPSession closes connection even on upload error."""
+        dummy = self._make_dummy_ftp()
+        monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
+        monkeypatch.setattr(
+            ftp_mod.os, "environ", {"FTP_USERNAME": "u", "FTP_PASSWORD": "p"}
+        )
+        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+
+        with pytest.raises(RuntimeError), FTPSession() as _session:
+            raise RuntimeError("test error")
+
+        assert dummy.quit_called
+
+    def test_session_upload_without_file(self, monkeypatch):
+        """Test FTPSession.upload with file=None (list only)."""
+        dummy = self._make_dummy_ftp()
+        monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
+        monkeypatch.setattr(
+            ftp_mod.os, "environ", {"FTP_USERNAME": "u", "FTP_PASSWORD": "p"}
+        )
+        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+
+        with FTPSession() as session:
+            url, files = session.upload("dir", "file.txt")
+
+        assert url == ""
+        assert "file1" in files
