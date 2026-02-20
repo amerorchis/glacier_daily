@@ -112,9 +112,10 @@ _settings: Optional[Settings] = None
 def get_settings() -> Settings:
     """Return the application settings singleton.
 
-    On the first call, loads ``email.env`` (if present) and then
-    constructs a ``Settings`` from ``os.environ``.  Subsequent calls
-    return the cached instance.
+    On the first call, loads ``config.env`` (machine-local config like
+    ENVIRONMENT) and ``email.env`` (secrets, decrypted from
+    ``email.enc.env`` on the Pi) and then constructs a ``Settings``
+    from ``os.environ``.  Subsequent calls return the cached instance.
 
     ``load_dotenv`` uses ``override=False`` by default, so pre-existing
     env vars (e.g. those set by CI workflows or test fixtures) are
@@ -125,9 +126,10 @@ def get_settings() -> Settings:
         try:
             from dotenv import load_dotenv
 
+            load_dotenv("config.env")
             load_dotenv("email.env")
         except Exception:
-            logger.debug("Could not load email.env; relying on existing env vars")
+            logger.debug("Could not load env files; relying on existing env vars")
         _settings = Settings.from_env()
     return _settings
 

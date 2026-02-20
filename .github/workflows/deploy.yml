@@ -46,6 +46,11 @@ jobs:
             NEW_COMMIT=$(git rev-parse HEAD)
             echo "New commit: $NEW_COMMIT"
 
+            # Decrypt secrets
+            echo "==> Decrypting secrets"
+            sops decrypt --input-type dotenv --output-type dotenv email.enc.env > email.env
+            chmod 600 email.env
+
             # Update dependencies
             echo "==> Updating dependencies with uv"
             /home/pi/.local/bin/uv sync
@@ -61,6 +66,8 @@ jobs:
               echo "Health check failed - generate_and_upload.py failed"
               echo "==> Rolling back to commit $CURRENT_COMMIT"
               git reset --hard $CURRENT_COMMIT
+              sops decrypt --input-type dotenv --output-type dotenv email.enc.env > email.env
+              chmod 600 email.env
               /home/pi/.local/bin/uv sync
               echo "Rolled back to previous version"
               exit 1
