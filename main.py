@@ -10,8 +10,6 @@ from time import sleep
 
 from dotenv import load_dotenv
 
-load_dotenv("email.env")
-
 from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
@@ -31,6 +29,7 @@ def main(
         tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
         force (bool): Clear cached data and re-fetch everything fresh.
     """
+    load_dotenv("email.env")
     setup_logging()
     validate_config()
 

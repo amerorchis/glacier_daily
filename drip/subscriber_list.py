@@ -2,11 +2,10 @@
 This module provides a function to retrieve a list of subscribers from the Drip email marketing platform.
 """
 
-import os
-
 import requests
 
 from shared.logging_config import get_logger
+from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
@@ -21,13 +20,11 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
     Returns:
         list: A list of subscriber emails or subscriber data.
     """
-    drip_token = os.environ["DRIP_TOKEN"]
-    account_id = os.environ["DRIP_ACCOUNT"]
-    api_key = drip_token
-    url = f"https://api.getdrip.com/v2/{account_id}/subscribers"
+    settings = get_settings()
+    url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/subscribers"
 
     headers = {
-        "Authorization": "Bearer " + api_key,
+        "Authorization": "Bearer " + settings.DRIP_TOKEN,
         "Content-Type": "application/vnd.api+json",
     }
 

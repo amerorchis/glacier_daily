@@ -7,24 +7,12 @@ import time
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime
-from os import environ
 from pathlib import Path
 from urllib.error import URLError
 
 from flickrapi import FlickrAPI
 
-
-def get_env_vars() -> dict[str, str]:
-    """Get required environment variables."""
-    required_vars = ["flickr_key", "flickr_secret", "glaciernps_uid"]
-    env_vars = {}
-
-    for var in required_vars:
-        if var not in environ:
-            raise FlickrAPIError(f"Missing environment variable: {var}")
-        env_vars[var] = environ[var]
-
-    return env_vars
+from shared.settings import get_settings
 
 
 class FlickrAPIError(Exception):
@@ -56,24 +44,24 @@ def get_flickr() -> FlickrImage:
         URLError: If image download fails
     """
     try:
-        env_vars = get_env_vars()
+        settings = get_settings()
         flickr = FlickrAPI(
-            env_vars["flickr_key"], env_vars["flickr_secret"], format="parsed-json"
+            settings.flickr_key, settings.flickr_secret, format="parsed-json"
         )
-        photos = flickr.photos.search(user_id=environ["glaciernps_uid"], per_page="1")
+        photos = flickr.photos.search(user_id=settings.glaciernps_uid, per_page="1")
         total = int(photos["photos"]["total"])
 
         random.seed(datetime.today().strftime("%Y:%m:%d"))
         potd_num = random.randint(1, total)  # noqa: S311
         photos = flickr.photos.search(
-            user_id=environ["glaciernps_uid"], per_page="1", page=potd_num
+            user_id=settings.glaciernps_uid, per_page="1", page=potd_num
         )
 
         # Retry if no photos found
         while len(photos["photos"]["photo"]) == 0:
             potd_num = random.randint(1, total)  # noqa: S311
             photos = flickr.photos.search(
-                user_id=environ["glaciernps_uid"], per_page="1", page=potd_num
+                user_id=settings.glaciernps_uid, per_page="1", page=potd_num
             )
 
         selected = photos["photos"]["photo"][0]

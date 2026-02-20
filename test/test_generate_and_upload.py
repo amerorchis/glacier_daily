@@ -250,7 +250,7 @@ def test_gen_data_module_exception_handling(monkeypatch):
         gau.gen_data()
 
 
-def test_purge_cache_success(monkeypatch):
+def test_purge_cache_success(monkeypatch, mock_required_settings):
     # Mock environment variables
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.setenv("ZONE_ID", "test_zone")
@@ -276,7 +276,7 @@ def test_purge_cache_success(monkeypatch):
         )
 
 
-def test_purge_cache_failure(monkeypatch):
+def test_purge_cache_failure(monkeypatch, mock_required_settings):
     # Mock environment variables
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.setenv("ZONE_ID", "test_zone")
@@ -290,7 +290,7 @@ def test_purge_cache_failure(monkeypatch):
         gau.purge_cache()  # Should not raise, just print error
 
 
-def test_purge_cache_missing_env_vars(monkeypatch):
+def test_purge_cache_missing_env_vars(monkeypatch, mock_required_settings):
     # Ensure environment variables are not set
     monkeypatch.delenv("CACHE_PURGE", raising=False)
     monkeypatch.delenv("ZONE_ID", raising=False)
@@ -301,7 +301,7 @@ def test_purge_cache_missing_env_vars(monkeypatch):
         mock_post.assert_not_called()
 
 
-def test_purge_cache_partial_env_vars(monkeypatch):
+def test_purge_cache_partial_env_vars(monkeypatch, mock_required_settings):
     # Set only one environment variable
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.delenv("ZONE_ID", raising=False)
@@ -347,7 +347,7 @@ def test_refresh_cache_request_exception():
         gau.refresh_cache()  # Should not raise, just print error
 
 
-def test_purge_cache_request_exception(monkeypatch):
+def test_purge_cache_request_exception(monkeypatch, mock_required_settings):
     """Verify purge_cache propagates RequestException (no try/except)."""
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.setenv("ZONE_ID", "test_zone")

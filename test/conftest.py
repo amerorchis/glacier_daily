@@ -9,9 +9,36 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from shared.settings import reset_settings
+
+# ============================================================================
+# Settings Fixtures
+# ============================================================================
+
+
+@pytest.fixture(autouse=True)
+def _reset_settings():
+    """Reset the settings singleton before each test so monkeypatched
+    env vars are picked up by get_settings()."""
+    reset_settings()
+    yield
+    reset_settings()
+
+
 # ============================================================================
 # Environment Variable Fixtures
 # ============================================================================
+
+
+@pytest.fixture
+def mock_required_settings(monkeypatch):
+    """Set the six required env vars so get_settings() succeeds."""
+    monkeypatch.setenv("NPS", "test_nps_key")
+    monkeypatch.setenv("DRIP_TOKEN", "test_drip_token")
+    monkeypatch.setenv("DRIP_ACCOUNT", "test_drip_account")
+    monkeypatch.setenv("FTP_USERNAME", "test_ftp_user")
+    monkeypatch.setenv("FTP_PASSWORD", "test_ftp_pass")
+    monkeypatch.setenv("MAPBOX_TOKEN", "test_mapbox_token")
 
 
 @pytest.fixture

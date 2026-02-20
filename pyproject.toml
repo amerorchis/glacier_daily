@@ -73,7 +73,6 @@ docstring-code-format = true
 
 [tool.ruff.lint.per-file-ignores]
 "test/**/*.py" = ["S"]   # disable security warnings in tests
-"main.py" = ["E402"]     # load_dotenv must run before project imports
 
 [tool.ty.environment]
 python-version = "3.9"

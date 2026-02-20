@@ -4,7 +4,6 @@ then return a description, link to product, and link to photo.
 """
 
 import json
-import os
 import random
 from io import BytesIO
 from re import sub
@@ -13,11 +12,9 @@ import requests
 from PIL import Image
 
 from shared.datetime_utils import now_mountain
-from shared.env_loader import load_env
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json
-
-load_env()
+from shared.settings import get_settings
 
 
 def prepare_potd_upload() -> tuple[str, str, str]:
@@ -92,14 +89,13 @@ def get_product(skip_upload: bool = False):
         return keys
 
     # Connect to API
-    bc_token = os.environ["BC_TOKEN"]
-    store_hash = os.environ["BC_STORE_HASH"]
+    settings = get_settings()
     url = (
-        f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products?"
+        f"https://api.bigcommerce.com/stores/{settings.BC_STORE_HASH}/v3/catalog/products?"
         "inventory_level:min=1&is_visible=true"
     )
     header = {
-        "X-Auth-Token": bc_token,
+        "X-Auth-Token": settings.BC_TOKEN,
     }
 
     # Figure out total number of products
@@ -125,7 +121,7 @@ def get_product(skip_upload: bool = False):
 
         # Retrieve item from response.
         new_url = (
-            f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products?"
+            f"https://api.bigcommerce.com/stores/{settings.BC_STORE_HASH}/v3/catalog/products?"
             f"inventory_level:min=1&is_visible=true&page={product_page}"
         )
         r = requests.get(url=new_url, headers=header, timeout=12)
@@ -155,7 +151,7 @@ def get_product(skip_upload: bool = False):
         # Get image url
         item_url = f"https://shop.glacier.org{item['custom_url']['url']}"
         get_image_url = (
-            f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products/"
+            f"https://api.bigcommerce.com/stores/{settings.BC_STORE_HASH}/v3/catalog/products/"
             f"{item['id']}/images"
         )
         r = requests.get(url=get_image_url, headers=header, timeout=12)

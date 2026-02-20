@@ -8,10 +8,7 @@ from typing import Optional
 import requests
 
 from shared.datetime_utils import now_mountain
-from shared.env_loader import load_env
 from shared.retrieve_from_json import retrieve_from_json
-
-load_env()
 
 
 class TimelapseError(Exception):

@@ -108,7 +108,7 @@ class TestModuleReturnTypes:
             result = get_hiker_biker_status()
             assert isinstance(result, str), "get_hiker_biker_status should return str"
 
-    def test_events_today_returns_string(self):
+    def test_events_today_returns_string(self, mock_required_settings):
         """Verify events_today returns a string."""
         # Mock requests.get to return empty data
         mock_response = Mock()

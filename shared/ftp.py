@@ -4,12 +4,12 @@ This module provides FTP functionalities including deleting old files and upload
 
 import contextlib
 import ftplib
-import os
 from datetime import datetime, timedelta
 from ftplib import FTP
 from typing import Optional
 
 from shared.datetime_utils import now_mountain
+from shared.settings import get_settings
 
 
 def delete_on_first(ftp: FTP) -> None:
@@ -51,11 +51,9 @@ class FTPSession:
         self._cleaned_dirs: set[str] = set()
 
     def __enter__(self) -> "FTPSession":
-        username = os.environ["FTP_USERNAME"]
-        password = os.environ["FTP_PASSWORD"]
-        server = "ftp.glacier.org"
-        self._ftp = FTP(server)  # noqa: S321
-        self._ftp.login(username, password)
+        settings = get_settings()
+        self._ftp = FTP(settings.FTP_SERVER)  # noqa: S321
+        self._ftp.login(settings.FTP_USERNAME, settings.FTP_PASSWORD)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -109,13 +107,11 @@ def upload_file(
     Returns:
         tuple: A tuple containing the URL of the uploaded file and a list of files in the directory.
     """
-    username = os.environ["FTP_USERNAME"]
-    password = os.environ["FTP_PASSWORD"]
-    server = "ftp.glacier.org"
+    settings = get_settings()
 
     # Connect to the FTP server
-    ftp = FTP(server)  # noqa: S321
-    ftp.login(username, password)
+    ftp = FTP(settings.FTP_SERVER)  # noqa: S321
+    ftp.login(settings.FTP_USERNAME, settings.FTP_PASSWORD)
 
     ftp.cwd(directory)
     delete_on_first(ftp)

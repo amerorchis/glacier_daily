@@ -2,7 +2,6 @@
 Generate a static image of peak of the day using Mapbox API and upload to website.
 """
 
-import os
 from io import BytesIO
 from typing import Optional
 
@@ -11,10 +10,8 @@ import requests
 from PIL import Image
 
 from shared.datetime_utils import now_mountain
-from shared.env_loader import load_env
 from shared.ftp import upload_file
-
-load_env()
+from shared.settings import get_settings
 
 
 def prepare_peak_upload() -> tuple[str, str, str]:
@@ -39,24 +36,17 @@ def peak_sat(peak: dict, skip_upload: bool = False) -> Optional[str]:
     Use mapbox API to get peak image, then send to FTP function.
     return: URL of peak image/header.
     """
+    settings = get_settings()
     lat, lon = peak["lat"], peak["lon"]
 
     # These settings tend to get best peak image
     zoom = 14
     bearing = 0
     dimensions = "1020x600@2x"
-    access_token = os.environ["MAPBOX_TOKEN"]
-
-    # This uses a custom mapbox style from your account, the default works fine if you
-    # haven't set one.
-    mapbox_account = os.environ.get("MAPBOX_ACCOUNT", "mapbox")
-    mapbox_style = os.environ.get("MAPBOX_STYLE", "satellite-streets-v12")
 
     # Construct url and get image.
-    base_url = (
-        f"https://api.mapbox.com/styles/v1/{mapbox_account}/{mapbox_style}/static/"
-    )
-    url_params = f"{lon},{lat},{zoom},{bearing}/{dimensions}?access_token={access_token}&logo=false"
+    base_url = f"https://api.mapbox.com/styles/v1/{settings.MAPBOX_ACCOUNT}/{settings.MAPBOX_STYLE}/static/"
+    url_params = f"{lon},{lat},{zoom},{bearing}/{dimensions}?access_token={settings.MAPBOX_TOKEN}&logo=false"
     try:
         r = requests.get(f"{base_url}{url_params}", timeout=10)
 

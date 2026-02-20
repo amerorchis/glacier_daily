@@ -6,21 +6,12 @@ attempts to use them, providing clear error messages at startup rather than
 cryptic failures mid-execution.
 """
 
-import os
 import sys
 
 from shared.logging_config import get_logger
+from shared.settings import ConfigError, get_settings
 
 logger = get_logger(__name__)
-
-REQUIRED_VARS = [
-    "NPS",
-    "DRIP_TOKEN",
-    "DRIP_ACCOUNT",
-    "FTP_USERNAME",
-    "FTP_PASSWORD",
-    "MAPBOX_TOKEN",
-]
 
 OPTIONAL_VARS = [
     "CACHE_PURGE",
@@ -35,13 +26,27 @@ def validate_config() -> None:
     Logs warnings for optional variables that are missing.
     Exits with an error if any required variables are missing.
     """
+    try:
+        settings = get_settings()
+    except ConfigError as exc:
+        logger.error(str(exc))
+        sys.exit(1)
+
+    # Check that required fields are not empty strings
     missing_required = []
-    for var in REQUIRED_VARS:
-        if not os.environ.get(var):
-            missing_required.append(var)
+    for name in (
+        "NPS",
+        "DRIP_TOKEN",
+        "DRIP_ACCOUNT",
+        "FTP_USERNAME",
+        "FTP_PASSWORD",
+        "MAPBOX_TOKEN",
+    ):
+        if not getattr(settings, name):
+            missing_required.append(name)
 
     for var in OPTIONAL_VARS:
-        if not os.environ.get(var):
+        if not getattr(settings, var):
             logger.warning(f"Optional environment variable {var} is not set.")
 
     if missing_required:

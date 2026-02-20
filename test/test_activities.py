@@ -15,7 +15,7 @@ from activities.gnpc_events import (
 
 
 @pytest.fixture
-def mock_nps_api(monkeypatch):
+def mock_nps_api(monkeypatch, mock_required_settings):
     """Mock NPS Events API at the module level."""
     monkeypatch.setenv("NPS", "fake_nps_key")
     with patch("activities.events.requests.get") as mock_get:

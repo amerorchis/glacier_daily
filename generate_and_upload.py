@@ -29,6 +29,7 @@ from shared.datetime_utils import (
 )
 from shared.ftp import FTPSession, upload_file
 from shared.logging_config import get_logger
+from shared.settings import get_settings
 from sunrise_timelapse.get_timelapse import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
 from trails_and_cgs.trails import get_closed_trails
@@ -150,8 +151,9 @@ def purge_cache():
     """
     Purge the Cloudflare cache for the site.
     """
-    purge_key = os.getenv("CACHE_PURGE")
-    zone_id = os.getenv("ZONE_ID")
+    settings = get_settings()
+    purge_key = settings.CACHE_PURGE
+    zone_id = settings.ZONE_ID
     if not purge_key or not zone_id:
         logger.warning("No CACHE_PURGE key or ZONE_ID set, skipping cache purge.")
         return
@@ -234,7 +236,7 @@ if __name__ == "__main__":  # pragma: no cover
     if _args.force:
         clear_cache()
 
-    environment = os.getenv("ENVIRONMENT", "development")
+    environment = get_settings().ENVIRONMENT
     if environment == "development":
         gen_data()
     elif environment == "production":
