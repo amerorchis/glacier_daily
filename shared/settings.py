@@ -7,8 +7,11 @@ instead of reading ``os.environ`` directly.
 """
 
 import dataclasses
+import logging
 import os
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigError(Exception):
@@ -56,6 +59,10 @@ class Settings:
     def from_env(cls) -> "Settings":
         """Build a ``Settings`` instance from ``os.environ``.
 
+        This is a **pure** function — it only reads ``os.environ`` and
+        never loads files.  Call ``get_settings()`` instead for the
+        full workflow (load env file, then build Settings).
+
         For each field, the value is read from the environment variable
         with the same name. Fields that have a default in the dataclass
         use that default when the environment variable is unset or empty.
@@ -64,6 +71,7 @@ class Settings:
             ConfigError: If any required field (no default) is missing
                 from the environment.
         """
+
         fields = dataclasses.fields(cls)
         kwargs: dict[str, str] = {}
         missing: list[str] = []
@@ -104,11 +112,22 @@ _settings: Optional[Settings] = None
 def get_settings() -> Settings:
     """Return the application settings singleton.
 
-    The first call constructs a ``Settings`` from ``os.environ``.
-    Subsequent calls return the cached instance.
+    On the first call, loads ``email.env`` (if present) and then
+    constructs a ``Settings`` from ``os.environ``.  Subsequent calls
+    return the cached instance.
+
+    ``load_dotenv`` uses ``override=False`` by default, so pre-existing
+    env vars (e.g. those set by CI workflows or test fixtures) are
+    never overwritten.
     """
     global _settings
     if _settings is None:
+        try:
+            from dotenv import load_dotenv
+
+            load_dotenv("email.env")
+        except Exception:
+            logger.debug("Could not load email.env; relying on existing env vars")
         _settings = Settings.from_env()
     return _settings
 

@@ -59,7 +59,4 @@ def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from dotenv import load_dotenv
-
-    load_dotenv("email.env")
     get_sunset_hue(test=True)

@@ -137,7 +137,7 @@ uv run python -W ignore -m peak.peak
 - `sunrise_timelapse/` - Video processing and timelapse compilation
 - `notices/` - Administrative notices from Google Sheets
 - `drip/` - Email delivery and subscriber management
-- `shared/` - FTP operations, retry mechanisms, config validation, logging, utilities
+- `shared/` - FTP operations, retry mechanisms, centralized settings, config validation, logging, utilities
 - `server/` - PHP templates and web interface components
 - `frontend_files/` - JavaScript and PHP for the web interface
 

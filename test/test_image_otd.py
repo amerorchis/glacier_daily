@@ -74,11 +74,15 @@ def test_get_flickr_success(mock_env_vars, mock_flickr_response):
         assert isinstance(result.path, Path)
 
 
-def test_get_flickr_missing_env_var():
+def test_get_flickr_missing_env_var(mock_required_settings):
+    # Flickr vars are "" from conftest seeding — FlickrAPI will fail with empty creds
     with (
-        patch.dict("os.environ", {}, clear=True),
-        pytest.raises(FlickrAPIError, match="Missing required environment variables"),
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        pytest.raises(FlickrAPIError),
     ):
+        MockFlickrAPI.return_value.photos.search.side_effect = Exception(
+            "Invalid API Key"
+        )
         get_flickr()
 
 

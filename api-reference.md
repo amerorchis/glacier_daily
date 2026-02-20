@@ -111,43 +111,47 @@ Multiple endpoints on `carto.nps.gov`:
 - Weather codes: `weather/descriptions.json`
 - Cached data: `server/email.json`
 
-## Required Environment Variables
+## Environment Variables
+
+All environment variables are defined in `email.env` and accessed through the centralized `Settings` dataclass in `shared/settings.py`. Modules use `get_settings()` instead of reading `os.environ` directly.
+
+### Required (app exits at startup if missing)
 
 ```bash
-# NPS
 NPS=your_nps_api_key
-
-# Drip Email
 DRIP_TOKEN=your_drip_token
 DRIP_ACCOUNT=your_drip_account_id
+FTP_USERNAME=your_ftp_username
+FTP_PASSWORD=your_ftp_password
+MAPBOX_TOKEN=your_mapbox_token
+```
 
-# Flickr
+### Service Keys (default to empty string; modules degrade gracefully if missing)
+
+```bash
 flickr_key=your_flickr_key
 flickr_secret=your_flickr_secret
 glaciernps_uid=your_glaciernps_user_id
-
-# Mapbox
-MAPBOX_TOKEN=your_mapbox_token
-MAPBOX_ACCOUNT=your_mapbox_account  # optional
-MAPBOX_STYLE=your_mapbox_style      # optional
-
-# BigCommerce
 BC_TOKEN=your_bigcommerce_token
 BC_STORE_HASH=your_store_hash
-
-# Main FTP
-FTP_USERNAME=your_ftp_username
-FTP_PASSWORD=your_ftp_password
-
-# Google Services
+SUNSETHUE_KEY=your_sunsethue_key
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service_account.json
 NOTICES_SPREADSHEET_ID=your_spreadsheet_id
+```
 
-# Cloudflare Cache (optional)
+### Optional with Defaults
+
+```bash
+MAPBOX_ACCOUNT=mapbox                  # default: "mapbox"
+MAPBOX_STYLE=satellite-streets-v12     # default: "satellite-streets-v12"
+FTP_SERVER=ftp.glacier.org             # default: "ftp.glacier.org"
+ENVIRONMENT=development                # default: "development"
+DRIP_CAMPAIGN_ID=169298893             # default: "169298893"
+```
+
+### Optional Cloudflare (default to empty string)
+
+```bash
 CACHE_PURGE=your_cloudflare_api_key
 ZONE_ID=your_cloudflare_zone_id
-
-# Other
-SUNSETHUE_KEY=your_sunsethue_key
-ENVIRONMENT=development  # "development" or "production"
 ```

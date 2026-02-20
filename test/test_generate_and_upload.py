@@ -291,20 +291,15 @@ def test_purge_cache_failure(monkeypatch, mock_required_settings):
 
 
 def test_purge_cache_missing_env_vars(monkeypatch, mock_required_settings):
-    # Ensure environment variables are not set
-    monkeypatch.delenv("CACHE_PURGE", raising=False)
-    monkeypatch.delenv("ZONE_ID", raising=False)
-
-    # Should return early without making any requests
+    # CACHE_PURGE and ZONE_ID are "" from conftest seeding — should return early
     with patch("generate_and_upload.requests.post") as mock_post:
         gau.purge_cache()
         mock_post.assert_not_called()
 
 
 def test_purge_cache_partial_env_vars(monkeypatch, mock_required_settings):
-    # Set only one environment variable
+    # Set only CACHE_PURGE; ZONE_ID stays "" from conftest seeding
     monkeypatch.setenv("CACHE_PURGE", "test_key")
-    monkeypatch.delenv("ZONE_ID", raising=False)
 
     # Should return early without making any requests
     with patch("generate_and_upload.requests.post") as mock_post:
