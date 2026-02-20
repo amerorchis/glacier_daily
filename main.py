@@ -21,12 +21,15 @@ from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 logger = get_logger(__name__)
 
 
-def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
+def main(
+    tag: str = "Glacier Daily Update", test: bool = False, force: bool = False
+) -> None:
     """
     Main function to perform the Glacier Daily Update.
 
     Args:
         tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
+        force (bool): Clear cached data and re-fetch everything fresh.
     """
     setup_logging()
     validate_config()
@@ -38,7 +41,7 @@ def main(tag: str = "Glacier Daily Update", test: bool = False) -> None:
     logger.info("Subscribers found")
 
     # Generated data and upload to website.
-    serve_api()
+    serve_api(force=force)
 
     # See if this fixes the issue with timelapse not showing.
     sleep(10 if not test else 0)
@@ -55,7 +58,12 @@ if __name__ == "__main__":  # pragma: no cover
         default="Glacier Daily Update",
         help="Tag to filter subscribers (default: Glacier Daily Update)",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Clear cached data and re-fetch everything fresh",
+    )
     args = parser.parse_args()
 
     test_mode = args.tag != "Glacier Daily Update"
-    main(args.tag, test=test_mode)
+    main(args.tag, test=test_mode, force=args.force)

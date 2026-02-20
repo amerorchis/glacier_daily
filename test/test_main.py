@@ -14,7 +14,7 @@ def test_main_runs_all_steps(monkeypatch):
         "get_subs",
         lambda tag: calls.append(f"get_subs:{tag}") or ["test@example.com"],
     )
-    monkeypatch.setattr(main, "serve_api", lambda: calls.append("serve_api"))
+    monkeypatch.setattr(main, "serve_api", lambda **kw: calls.append("serve_api"))
     monkeypatch.setattr(main, "sleep", lambda x: calls.append(f"sleep:{x}"))
     monkeypatch.setattr(
         main,
@@ -45,7 +45,7 @@ def test_main_test_flag_skips_sleep(monkeypatch):
         "get_subs",
         lambda tag: calls.append(f"get_subs:{tag}") or ["test@example.com"],
     )
-    monkeypatch.setattr(main, "serve_api", lambda: calls.append("serve_api"))
+    monkeypatch.setattr(main, "serve_api", lambda **kw: calls.append("serve_api"))
     monkeypatch.setattr(main, "sleep", lambda x: calls.append(f"sleep:{x}"))
     monkeypatch.setattr(
         main,
@@ -69,7 +69,7 @@ def test_main_default_tag(monkeypatch):
         "get_subs",
         lambda tag: calls.append(f"get_subs:{tag}") or ["test@example.com"],
     )
-    monkeypatch.setattr(main, "serve_api", lambda: calls.append("serve_api"))
+    monkeypatch.setattr(main, "serve_api", lambda **kw: calls.append("serve_api"))
     monkeypatch.setattr(main, "sleep", lambda x: calls.append(f"sleep:{x}"))
     monkeypatch.setattr(
         main,

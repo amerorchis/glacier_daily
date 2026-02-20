@@ -139,15 +139,11 @@ unresolved-attribute = "ignore"
 
 [tool.coverage.run]
 omit = [
-    "config-3.py",
-    "config.py",
     "peak/fetch_wikipedia.py",
 ]
 
 [tool.coverage.report]
 omit = [
-    "config-3.py",
-    "config.py",
     "peak/fetch_wikipedia.py",
 ]
 
