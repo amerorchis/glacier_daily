@@ -1,4 +1,4 @@
-"""
+"""# pragma: no cover
 Fetch Wikipedia article text for all peaks in Glacier National Park.
 
 This script reads peaks from PeaksCSV.csv and fetches the corresponding
