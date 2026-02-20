@@ -5,11 +5,12 @@ This module provides common fixtures that can be reused across multiple test fil
 reducing code duplication and ensuring consistent test setup.
 """
 
+import dataclasses
 from unittest.mock import Mock, patch
 
 import pytest
 
-from shared.settings import reset_settings
+from shared.settings import Settings, reset_settings
 
 # ============================================================================
 # Settings Fixtures
@@ -17,10 +18,14 @@ from shared.settings import reset_settings
 
 
 @pytest.fixture(autouse=True)
-def _reset_settings():
-    """Reset the settings singleton before each test so monkeypatched
-    env vars are picked up by get_settings()."""
+def _reset_settings(monkeypatch):
+    """Reset the settings singleton and seed every Settings field to ``""``
+    so that ``load_dotenv(override=False)`` in ``get_settings()`` can never
+    inject real values from ``email.env``.  This mirrors how the CI workflow
+    sets all env vars to ``""``."""
     reset_settings()
+    for f in dataclasses.fields(Settings):
+        monkeypatch.setenv(f.name, "")
     yield
     reset_settings()
 

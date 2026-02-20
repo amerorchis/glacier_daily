@@ -197,7 +197,7 @@ class TestConfigValidation:
         validate_config()
 
     def test_exits_with_missing_required_var(self, monkeypatch):
-        # Set all except one
+        # Set all except MAPBOX_TOKEN (stays "" from conftest seeding)
         for var in [
             "NPS",
             "DRIP_TOKEN",
@@ -206,7 +206,6 @@ class TestConfigValidation:
             "FTP_PASSWORD",
         ]:
             monkeypatch.setenv(var, "test_value")
-        monkeypatch.delenv("MAPBOX_TOKEN", raising=False)
 
         from shared.config_validation import validate_config
 
@@ -216,6 +215,7 @@ class TestConfigValidation:
     def test_warns_for_optional_vars(self, monkeypatch, caplog):
         import logging
 
+        # CACHE_PURGE and ZONE_ID stay "" from conftest seeding
         for var in [
             "NPS",
             "DRIP_TOKEN",
@@ -225,8 +225,6 @@ class TestConfigValidation:
             "MAPBOX_TOKEN",
         ]:
             monkeypatch.setenv(var, "test_value")
-        monkeypatch.delenv("CACHE_PURGE", raising=False)
-        monkeypatch.delenv("ZONE_ID", raising=False)
 
         from shared.config_validation import validate_config
 
