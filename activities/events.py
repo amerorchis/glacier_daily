@@ -116,7 +116,8 @@ def events_today(now=None):
             new_events, _ = fetch_events(new_endpoint, headers)
             raw_events.extend(new_events)
 
-        now_dt = datetime(*[int(i) for i in now.split("-")])
+        year, month, day = (int(i) for i in now.split("-"))
+        now_dt = datetime(year, month, day)
         if raw_events:
             events = [process_event(event) for event in raw_events]
             events.sort(key=lambda x: x["sortable"])
@@ -129,7 +130,8 @@ def events_today(now=None):
     except (JSONDecodeError, ReadTimeout) as e:
         print(f"Failed to retrieve events. {e}", file=sys.stderr)
         traceback.print_exc()
-        now_dt = datetime(*[int(i) for i in now.split("-")])
+        year, month, day = (int(i) for i in now.split("-"))
+        now_dt = datetime(year, month, day)
         seasonal_message_str = seasonal_message(now_dt)
         if (
             seasonal_message_str

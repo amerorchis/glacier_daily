@@ -136,7 +136,7 @@ def closed_roads() -> dict[str, Road]:
     status = json.loads(r.text)
 
     if not status.get("features"):
-        return ""
+        return {}
 
     roads_json = status["features"]
 
@@ -196,7 +196,7 @@ def closed_roads() -> dict[str, Road]:
     return {key: value for (key, value) in roads.items() if value}
 
 
-def format_road_closures(roads: list[Road]) -> str:
+def format_road_closures(roads: dict[str, Road]) -> str:
     """
     Take list of Road objects and turn into html formatted string.
     """

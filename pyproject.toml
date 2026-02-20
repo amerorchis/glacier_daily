@@ -38,6 +38,7 @@ dev = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "ruff>=0.9.7",
+    "ty>=0.0.1a7",
 ]
 
 [project.scripts]
@@ -73,6 +74,68 @@ docstring-code-format = true
 [tool.ruff.lint.per-file-ignores]
 "test/**/*.py" = ["S"]   # disable security warnings in tests
 "main.py" = ["E402"]     # load_dotenv must run before project imports
+
+[tool.ty.environment]
+python-version = "3.9"
+
+[tool.ty.src]
+exclude = [
+    "frontend_files/",
+    "server/",
+    "email_html/",
+]
+
+[tool.ty.analysis]
+# Suppress import errors for modules that use try/except import patterns
+# and third-party packages with incomplete type stubs
+allowed-unresolved-imports = [
+    "subscriber_list",
+    "update_subscriber",
+]
+
+# Test files use mocks, intentional bad types, and duck-typed objects
+# that are incompatible with strict type checking
+[[tool.ty.overrides]]
+include = ["test/**/*.py"]
+[tool.ty.overrides.rules]
+invalid-argument-type = "ignore"
+too-many-positional-arguments = "ignore"
+missing-argument = "ignore"
+unresolved-attribute = "ignore"
+unsupported-operator = "ignore"
+
+# BeautifulSoup's find/find_all returns PageElement but actual Tags
+# have find/find_all/get methods - BS4 stubs are incomplete
+[[tool.ty.overrides]]
+include = ["activities/gnpc_events.py"]
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+invalid-argument-type = "ignore"
+
+# Roads module uses dynamically typed attributes (initialized as empty
+# tuples, later reassigned to strings/tuples with data)
+[[tool.ty.overrides]]
+include = ["roads/**/*.py"]
+[tool.ty.overrides.rules]
+index-out-of-bounds = "ignore"
+unresolved-attribute = "ignore"
+unsupported-operator = "ignore"
+invalid-argument-type = "ignore"
+
+# pytz.UTC is typed as BaseTzInfo but doesn't satisfy tzinfo in ty's
+# type resolution - known pytz stubs limitation
+[[tool.ty.overrides]]
+include = ["weather/night_sky.py"]
+[tool.ty.overrides.rules]
+invalid-argument-type = "ignore"
+missing-argument = "ignore"
+no-matching-overload = "ignore"
+
+# Pillow stubs don't expose Image.LANCZOS
+[[tool.ty.overrides]]
+include = ["image_otd/**/*.py"]
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
 
 [tool.coverage.run]
 omit = [

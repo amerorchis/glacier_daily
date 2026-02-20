@@ -17,7 +17,7 @@ load_env()
 default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Notices could not be retrieved.</p>'
 
 
-@retry(3, (gspread.exceptions.APIError), default, 3)
+@retry(3, (gspread.exceptions.APIError,), default, 3)
 def get_notices():
     """
     Retrieves notices from a Google Sheets document and formats them as an HTML list.
@@ -39,7 +39,7 @@ def get_notices():
         client = gspread.authorize(credentials)
 
         # Open a spreadsheet
-        spreadsheet = client.open_by_key(os.getenv("NOTICES_SPREADSHEET_ID"))
+        spreadsheet = client.open_by_key(os.environ["NOTICES_SPREADSHEET_ID"])
 
         # Access a worksheet
         worksheet = spreadsheet.sheet1

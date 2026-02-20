@@ -34,25 +34,25 @@ class TestClosedRoads:
             with pytest.raises(NPSWebsiteError):
                 closed_roads()
 
-    def test_empty_features_returns_empty_string(self):
-        """Verify empty string returned when no closures exist."""
+    def test_empty_features_returns_empty_dict(self):
+        """Verify empty dict returned when no closures exist."""
         mock_response = Mock()
         mock_response.text = json.dumps({"features": []})
         mock_response.raise_for_status = Mock()
 
         with patch("roads.roads.requests.get", return_value=mock_response):
             result = closed_roads()
-            assert result == ""
+            assert result == {}
 
-    def test_no_features_key_returns_empty_string(self):
-        """Verify empty string returned when features key is missing."""
+    def test_no_features_key_returns_empty_dict(self):
+        """Verify empty dict returned when features key is missing."""
         mock_response = Mock()
         mock_response.text = json.dumps({})
         mock_response.raise_for_status = Mock()
 
         with patch("roads.roads.requests.get", return_value=mock_response):
             result = closed_roads()
-            assert result == ""
+            assert result == {}
 
     def test_standard_road_closure_parsed(self):
         """Verify standard road closures are correctly parsed."""

@@ -68,7 +68,7 @@ def gen_data():
         "today": format_date_readable(now_mountain()),
         "events": events_future.result(),
         "weather1": weather.message1,
-        "weather_image": weather_image(weather.results),
+        "weather_image": weather_image(weather.results or []),
         "weather2": weather.message2,
         "season": weather.season,
         "trails": trails_future.result(),
