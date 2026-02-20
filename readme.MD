@@ -32,6 +32,7 @@ uv sync
 
 # Create required directories
 mkdir -p email_images/today/
+mkdir -p notices/
 
 # Configure environment variables in email.env (see Configuration section)
 ```
@@ -43,6 +44,9 @@ uv run python main.py
 
 # Run in test mode (test subscribers only)
 uv run python main.py --tag "Test Glacier Daily Update"
+
+# Force re-fetch all data (clear cache)
+uv run python main.py --force
 
 # Generate data without sending emails
 uv run python generate_and_upload.py
@@ -82,6 +86,7 @@ cp TEMPLATE.env email.env
 This project uses automated code formatting and quality checks:
 
 - **Ruff** for Python code formatting, linting, and import sorting
+- **ty** for type checking
 - **Pre-commit hooks** for automated checks
 
 ```bash
@@ -101,7 +106,7 @@ Tests automatically use `TEMPLATE.env` (with empty API keys) to ensure no real c
 uv run pytest test/ --cov=. --cov-report xml
 
 # Run specific tests
-uv run pytest test/test_weather.py
+uv run pytest test/weather/test_weather.py
 uv run pytest test/weather/
 ```
 
@@ -129,8 +134,12 @@ uv run python -W ignore -m peak.peak
 - `peak/` - Daily featured peak with satellite imagery
 - `image_otd/` - Daily image selection from Flickr
 - `product_otd/` - Featured product from BigCommerce
+- `sunrise_timelapse/` - Video processing and timelapse compilation
+- `notices/` - Administrative notices from Google Sheets
 - `drip/` - Email delivery and subscriber management
-- `shared/` - FTP operations, retry mechanisms, utilities
+- `shared/` - FTP operations, retry mechanisms, config validation, logging, utilities
+- `server/` - PHP templates and web interface components
+- `frontend_files/` - JavaScript and PHP for the web interface
 
 **Data Flow:**
 1. **Collection**: Concurrent API calls gather real-time data

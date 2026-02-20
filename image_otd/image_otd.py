@@ -4,6 +4,7 @@ It includes functions to resize the image and upload it to a specified directory
 """
 
 from pathlib import Path
+from typing import Optional
 
 from PIL import Image, UnidentifiedImageError
 
@@ -22,6 +23,18 @@ class ImageProcessingError(Exception):
     pass
 
 
+def prepare_pic_otd() -> tuple[str, str, str]:
+    """Return (directory, filename, local_path) for the picture of the day upload."""
+    today = now_mountain()
+    filename = f"{today.month}_{today.day}_{today.year}_pic_otd.jpg"
+    file = Path("email_images/today/resized_image_otd.jpg")
+
+    if not file.exists():
+        raise FileNotFoundError(f"Image file not found: {file}")
+
+    return "picture", filename, str(file)
+
+
 def upload_pic_otd() -> str:
     """
     Upload the picture of the day to the specified directory.
@@ -32,15 +45,8 @@ def upload_pic_otd() -> str:
     Raises:
         FileNotFoundError: If the image file doesn't exist
     """
-    today = now_mountain()
-    filename = f"{today.month}_{today.day}_{today.year}_pic_otd.jpg"
-    file = Path("email_images/today/resized_image_otd.jpg")
-
-    if not file.exists():
-        raise FileNotFoundError(f"Image file not found: {file}")
-
-    directory = "picture"
-    address, _ = upload_file(directory, filename, str(file))
+    directory, filename, local_path = prepare_pic_otd()
+    address, _ = upload_file(directory, filename, local_path)
     return address
 
 
@@ -93,7 +99,7 @@ def process_image(image_path: Path, dimensions: tuple[int, int, int]) -> Path:
         raise ImageProcessingError(f"Image processing failed: {str(e)}") from e
 
 
-def resize_full() -> tuple[str, str, str]:
+def resize_full(skip_upload: bool = False) -> tuple[Optional[str], str, str]:
     """
     Main function to retrieve and process the image of the day.
 
@@ -113,17 +119,20 @@ def resize_full() -> tuple[str, str, str]:
     image_data = get_flickr()
     dimensions = (255, 150, 4)  # width, height, scale_multiplier
     process_image(image_data.path, dimensions)
-    upload_address = upload_pic_otd()
 
+    if skip_upload:
+        return None, image_data.title, image_data.link
+
+    upload_address = upload_pic_otd()
     return upload_address, image_data.title, image_data.link
 
 
-def get_image_otd() -> tuple[str, str, str]:
+def get_image_otd(skip_upload: bool = False) -> tuple[Optional[str], str, str]:
     """
     Get the image of the day from Flickr.
     """
     try:
-        return resize_full()
+        return resize_full(skip_upload=skip_upload)
     except FlickrAPIError:
         return "Flickr API Error", "", ""
 

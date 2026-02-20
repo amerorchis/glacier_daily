@@ -32,7 +32,7 @@ def _get_peak_summary(name: str, lat: float, lon: float) -> Optional[str]:
     return None
 
 
-def peak(test=False):
+def peak(test=False, skip_upload: bool = False):
     """
     Select a random peak, and return the relevant information.
     """
@@ -52,7 +52,7 @@ def peak(test=False):
     random.seed(date.today().strftime("%Y%m%d"))
     today = random.choice(peaks)  # noqa: S311
 
-    peak_img = peak_sat(today) if not test else None
+    peak_img = peak_sat(today, skip_upload=skip_upload) if not test else None
 
     google_maps = (
         f"https://www.google.com/maps/place/{today['lat']}N+{today['lon'][1:]}W/"

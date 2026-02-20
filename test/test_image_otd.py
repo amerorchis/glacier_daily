@@ -10,6 +10,7 @@ from image_otd.flickr import FlickrAPIError, FlickrImage, get_flickr
 from image_otd.image_otd import (
     ImageProcessingError,
     get_image_otd,
+    prepare_pic_otd,
     process_image,
     resize_full,
     upload_pic_otd,
@@ -172,6 +173,29 @@ def test_upload_pic_otd_file_not_found():
         pytest.raises(FileNotFoundError),
     ):
         upload_pic_otd()
+
+
+def test_prepare_pic_otd():
+    """Test prepare_pic_otd returns correct tuple."""
+    with patch("image_otd.image_otd.Path.exists", return_value=True):
+        directory, filename, local_path = prepare_pic_otd()
+        assert directory == "picture"
+        assert filename.endswith("_pic_otd.jpg")
+        assert "resized_image_otd.jpg" in local_path
+
+
+def test_resize_full_skip_upload(sample_image):
+    """Test resize_full with skip_upload=True returns None for URL."""
+    with (
+        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
+        patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
+        patch("image_otd.image_otd.process_image"),
+    ):
+        mock_get_flickr.return_value = FlickrImage(
+            sample_image, "test_title", "test_link"
+        )
+        result = resize_full(skip_upload=True)
+        assert result == (None, "test_title", "test_link")
 
 
 def test_resize_full_cached():

@@ -4,6 +4,7 @@ Generate a static image of peak of the day using Mapbox API and upload to websit
 
 import os
 from io import BytesIO
+from typing import Optional
 
 import PIL
 import requests
@@ -16,21 +17,24 @@ from shared.ftp import upload_file
 load_env()
 
 
+def prepare_peak_upload() -> tuple[str, str, str]:
+    """Return (directory, filename, local_path) for peak image upload."""
+    today = now_mountain()
+    filename = f"{today.month}_{today.day}_{today.year}_peak.jpg"
+    return "peak", filename, "email_images/today/peak.jpg"
+
+
 def upload_peak() -> str:
     """
     Upload the file from the today folder as the image with today's day as name,
     then return the URL.
     """
-
-    today = now_mountain()
-    filename = f"{today.month}_{today.day}_{today.year}_peak.jpg"
-    file = "email_images/today/peak.jpg"
-    directory = "peak"
-    address, _ = upload_file(directory, filename, file)
+    directory, filename, local_path = prepare_peak_upload()
+    address, _ = upload_file(directory, filename, local_path)
     return address
 
 
-def peak_sat(peak: dict) -> str:
+def peak_sat(peak: dict, skip_upload: bool = False) -> Optional[str]:
     """
     Use mapbox API to get peak image, then send to FTP function.
     return: URL of peak image/header.
@@ -61,6 +65,8 @@ def peak_sat(peak: dict) -> str:
             image = Image.open(BytesIO(r.content))
             image.save("email_images/today/peak.jpg")
 
+            if skip_upload:
+                return None
             return upload_peak()
         else:
             raise requests.RequestException("Bad status code")

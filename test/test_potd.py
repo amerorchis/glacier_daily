@@ -6,7 +6,12 @@ import pytest
 import requests
 from PIL import Image
 
-from product_otd.product import get_product, resize_image, upload_potd
+from product_otd.product import (
+    get_product,
+    prepare_potd_upload,
+    resize_image,
+    upload_potd,
+)
 
 
 @pytest.fixture
@@ -108,6 +113,37 @@ class TestGetProduct:
 
             with pytest.raises(requests.exceptions.RequestException):
                 get_product()
+
+    def test_get_product_skip_upload(
+        self, mock_product_response, mock_image_response, mock_env_vars
+    ):
+        """Test get_product with skip_upload=True returns None for image."""
+        with (
+            patch("requests.get") as mock_get,
+            patch("product_otd.product.resize_image"),
+            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
+            patch("random.randrange", return_value=1),
+        ):
+            mock_get.side_effect = [
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_image_response)),
+            ]
+            title, image_url, product_link, desc = get_product(skip_upload=True)
+            assert title == "Test Product"
+            assert image_url is None
+            assert product_link == "https://shop.glacier.org/test-product"
+
+
+class TestPreparePotdUpload:
+    """Test suite for prepare_potd_upload function."""
+
+    def test_prepare_potd_upload(self):
+        """Test prepare_potd_upload returns correct tuple."""
+        directory, filename, local_path = prepare_potd_upload()
+        assert directory == "product"
+        assert filename.endswith("_product_otd.jpg")
+        assert local_path == "email_images/today/product_otd.jpg"
 
 
 class TestResizeImage:

@@ -15,6 +15,19 @@ def make_fake_weather():
     return FakeWeather()
 
 
+class MockFTPSession:
+    """Mock FTPSession for testing."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def upload(self, directory, filename, file=None):
+        return (f"https://glacier.org/daily/{directory}/{filename}", [])
+
+
 @pytest.fixture
 def mock_all_data_sources(monkeypatch):
     """Fixture to mock all data sources used by gen_data()."""
@@ -24,15 +37,19 @@ def mock_all_data_sources(monkeypatch):
     monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
     monkeypatch.setattr(gau, "events_today", lambda: "events")
-    monkeypatch.setattr(gau, "get_image_otd", lambda: ("img", "img_title", "img_link"))
-    monkeypatch.setattr(gau, "peak", lambda: ("peak", "peak_img", "peak_map"))
+    monkeypatch.setattr(
+        gau, "get_image_otd", lambda **kw: ("img", "img_title", "img_link")
+    )
+    monkeypatch.setattr(gau, "peak", lambda **kw: ("peak", "peak_img", "peak_map"))
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "descriptor"))
     monkeypatch.setattr(
-        gau, "get_product", lambda: ("prod_title", "prod_img", "prod_link", "prod_desc")
+        gau,
+        "get_product",
+        lambda **kw: ("prod_title", "prod_img", "prod_link", "prod_desc"),
     )
     monkeypatch.setattr(gau, "get_notices", lambda: "notices")
     monkeypatch.setattr(gau, "html_safe", lambda x: x)
-    monkeypatch.setattr(gau, "weather_image", lambda x: "weather_img")
+    monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
 
 def test_gen_data_keys_present(mock_all_data_sources):
@@ -143,15 +160,13 @@ def test_gen_data_with_empty_returns(monkeypatch):
     monkeypatch.setattr(gau, "get_road_status", lambda: "")  # Empty
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "")  # Empty
     monkeypatch.setattr(gau, "events_today", lambda: "")  # Empty
-    monkeypatch.setattr(gau, "get_image_otd", lambda: ("", "", ""))  # Empty tuple
-    monkeypatch.setattr(gau, "peak", lambda: ("", None, ""))  # None for image
+    monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("", "", ""))
+    monkeypatch.setattr(gau, "peak", lambda **kw: ("", None, ""))
     monkeypatch.setattr(gau, "process_video", lambda: ("", "", ""))  # Empty
-    monkeypatch.setattr(
-        gau, "get_product", lambda: ("", None, "", "")
-    )  # None for image
+    monkeypatch.setattr(gau, "get_product", lambda **kw: ("", None, "", ""))
     monkeypatch.setattr(gau, "get_notices", lambda: "")  # Empty
     monkeypatch.setattr(gau, "html_safe", lambda x: x)
-    monkeypatch.setattr(gau, "weather_image", lambda x: "")  # Empty
+    monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "")  # Empty
 
     # Should not raise even with empty values
     data = gau.gen_data()
@@ -186,12 +201,12 @@ def test_send_to_server(monkeypatch):
 
 def test_serve_api(monkeypatch, tmp_path):
     # Patch everything to avoid side effects
-    monkeypatch.setattr(gau, "gen_data", lambda: {"foo": "bar"})
-    monkeypatch.setattr(gau, "web_version", lambda data, *a, **k: "webfile")
+    monkeypatch.setattr(gau, "gen_data", lambda ftp_session=None: {"foo": "bar"})
+    monkeypatch.setattr(gau, "web_version", lambda data, *a, **k: "server/webfile")
     monkeypatch.setattr(
         gau, "write_data_to_json", lambda data, doctype: str(tmp_path / "email.json")
     )
-    monkeypatch.setattr(gau, "send_to_server", lambda file, directory: None)
+    monkeypatch.setattr(gau, "FTPSession", MockFTPSession)
     monkeypatch.setattr(gau, "purge_cache", lambda: None)
     monkeypatch.setattr(gau, "refresh_cache", lambda: None)
     monkeypatch.setattr(gau, "sleep", lambda _: None)
@@ -202,10 +217,11 @@ def test_serve_api(monkeypatch, tmp_path):
 def test_serve_api_gen_data_raises(monkeypatch):
     """Verify serve_api propagates exceptions from gen_data."""
 
-    def failing_gen_data():
+    def failing_gen_data(ftp_session=None):
         raise RuntimeError("data fetch failed")
 
     monkeypatch.setattr(gau, "gen_data", failing_gen_data)
+    monkeypatch.setattr(gau, "FTPSession", MockFTPSession)
     with pytest.raises(RuntimeError, match="data fetch failed"):
         gau.serve_api()
 
@@ -213,7 +229,7 @@ def test_serve_api_gen_data_raises(monkeypatch):
 def test_gen_data_module_exception_handling(monkeypatch):
     """Verify gen_data propagates exceptions from individual data modules."""
 
-    def failing_peak():
+    def failing_peak(**kw):
         raise ConnectionError("API unreachable")
 
     monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
@@ -222,13 +238,13 @@ def test_gen_data_module_exception_handling(monkeypatch):
     monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
     monkeypatch.setattr(gau, "events_today", lambda: "events")
-    monkeypatch.setattr(gau, "get_image_otd", lambda: ("img", "title", "link"))
+    monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
     monkeypatch.setattr(gau, "peak", failing_peak)
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
-    monkeypatch.setattr(gau, "get_product", lambda: ("t", "i", "l", "d"))
+    monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
     monkeypatch.setattr(gau, "get_notices", lambda: "notices")
     monkeypatch.setattr(gau, "html_safe", lambda x: x)
-    monkeypatch.setattr(gau, "weather_image", lambda x: "weather_img")
+    monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
     with pytest.raises(ConnectionError, match="API unreachable"):
         gau.gen_data()
@@ -348,6 +364,6 @@ def test_purge_cache_request_exception(monkeypatch):
 
 def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
     """Verify that None values in gen_data output are replaced with empty strings."""
-    monkeypatch.setattr(gau, "peak", lambda: ("peak", None, "peak_map"))
+    monkeypatch.setattr(gau, "peak", lambda **kw: ("peak", None, "peak_map"))
     data = gau.gen_data()
     assert data["peak_image"] == ""
