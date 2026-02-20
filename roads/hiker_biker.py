@@ -7,6 +7,7 @@ import json
 import sys
 import traceback
 
+import certifi
 import requests
 
 from roads.HikerBiker import HikerBiker
@@ -33,7 +34,7 @@ def hiker_biker() -> str:
 
         for url in urls:
             try:
-                r = requests.get(url, timeout=5)
+                r = requests.get(url, timeout=5, verify=certifi.where())
             except requests.exceptions.RequestException:
                 print(
                     f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",

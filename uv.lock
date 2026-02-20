@@ -189,6 +189,7 @@ source = { editable = "." }
 dependencies = [
     { name = "astral" },
     { name = "beautifulsoup4" },
+    { name = "certifi" },
     { name = "flickrapi" },
     { name = "gspread" },
     { name = "jinja2" },
@@ -215,6 +216,7 @@ dev = [
 requires-dist = [
     { name = "astral", specifier = "==2.2" },
     { name = "beautifulsoup4", specifier = ">=4.13.4" },
+    { name = "certifi", specifier = ">=2024.1.0" },
     { name = "flickrapi", specifier = ">=2.4.0" },
     { name = "gspread", specifier = ">=6.2.1" },
     { name = "jinja2", specifier = ">=3.1.6" },
