@@ -85,10 +85,10 @@ def test_start_and_end_calls_update_subscriber(monkeypatch):
 
 
 def test_update_scheduled_subs_logic(monkeypatch):
-    today = scheduled_subs.datetime.now().strftime("%Y-%m-%d")
-    yesterday = (
-        scheduled_subs.datetime.now() - scheduled_subs.timedelta(days=1)
-    ).strftime("%Y-%m-%d")
+    from shared.datetime_utils import now_mountain
+
+    today = now_mountain().strftime("%Y-%m-%d")
+    yesterday = (now_mountain() - scheduled_subs.timedelta(days=1)).strftime("%Y-%m-%d")
     fake_list = [
         {
             "tags": ["Daily Start Set"],

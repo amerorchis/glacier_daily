@@ -1,5 +1,5 @@
 import io
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import Mock, patch
 
 import pytest
@@ -121,7 +121,9 @@ def test_peak_sat_image_processing_error(mock_env_vars, sample_peak_data):
 
 def test_upload_peak(mock_env_vars):
     """Test peak image upload functionality"""
-    today = datetime.now()
+    from shared.datetime_utils import now_mountain
+
+    today = now_mountain()
     expected_filename = f"{today.month}_{today.day}_{today.year}_peak.jpg"
 
     with patch(
