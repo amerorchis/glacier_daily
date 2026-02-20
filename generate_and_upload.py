@@ -169,10 +169,19 @@ def refresh_cache():
         logger.error(f"Error refreshing cache: {e}")
 
 
-def serve_api():
+def clear_cache():
+    """Remove cached email.json so all modules re-fetch fresh data."""
+    cache_file = "server/email.json"
+    if os.path.exists(cache_file):
+        os.remove(cache_file)
+
+
+def serve_api(force: bool = False):
     """
     Get the data, then upload it to server for API.
     """
+    if force:
+        clear_cache()
     data = gen_data()
     web = web_version(data)
     printable = web_version(data, "server/printable.html", "printable.html")
@@ -185,12 +194,25 @@ def serve_api():
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import argparse as _argparse
+
     from shared.logging_config import setup_logging
 
     setup_logging()
+
+    _parser = _argparse.ArgumentParser(description="Generate and upload data")
+    _parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Clear cached data and re-fetch everything fresh",
+    )
+    _args = _parser.parse_args()
+
+    if _args.force:
+        clear_cache()
 
     environment = os.getenv("ENVIRONMENT", "development")
     if environment == "development":
         gen_data()
     elif environment == "production":
-        serve_api()
+        serve_api(force=_args.force)
