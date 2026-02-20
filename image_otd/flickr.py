@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from os import environ
 from pathlib import Path
-from urllib.request import URLError
+from urllib.error import URLError
 
 from flickrapi import FlickrAPI
 

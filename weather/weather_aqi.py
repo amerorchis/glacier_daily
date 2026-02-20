@@ -2,6 +2,8 @@
 This module fetches the Air Quality Index (AQI) for West Glacier from the National Park Service.
 """
 
+from __future__ import annotations
+
 import time
 import uuid
 
@@ -31,7 +33,7 @@ def add_cache_buster(url: str) -> str:
     return final_url
 
 
-def get_air_quality() -> int:
+def get_air_quality() -> int | str:
     """
     Fetch the current Air Quality Index (AQI) for West Glacier.
 

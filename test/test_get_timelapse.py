@@ -86,7 +86,7 @@ class TestFetchGlacierData:
     def test_fetch_invalid_endpoint(self):
         """Test handling of invalid endpoint type."""
         result = fetch_glacier_data("invalid")
-        assert result == {}
+        assert result == []
 
     @patch("requests.get")
     def test_fetch_request_exception(self, mock_get):
@@ -95,7 +95,7 @@ class TestFetchGlacierData:
 
         result = fetch_glacier_data("timelapse")
 
-        assert result == {}
+        assert result == []
 
     @patch("requests.get")
     def test_fetch_timeout(self, mock_get):
@@ -104,7 +104,7 @@ class TestFetchGlacierData:
 
         result = fetch_glacier_data("timelapse")
 
-        assert result == {}
+        assert result == []
 
     @patch("requests.get")
     def test_fetch_json_decode_error(self, mock_get):
@@ -116,7 +116,7 @@ class TestFetchGlacierData:
 
         result = fetch_glacier_data("timelapse")
 
-        assert result == {}
+        assert result == []
 
 
 class TestSelectVideo:

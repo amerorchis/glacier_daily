@@ -32,7 +32,7 @@ class FileOperationError(TimelapseError):
     pass
 
 
-def fetch_glacier_data(endpoint_type: str) -> dict:
+def fetch_glacier_data(endpoint_type: str) -> list:
     """
     Fetch data from glacier.org JSON endpoints.
 
@@ -40,7 +40,7 @@ def fetch_glacier_data(endpoint_type: str) -> dict:
         endpoint_type (str): Either "timelapse" or "thumbnails"
 
     Returns:
-        dict: JSON data from the endpoint, empty dict if error
+        list: JSON data from the endpoint, empty list if error
     """
     endpoint_map = {
         "timelapse": "daily_timelapse_data.json",
@@ -49,7 +49,7 @@ def fetch_glacier_data(endpoint_type: str) -> dict:
 
     if endpoint_type not in endpoint_map:
         print(f"Invalid endpoint type: {endpoint_type}", file=sys.stderr)
-        return {}
+        return []
 
     try:
         cache_buster = str(int(now_mountain().timestamp()))
@@ -64,11 +64,11 @@ def fetch_glacier_data(endpoint_type: str) -> dict:
         return response.json()
     except Exception as e:
         print(f"Error fetching {endpoint_type} data: {e}", file=sys.stderr)
-        return {}
+        return []
 
 
 def select_video(
-    timelapse_data: dict,
+    timelapse_data: list,
 ) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Select video based on today's date first, then fallback to latest.
@@ -115,7 +115,7 @@ def select_video(
         return None, None, None
 
 
-def find_matching_thumbnail(video_id: str, thumbnail_data: dict) -> Optional[str]:
+def find_matching_thumbnail(video_id: str, thumbnail_data: list) -> Optional[str]:
     """
     Find thumbnail that matches the selected video.
 
@@ -193,7 +193,7 @@ def process_video() -> tuple[str, str, str]:
             print(f"No matching thumbnail found for video {video_id}", file=sys.stderr)
             return "", "", ""
 
-        return video_url, thumbnail_url, descriptor
+        return video_url, thumbnail_url, descriptor or ""
 
     except Exception as e:
         print(f"Unexpected error in process_video: {e}", file=sys.stderr)

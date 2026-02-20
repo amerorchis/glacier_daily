@@ -139,4 +139,4 @@ if __name__ == "__main__":  # pragma: no cover
     from shared.env_loader import load_env
 
     load_env()
-    print(weather_image(weather_data().results))
+    print(weather_image(weather_data().results or []))

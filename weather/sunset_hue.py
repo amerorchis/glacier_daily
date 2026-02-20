@@ -8,7 +8,7 @@ from datetime import datetime
 import requests
 
 
-def get_sunset_hue(test: bool = False) -> str:
+def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
     """
     Fetches the sunset hue forecast for a specific location and date.
 

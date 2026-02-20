@@ -361,7 +361,7 @@ class Forecast:
         )
 
 
-def aurora_forecast(cloud_cover: float = 0.0) -> str:
+def aurora_forecast(cloud_cover: float = 0.0) -> tuple[str, str]:
     """Get and format the forecast"""
     f = Forecast()
 

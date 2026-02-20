@@ -126,7 +126,7 @@ class WeatherAPI:
                 "Weather descriptions file not found. Ensure 'weather/descriptions.json' exists."
             ) from e
 
-    def _format_daylight_info(self, forecast_data: dict[str, Any]) -> str:
+    def _format_daylight_info(self, forecast_data: list) -> str:
         """Format daylight information string."""
         wg = forecast_data[0]["daily"]
 

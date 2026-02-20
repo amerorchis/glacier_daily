@@ -19,7 +19,7 @@ def update_subscriber(updates: dict):
     Returns:
         None
     """
-    email = updates.get("email")
+    email = updates.get("email", "")
     email = urllib.parse.quote(email, safe="@")
     drip_token = os.environ["DRIP_TOKEN"]
     account_id = os.environ["DRIP_ACCOUNT"]
