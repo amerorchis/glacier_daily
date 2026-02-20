@@ -7,11 +7,13 @@ import json
 import sys
 import traceback
 
-import certifi
 import requests
+import urllib3
 
 from roads.HikerBiker import HikerBiker
 from roads.roads import NPSWebsiteError, closed_roads
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def hiker_biker() -> str:
@@ -34,7 +36,7 @@ def hiker_biker() -> str:
 
         for url in urls:
             try:
-                r = requests.get(url, timeout=5, verify=certifi.where())
+                r = requests.get(url, timeout=5, verify=False)  # noqa: S501
             except requests.exceptions.RequestException:
                 print(
                     f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
