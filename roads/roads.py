@@ -6,7 +6,6 @@ import json
 import sys
 import traceback
 
-import certifi
 import requests
 import urllib3
 
