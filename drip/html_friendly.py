@@ -1,22 +1,19 @@
 """
-This module provides a function to convert a string to an HTML-safe format.
+This module provides a function to encode non-ASCII characters for HTML email compatibility.
 """
-
-import html
 
 
 def html_safe(input_string: str) -> str:
     """
-    Convert a string to an HTML-safe format.
+    Encode non-ASCII characters as XML character references for email compatibility.
 
-    Escapes HTML special characters (<, >, &, ", ') and then encodes
-    non-ASCII characters as XML character references.
+    Note: This does NOT escape HTML tags — template fields intentionally contain
+    pre-sanitized HTML markup that must be rendered, not escaped.
 
     Args:
         input_string (str): The string to be converted.
 
     Returns:
-        str: The HTML-safe string.
+        str: The string with non-ASCII characters encoded as XML character references.
     """
-    escaped = html.escape(input_string)
-    return escaped.encode("ascii", "xmlcharrefreplace").decode("utf-8")
+    return input_string.encode("ascii", "xmlcharrefreplace").decode("utf-8")
