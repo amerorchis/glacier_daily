@@ -231,17 +231,17 @@ class TestWeatherImageIntegration:
         mock_draw = Mock()
         mock_draw.textlength = Mock(return_value=50.0)  # Mock text width
 
-        with patch("weather.weather_img._validate_input"):
-            with patch("weather.weather_img._get_base_image", return_value=mock_image):
-                with patch(
-                    "weather.weather_img.ImageDraw.Draw", return_value=mock_draw
-                ):
-                    with patch("weather.weather_img._get_font", return_value=Mock()):
-                        with patch(
-                            "weather.weather_img.upload_weather",
-                            return_value="https://example.com/img.png",
-                        ):
-                            from weather.weather_img import weather_image
+        with (
+            patch("weather.weather_img._validate_input"),
+            patch("weather.weather_img._get_base_image", return_value=mock_image),
+            patch("weather.weather_img.ImageDraw.Draw", return_value=mock_draw),
+            patch("weather.weather_img._get_font", return_value=Mock()),
+            patch(
+                "weather.weather_img.upload_weather",
+                return_value="https://example.com/img.png",
+            ),
+        ):
+            from weather.weather_img import weather_image
 
-                            result = weather_image([("West Glacier", 70, 45, "Sunny")])
-                            assert isinstance(result, str)
+            result = weather_image([("West Glacier", 70, 45, "Sunny")])
+            assert isinstance(result, str)

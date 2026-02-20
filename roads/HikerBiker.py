@@ -35,7 +35,6 @@ class HikerBiker(Place):
         # Logan Pass is at 48.6959, -113.7172
 
         north_boundary = 48.6998
-        south_boundary = 48.6940
         west_boundary = -113.72402
         east_boundary = -113.71225
 

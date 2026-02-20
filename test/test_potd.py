@@ -1,6 +1,5 @@
 import io
 import json
-from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -59,7 +58,7 @@ class TestGetProduct:
         """Test successful product retrieval"""
         with (
             patch("requests.get") as mock_get,
-            patch("product_otd.product.resize_image") as mock_resize,
+            patch("product_otd.product.resize_image"),
             patch("product_otd.product.upload_potd") as mock_upload,
             patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
             patch("random.randrange", return_value=1),
@@ -156,7 +155,7 @@ class TestResizeImage:
             mock_response.content = b"invalid image data"
             mock_get.return_value = mock_response
 
-            with pytest.raises(Exception):
+            with pytest.raises(OSError):
                 resize_image("https://example.com/test.jpg")
 
 

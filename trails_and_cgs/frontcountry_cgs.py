@@ -6,12 +6,10 @@ It retrieves data from the NPS API, processes it to identify closures and alerts
 import json
 import sys
 import traceback
-from datetime import datetime
 
 import requests
-import urllib3
 
-urllib3.disable_warnings()
+from shared.datetime_utils import now_mountain
 
 
 def campground_alerts():
@@ -23,8 +21,8 @@ def campground_alerts():
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
     try:
-        r = requests.get(url, verify=False, timeout=10)
-    except requests.exceptions.RequestException as e:
+        r = requests.get(url, timeout=10)
+    except requests.exceptions.RequestException:
         print(
             f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",
             file=sys.stderr,
@@ -92,7 +90,7 @@ def campground_alerts():
     if season_closures:
         seasonal = (
             [f'Closed for the season: {", ".join(season_closures)}']
-            if datetime.now().month >= 8
+            if now_mountain().month >= 8
             else [f'Not yet open for the season: {", ".join(season_closures)}']
         )
         statuses.extend(seasonal)

@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-import pytest
 import requests
 
 from sunrise_timelapse.get_timelapse import (
@@ -121,15 +120,12 @@ class TestFetchGlacierData:
 
 
 class TestSelectVideo:
-    @patch("sunrise_timelapse.get_timelapse.datetime")
-    def test_select_today_video(self, mock_datetime):
+    @patch(
+        "sunrise_timelapse.get_timelapse.now_mountain",
+        return_value=datetime(2025, 8, 20),
+    )
+    def test_select_today_video(self, mock_now):
         """Test selecting today's video when available."""
-        mock_now = Mock()
-        mock_now.month = 8
-        mock_now.day = 20
-        mock_now.year = 2025
-        mock_datetime.now.return_value = mock_now
-
         video_id, video_url, descriptor = select_video(MOCK_TIMELAPSE_DATA)
 
         assert video_id == "8_20_2025_sunrise_timelapse"
@@ -139,15 +135,12 @@ class TestSelectVideo:
         )
         assert descriptor == "This Morning's"
 
-    @patch("sunrise_timelapse.get_timelapse.datetime")
-    def test_select_latest_video(self, mock_datetime):
+    @patch(
+        "sunrise_timelapse.get_timelapse.now_mountain",
+        return_value=datetime(2025, 8, 21),
+    )
+    def test_select_latest_video(self, mock_now):
         """Test falling back to latest video when today's is not available."""
-        mock_now = Mock()
-        mock_now.month = 8
-        mock_now.day = 21  # Different date
-        mock_now.year = 2025
-        mock_datetime.now.return_value = mock_now
-
         video_id, video_url, descriptor = select_video(MOCK_TIMELAPSE_DATA)
 
         # Extract expected ID from the mock data's "latest" entry vid_src
@@ -176,14 +169,11 @@ class TestSelectVideo:
 
         assert result == (None, None, None)
 
-    @patch("sunrise_timelapse.get_timelapse.datetime")
-    def test_select_video_first_fallback(self, mock_datetime):
-        """Test falling back to first entry when no 'latest' exists."""
-        mock_now = Mock()
-        mock_now.month = 8
-        mock_now.day = 21  # Different date
-        mock_now.year = 2025
-        mock_datetime.now.return_value = mock_now
+    @patch(
+        "sunrise_timelapse.get_timelapse.now_mountain",
+        return_value=datetime(2025, 8, 21),
+    )
+    def test_select_video_first_fallback(self, mock_now):
 
         # Data without 'latest' entry
         data_no_latest = [

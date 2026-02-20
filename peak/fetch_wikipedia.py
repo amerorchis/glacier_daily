@@ -11,7 +11,7 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import requests_cache
 from requests.adapters import HTTPAdapter
@@ -43,7 +43,7 @@ def _setup_session() -> requests_cache.CachedSession:
     return cache_session
 
 
-def load_peaks() -> List[Dict]:
+def load_peaks() -> list[dict]:
     """Load peaks from CSV file."""
     peaks = []
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
@@ -61,7 +61,7 @@ def load_peaks() -> List[Dict]:
     return peaks
 
 
-def load_partial_results() -> Dict[str, Dict]:
+def load_partial_results() -> dict[str, dict]:
     """Load any existing partial results."""
     if PARTIAL_PATH.exists():
         with open(PARTIAL_PATH, encoding="utf-8") as f:
@@ -73,13 +73,13 @@ def load_partial_results() -> Dict[str, Dict]:
     return {}
 
 
-def save_partial_results(results: List[Dict]) -> None:
+def save_partial_results(results: list[dict]) -> None:
     """Save partial results for resumability."""
     with open(PARTIAL_PATH, "w", encoding="utf-8") as f:
         json.dump({"peaks": results}, f, indent=2)
 
 
-def generate_title_variants(name: str) -> List[str]:
+def generate_title_variants(name: str) -> list[str]:
     """Generate possible Wikipedia title variants for a peak name."""
     variants = [name]
 
@@ -113,7 +113,7 @@ def generate_title_variants(name: str) -> List[str]:
     return variants
 
 
-def search_wikipedia(session: requests_cache.CachedSession, query: str) -> List[Dict]:
+def search_wikipedia(session: requests_cache.CachedSession, query: str) -> list[dict]:
     """Search Wikipedia for articles matching query."""
     params = {
         "action": "query",
@@ -130,7 +130,7 @@ def search_wikipedia(session: requests_cache.CachedSession, query: str) -> List[
 
 def get_page_by_title(
     session: requests_cache.CachedSession, title: str
-) -> Optional[Dict]:
+) -> Optional[dict]:
     """Try to get a Wikipedia page by exact title."""
     params = {
         "action": "query",
@@ -154,7 +154,7 @@ def get_page_by_title(
 
 def get_page_content(
     session: requests_cache.CachedSession, page_id: int
-) -> Optional[Dict]:
+) -> Optional[dict]:
     """Get full content of a Wikipedia page by ID."""
     params = {
         "action": "query",
@@ -173,7 +173,7 @@ def get_page_content(
 
 
 def verify_article(
-    article_text: str, peak_lat: float, peak_lon: float, article_coords: Optional[List]
+    article_text: str, peak_lat: float, peak_lon: float, article_coords: Optional[list]
 ) -> bool:
     """Verify that an article is about a peak in Glacier National Park."""
     text_lower = article_text.lower()
@@ -200,8 +200,8 @@ def verify_article(
 
 
 def find_wikipedia_article(
-    session: requests_cache.CachedSession, peak: Dict
-) -> Optional[Dict]:
+    session: requests_cache.CachedSession, peak: dict
+) -> Optional[dict]:
     """
     Find the Wikipedia article for a peak using multi-pass search.
     Returns article info or None if not found.
@@ -252,7 +252,7 @@ def find_wikipedia_article(
     return None
 
 
-def fetch_all_wikipedia_data() -> List[Dict]:
+def fetch_all_wikipedia_data() -> list[dict]:
     """Fetch Wikipedia data for all peaks."""
     session = _setup_session()
     peaks = load_peaks()

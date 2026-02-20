@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import gspread
 from google.oauth2.service_account import Credentials
 
+from shared.datetime_utils import now_mountain
 from shared.env_loader import load_env
 from shared.retry import retry
 
@@ -63,7 +64,9 @@ def get_notices():
                 for i in notices
             ]  # create a dict for each one
             current_notices = [
-                i["notice"] for i in notices if i["start"] < datetime.now() < i["last"]
+                i["notice"]
+                for i in notices
+                if i["start"] < now_mountain().replace(tzinfo=None) < i["last"]
             ]  # isolate the content of the current notices
 
             if current_notices:

@@ -5,10 +5,12 @@ This module retrieves and processes daily events from the National Park Service 
 import os
 import sys
 import traceback
-from datetime import date, datetime
+from datetime import datetime
 
 import requests
 from requests.exceptions import JSONDecodeError, ReadTimeout
+
+from shared.datetime_utils import now_mountain
 
 
 def time_sortable(time: str):
@@ -21,13 +23,13 @@ def time_sortable(time: str):
     Returns:
         datetime: A datetime object with today's date and the given time.
     """
-    today = datetime.now().date()
+    today = now_mountain().date()
     time_format = "%I:%M %p"
     time_obj = datetime.strptime(time, time_format).time()
     return datetime.combine(today, time_obj)
 
 
-def events_today(now=date.today().strftime("%Y-%m-%d")):
+def events_today(now=None):
     """
     Retrieve and process today's events from the National Park Service API.
 
@@ -99,6 +101,9 @@ def events_today(now=date.today().strftime("%Y-%m-%d")):
         if datetime(year, 4, 1, 1, 30) < now_dt < datetime(year, 6, 1, 1, 30):
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
         return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
+
+    if now is None:
+        now = now_mountain().strftime("%Y-%m-%d")
 
     try:
         endpoint = f"http://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"

@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +8,6 @@ from requests.exceptions import RequestException
 from weather.night_sky import (
     DarkPeriod,
     Forecast,
-    ForecastError,
     ForecastFetchError,
     ForecastValidationError,
     KpPeriod,
@@ -134,7 +132,7 @@ def test_get_forecast_by_location(sample_forecast):
     )
 
     assert isinstance(forecast, dict)
-    assert all(isinstance(k, datetime) for k in forecast.keys())
+    assert all(isinstance(k, datetime) for k in forecast)
     assert all(isinstance(v, float) for v in forecast.values())
 
 
@@ -165,7 +163,7 @@ def test_get_forecast_different_timezones(sample_forecast, timezone):
     """Test forecast retrieval in different timezones"""
     forecast = sample_forecast.get_forecast(timezone=timezone)
     assert isinstance(forecast, dict)
-    assert all(dt.tzinfo.zone == timezone for dt in forecast.keys())
+    assert all(dt.tzinfo.zone == timezone for dt in forecast)
 
 
 def test_aurora_forecast():

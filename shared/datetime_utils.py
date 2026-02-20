@@ -6,7 +6,14 @@ This module provides cross-platform compatible datetime formatting.
 
 import platform
 from datetime import datetime
-from typing import Union
+from zoneinfo import ZoneInfo
+
+MOUNTAIN = ZoneInfo("America/Denver")
+
+
+def now_mountain():
+    """Get current datetime in Mountain Time (America/Denver), timezone-aware."""
+    return datetime.now(tz=MOUNTAIN)
 
 
 def cross_platform_strftime(dt: datetime, format_string: str) -> str:

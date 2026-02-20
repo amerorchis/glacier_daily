@@ -5,14 +5,10 @@ Get road status from NPS and format into HTML.
 import json
 import sys
 import traceback
-from typing import Dict, List, Set, Tuple
 
 import requests
-import urllib3
 
 from roads.Road import Road
-
-urllib3.disable_warnings()
 
 
 class NPSWebsiteError(Exception):
@@ -23,12 +19,12 @@ class NPSWebsiteError(Exception):
     pass
 
 
-def _get_segment_bounds(coordinates: List) -> Tuple[float, float]:
+def _get_segment_bounds(coordinates: list) -> tuple[float, float]:
     """
     Extract the west and east longitude bounds from a list of coordinates.
 
     Returns:
-        Tuple of (west_lon, east_lon)
+        tuple of (west_lon, east_lon)
     """
     # Flatten nested arrays if needed
     flat = []
@@ -42,7 +38,7 @@ def _get_segment_bounds(coordinates: List) -> Tuple[float, float]:
     return (min(lons), max(lons))
 
 
-def _segments_overlap(seg1: Tuple[float, float], seg2: Tuple[float, float]) -> bool:
+def _segments_overlap(seg1: tuple[float, float], seg2: tuple[float, float]) -> bool:
     """
     Check if two segments (defined by west/east longitude bounds) overlap.
 
@@ -60,7 +56,7 @@ def _segments_overlap(seg1: Tuple[float, float], seg2: Tuple[float, float]) -> b
     return seg1[0] < seg2[1] and seg2[0] < seg1[1]
 
 
-def _fetch_open_segments(road_name: str) -> Set[Tuple[float, float]]:
+def _fetch_open_segments(road_name: str) -> set[tuple[float, float]]:
     """
     Fetch open road segments for a specific road from NPS API.
 
@@ -68,7 +64,7 @@ def _fetch_open_segments(road_name: str) -> Set[Tuple[float, float]]:
         road_name: Name of the road to query
 
     Returns:
-        Set of (west_lon, east_lon) tuples for open segments
+        set of (west_lon, east_lon) tuples for open segments
     """
     # URL-encode the road name for the query
     encoded_name = road_name.replace(" ", "%20").replace("-", "%2D")
@@ -79,7 +75,7 @@ def _fetch_open_segments(road_name: str) -> Set[Tuple[float, float]]:
     )
 
     try:
-        r = requests.get(url, verify=False, timeout=5)
+        r = requests.get(url, timeout=5)
         r.raise_for_status()
         data = json.loads(r.text)
     except (requests.exceptions.RequestException, json.JSONDecodeError):
@@ -97,7 +93,7 @@ def _fetch_open_segments(road_name: str) -> Set[Tuple[float, float]]:
 
 
 def _is_covered_by_open(
-    closed_bounds: Tuple[float, float], open_segments: Set[Tuple[float, float]]
+    closed_bounds: tuple[float, float], open_segments: set[tuple[float, float]]
 ) -> bool:
     """
     Check if a closed segment overlaps with any open segment.
@@ -107,7 +103,7 @@ def _is_covered_by_open(
 
     Args:
         closed_bounds: (west_lon, east_lon) for the closed segment
-        open_segments: Set of (west_lon, east_lon) for open segments
+        open_segments: set of (west_lon, east_lon) for open segments
 
     Returns:
         True if the closed segment overlaps with an open segment
@@ -118,7 +114,7 @@ def _is_covered_by_open(
     return False
 
 
-def closed_roads() -> Dict[str, Road]:
+def closed_roads() -> dict[str, Road]:
     """
     Retrieve closed road info from NPS and convert coordinates to names.
 
@@ -129,7 +125,7 @@ def closed_roads() -> Dict[str, Road]:
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
         SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
     try:
-        r = requests.get(url, verify=False, timeout=5)
+        r = requests.get(url, timeout=5)
     except requests.exceptions.RequestException as e:
         print(
             f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",
@@ -200,7 +196,7 @@ def closed_roads() -> Dict[str, Road]:
     return {key: value for (key, value) in roads.items() if value}
 
 
-def format_road_closures(roads: List[Road]) -> str:
+def format_road_closures(roads: list[Road]) -> str:
     """
     Take list of Road objects and turn into html formatted string.
     """

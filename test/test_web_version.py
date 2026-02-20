@@ -56,11 +56,11 @@ def test_web_version_creates_file(sample_data):
     with tempfile.TemporaryDirectory() as tmpdir:
         out_file = os.path.join(tmpdir, "test_output.html")
         # Use the default template, which is safe for test
-        result = web_version(
+        web_version(
             sample_data, file_name=out_file, template_path="email_template.html"
         )
         assert os.path.exists(out_file)
-        with open(out_file, "r", encoding="utf-8") as f:
+        with open(out_file, encoding="utf-8") as f:
             content = f.read()
         assert "Glacier Daily Update" in content or "Glacier National Park" in content
         assert "May 28, 2025" in content
@@ -69,10 +69,8 @@ def test_web_version_creates_file(sample_data):
 def test_web_version_printable_removes_styles(sample_data):
     with tempfile.TemporaryDirectory() as tmpdir:
         out_file = os.path.join(tmpdir, "printable.html")
-        result = web_version(
-            sample_data, file_name=out_file, template_path="printable.html"
-        )
-        with open(out_file, "r", encoding="utf-8") as f:
+        web_version(sample_data, file_name=out_file, template_path="printable.html")
+        with open(out_file, encoding="utf-8") as f:
             content = f.read()
         # Should not have font-size:12px or line-height:18px in printable
         assert "font-size:12px;" not in content

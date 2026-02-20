@@ -1,10 +1,7 @@
 import json
-from datetime import datetime
-from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
-import requests_cache
 from requests.exceptions import RequestException
 
 from weather.forecast import Location, WeatherAPI, get_forecast

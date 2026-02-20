@@ -3,9 +3,16 @@ A decorator to retry an operation.
 """
 
 from time import sleep
+from typing import Callable
+
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
-def retry(times: int, exceptions: tuple, default: str = "", backoff: int = 15):
+def retry(
+    times: int, exceptions: tuple, default: str = "", backoff: int = 15
+) -> Callable:
     """
     Retry Decorator
     Retries the wrapped function/method `times` times if the exceptions listed
@@ -30,17 +37,22 @@ def retry(times: int, exceptions: tuple, default: str = "", backoff: int = 15):
             The new function
             """
             attempt = 0
+            last_exception = None
             while attempt < times:
                 try:
                     return func(*args, **kwargs)
-                except exceptions:
-                    print(
-                        "Exception thrown when attempting to run %s, attempt "
-                        "%d of %d" % (func, attempt + 1, times)
+                except exceptions as e:
+                    last_exception = e
+                    logger.warning(
+                        f"Exception thrown when attempting to run {func.__name__}, attempt "
+                        f"{attempt + 1} of {times}"
                     )
                     attempt += 1
                     sleep(backoff)
 
+            logger.error(
+                f"All {times} attempts failed for {func.__name__}: {last_exception}"
+            )
             return default
 
         return newfn

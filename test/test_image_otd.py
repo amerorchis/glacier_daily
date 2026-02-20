@@ -4,11 +4,12 @@ from unittest.mock import Mock, patch
 from urllib.error import URLError
 
 import pytest
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 
 from image_otd.flickr import FlickrAPIError, FlickrImage, get_flickr
 from image_otd.image_otd import (
     ImageProcessingError,
+    get_image_otd,
     process_image,
     resize_full,
     upload_pic_otd,
@@ -74,9 +75,11 @@ def test_get_flickr_success(mock_env_vars, mock_flickr_response):
 
 
 def test_get_flickr_missing_env_var():
-    with patch.dict("os.environ", {}, clear=True):
-        with pytest.raises(FlickrAPIError, match="Missing environment variable"):
-            get_flickr()
+    with (
+        patch.dict("os.environ", {}, clear=True),
+        pytest.raises(FlickrAPIError, match="Missing environment variable"),
+    ):
+        get_flickr()
 
 
 def test_get_flickr_api_error(mock_env_vars):
@@ -104,9 +107,6 @@ def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
 
         with pytest.raises(FlickrAPIError, match="Failed to download image"):
             get_flickr()
-
-
-from image_otd.image_otd import get_image_otd
 
 
 @pytest.fixture
@@ -170,9 +170,11 @@ def test_upload_pic_otd_success():
 
 
 def test_upload_pic_otd_file_not_found():
-    with patch("image_otd.image_otd.Path.exists", return_value=False):
-        with pytest.raises(FileNotFoundError):
-            upload_pic_otd()
+    with (
+        patch("image_otd.image_otd.Path.exists", return_value=False),
+        pytest.raises(FileNotFoundError),
+    ):
+        upload_pic_otd()
 
 
 def test_resize_full_cached():

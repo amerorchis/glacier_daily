@@ -116,7 +116,7 @@ def test_error_handling_in_weather_services(mock_all_weather_services):
     mock_all_weather_services["forecast"].side_effect = Exception("API Error")
 
     with pytest.raises(Exception) as exc_info:
-        weather = WeatherContent()
+        WeatherContent()
 
     assert "API Error" in str(exc_info.value)
 

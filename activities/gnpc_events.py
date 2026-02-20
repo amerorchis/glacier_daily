@@ -2,8 +2,6 @@
 This module retrieves information about GNPC events by scraping the GNPC website.
 """
 
-from typing import Dict, List
-
 import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
@@ -29,7 +27,7 @@ class GNPCParsingError(GNPCError):
     pass
 
 
-def scrape_events_page(url: str, event_type: str) -> List[Dict[str, str]]:
+def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
     """
     Scrape events from a specific GNPC page.
 
@@ -49,7 +47,7 @@ def scrape_events_page(url: str, event_type: str) -> List[Dict[str, str]]:
         r = requests.get(url, headers=headers, timeout=12)
         r.raise_for_status()
     except RequestException as e:
-        raise GNPCRequestError(f"Failed to access {url}: {str(e)}")
+        raise GNPCRequestError(f"Failed to access {url}: {str(e)}") from e
 
     try:
         soup = BeautifulSoup(r.content, "html.parser")
@@ -104,10 +102,10 @@ def scrape_events_page(url: str, event_type: str) -> List[Dict[str, str]]:
 
         return events
     except Exception as e:
-        raise GNPCParsingError(f"Failed to parse content from {url}: {str(e)}")
+        raise GNPCParsingError(f"Failed to parse content from {url}: {str(e)}") from e
 
 
-def get_gnpc_events() -> List[Dict[str, str]]:
+def get_gnpc_events() -> list[dict[str, str]]:
     """
     Gather information about upcoming Glacier Conversations and Glacier Book Club.
 
@@ -149,4 +147,4 @@ def get_gnpc_events() -> List[Dict[str, str]]:
 
         return events
     except Exception as e:
-        raise GNPCError(f"Error processing event dates: {str(e)}")
+        raise GNPCError(f"Error processing event dates: {str(e)}") from e

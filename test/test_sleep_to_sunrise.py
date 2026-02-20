@@ -1,5 +1,4 @@
 import types
-from datetime import timedelta
 
 import sunrise_timelapse.sleep_to_sunrise as sts
 

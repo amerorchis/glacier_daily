@@ -1,6 +1,5 @@
 import json
 
-import pytest
 import requests
 
 import trails_and_cgs.trails as trails_mod

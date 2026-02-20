@@ -9,13 +9,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from os import environ
 from pathlib import Path
-from typing import Dict
-from urllib.request import URLError, urlretrieve
+from urllib.request import URLError
 
 from flickrapi import FlickrAPI
 
 
-def get_env_vars() -> Dict[str, str]:
+def get_env_vars() -> dict[str, str]:
     """Get required environment variables."""
     required_vars = ["flickr_key", "flickr_secret", "glaciernps_uid"]
     env_vars = {}
@@ -65,14 +64,14 @@ def get_flickr() -> FlickrImage:
         total = int(photos["photos"]["total"])
 
         random.seed(datetime.today().strftime("%Y:%m:%d"))
-        potd_num = random.randint(1, total)
+        potd_num = random.randint(1, total)  # noqa: S311
         photos = flickr.photos.search(
             user_id=environ["glaciernps_uid"], per_page="1", page=potd_num
         )
 
         # Retry if no photos found
         while len(photos["photos"]["photo"]) == 0:
-            potd_num = random.randint(1, total)
+            potd_num = random.randint(1, total)  # noqa: S311
             photos = flickr.photos.search(
                 user_id=environ["glaciernps_uid"], per_page="1", page=potd_num
             )
@@ -87,7 +86,7 @@ def get_flickr() -> FlickrImage:
         save_loc = Path("email_images/today/raw_image_otd.jpg")
         save_loc.parent.mkdir(parents=True, exist_ok=True)
 
-        req = urllib.request.Request(
+        req = urllib.request.Request(  # noqa: S310
             pic_url,
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -109,7 +108,7 @@ def get_flickr() -> FlickrImage:
         for attempt in range(max_retries):
             try:
                 with (
-                    urllib.request.urlopen(req) as response,
+                    urllib.request.urlopen(req) as response,  # noqa: S310
                     open(save_loc, "wb") as out_file,
                 ):
                     if response.status == 429:

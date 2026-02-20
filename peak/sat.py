@@ -3,13 +3,13 @@ Generate a static image of peak of the day using Mapbox API and upload to websit
 """
 
 import os
-from datetime import datetime
 from io import BytesIO
 
 import PIL
 import requests
 from PIL import Image
 
+from shared.datetime_utils import now_mountain
 from shared.env_loader import load_env
 from shared.ftp import upload_file
 
@@ -22,7 +22,7 @@ def upload_peak() -> str:
     then return the URL.
     """
 
-    today = datetime.now()
+    today = now_mountain()
     filename = f"{today.month}_{today.day}_{today.year}_peak.jpg"
     file = "email_images/today/peak.jpg"
     directory = "peak"

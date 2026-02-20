@@ -35,8 +35,8 @@ def test_record_drip_event_success(monkeypatch):
     assert called["timeout"] == 30
 
 
-def test_record_drip_event_failure(monkeypatch, capsys):
-    """Verify non-204 status prints to stderr."""
+def test_record_drip_event_failure(monkeypatch, caplog):
+    """Verify non-204 status logs an error."""
 
     def fake_post(url, headers, data, timeout):
         class R:
@@ -51,9 +51,9 @@ def test_record_drip_event_failure(monkeypatch, capsys):
     monkeypatch.setattr(
         drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
     )
-    drip_actions.record_drip_event("test@example.com", event="Test Event")
-    captured = capsys.readouterr()
-    assert "Failed to record event" in captured.err
+    with caplog.at_level("ERROR"):
+        drip_actions.record_drip_event("test@example.com", event="Test Event")
+    assert "Failed to record event" in caplog.text
 
 
 # --- html_friendly.py ---
@@ -205,8 +205,8 @@ def test_bulk_workflow_trigger_chunking(monkeypatch):
     assert len(post_calls) == 3  # 1000 + 1000 + 500
 
 
-def test_bulk_workflow_trigger_failure(monkeypatch, capsys):
-    """Verify non-201 status prints error."""
+def test_bulk_workflow_trigger_failure(monkeypatch, caplog):
+    """Verify non-201 status logs an error."""
 
     def fake_post(url, headers, data, timeout):
         class R:
@@ -221,9 +221,9 @@ def test_bulk_workflow_trigger_failure(monkeypatch, capsys):
     monkeypatch.setattr(
         drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
     )
-    drip_actions.bulk_workflow_trigger(["a@example.com"])
-    captured = capsys.readouterr()
-    assert "Failed to add subscribers" in captured.out
+    with caplog.at_level("ERROR"):
+        drip_actions.bulk_workflow_trigger(["a@example.com"])
+    assert "Failed to add subscribers" in caplog.text
 
 
 def test_send_in_drip(monkeypatch):
@@ -245,8 +245,8 @@ def test_send_in_drip(monkeypatch):
     drip_actions.send_in_drip("a@example.com")
 
 
-def test_send_in_drip_failure(monkeypatch, capsys):
-    """Verify non-201 status prints to stderr."""
+def test_send_in_drip_failure(monkeypatch, caplog):
+    """Verify non-201 status logs an error."""
 
     def fake_post(url, headers, data, timeout):
         class R:
@@ -261,9 +261,9 @@ def test_send_in_drip_failure(monkeypatch, capsys):
     monkeypatch.setattr(
         drip_actions.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}
     )
-    drip_actions.send_in_drip("bad@example.com")
-    captured = capsys.readouterr()
-    assert "Failed to subscribe" in captured.err
+    with caplog.at_level("ERROR"):
+        drip_actions.send_in_drip("bad@example.com")
+    assert "Failed to subscribe" in caplog.text
 
 
 # --- subscriber_list.py ---
@@ -317,7 +317,7 @@ def test_subscriber_list_multipage(monkeypatch):
 
     calls = []
 
-    def fake_get(url, headers=None, params=None):
+    def fake_get(url, headers=None, params=None, **kwargs):
         # params["page"] will be 1 for first call, 2 for second
         page = params["page"] if params and "page" in params else 1
         calls.append(page)
@@ -333,7 +333,7 @@ def test_subscriber_list_multipage(monkeypatch):
     assert set(result) == {"a@example.com", "b@example.com"}
     assert calls == [1, 2]
 
-    class FakeResponse:
+    class FakeSimpleResponse:
         def __init__(self):
             self._page = 1
 
@@ -349,7 +349,7 @@ def test_subscriber_list_multipage(monkeypatch):
     monkeypatch.setattr(
         subscriber_list,
         "requests",
-        types.SimpleNamespace(get=lambda *a, **k: FakeResponse()),
+        types.SimpleNamespace(get=lambda *a, **k: FakeSimpleResponse()),
     )
     monkeypatch.setattr(
         subscriber_list.os, "environ", {"DRIP_TOKEN": "t", "DRIP_ACCOUNT": "a"}

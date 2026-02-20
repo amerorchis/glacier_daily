@@ -3,15 +3,12 @@ This module handles the image of the day functionality.
 It includes functions to resize the image and upload it to a specified directory.
 """
 
-import sys
-import traceback
-from datetime import datetime
 from pathlib import Path
-from typing import Tuple
 
 from PIL import Image, UnidentifiedImageError
 
 from image_otd.flickr import FlickrAPIError, get_flickr
+from shared.datetime_utils import now_mountain
 from shared.env_loader import load_env
 from shared.ftp import upload_file
 from shared.retrieve_from_json import retrieve_from_json
@@ -35,7 +32,7 @@ def upload_pic_otd() -> str:
     Raises:
         FileNotFoundError: If the image file doesn't exist
     """
-    today = datetime.now()
+    today = now_mountain()
     filename = f"{today.month}_{today.day}_{today.year}_pic_otd.jpg"
     file = Path("email_images/today/resized_image_otd.jpg")
 
@@ -47,13 +44,13 @@ def upload_pic_otd() -> str:
     return address
 
 
-def process_image(image_path: Path, dimensions: Tuple[int, int, int]) -> Path:
+def process_image(image_path: Path, dimensions: tuple[int, int, int]) -> Path:
     """
     Process and resize an image while maintaining aspect ratio.
 
     Args:
         image_path: Path to the input image
-        dimensions: Tuple of (width, height, scale_multiplier)
+        dimensions: tuple of (width, height, scale_multiplier)
 
     Returns:
         Path: Path to the processed image
@@ -90,18 +87,18 @@ def process_image(image_path: Path, dimensions: Tuple[int, int, int]) -> Path:
 
         return output_path
 
-    except UnidentifiedImageError:
-        raise ImageProcessingError("Invalid or corrupt image file")
+    except UnidentifiedImageError as e:
+        raise ImageProcessingError("Invalid or corrupt image file") from e
     except Exception as e:
-        raise ImageProcessingError(f"Image processing failed: {str(e)}")
+        raise ImageProcessingError(f"Image processing failed: {str(e)}") from e
 
 
-def resize_full() -> Tuple[str, str, str]:
+def resize_full() -> tuple[str, str, str]:
     """
     Main function to retrieve and process the image of the day.
 
     Returns:
-        Tuple[str, str, str]: (upload_address, image_title, image_link)
+        tuple[str, str, str]: (upload_address, image_title, image_link)
 
     Raises:
         FlickrAPIError: If Flickr operations fail
@@ -121,7 +118,7 @@ def resize_full() -> Tuple[str, str, str]:
     return upload_address, image_data.title, image_data.link
 
 
-def get_image_otd() -> Tuple[str, str, str]:
+def get_image_otd() -> tuple[str, str, str]:
     """
     Get the image of the day from Flickr.
     """

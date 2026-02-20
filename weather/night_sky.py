@@ -5,7 +5,7 @@ Retrieve and process aurora forecast.
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional
+from typing import NamedTuple, Optional
 
 import pytz
 import requests
@@ -80,7 +80,7 @@ class Forecast:
                 ) from e
 
         self.raw_text = forecast_text.strip()
-        self.forecast_periods: List[KpPeriod] = []
+        self.forecast_periods: list[KpPeriod] = []
 
         if not self._validate_text_structure():
             raise ForecastValidationError("Invalid forecast text structure")
@@ -92,7 +92,7 @@ class Forecast:
     @classmethod
     def from_file(cls, filepath: str) -> "Forecast":
         """Create Forecast instance from a local file."""
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             return cls(f.read())
 
     def _validate_text_structure(self) -> bool:
@@ -117,7 +117,7 @@ class Forecast:
             self.issue_date = datetime.strptime(date_str, "%Y %b %d %H%M")
             self.issue_date = pytz.UTC.localize(self.issue_date)
         except ValueError as e:
-            raise ForecastValidationError(f"Invalid date format: {e}")
+            raise ForecastValidationError(f"Invalid date format: {e}") from e
 
     def _parse_kp_indices(self) -> None:
         """Parse and validate the Kp indices from the forecast text."""
@@ -271,7 +271,7 @@ class Forecast:
         longitude: float,
         timezone: str,
         start_time: Optional[datetime] = None,
-    ) -> Dict[datetime, float]:
+    ) -> dict[datetime, float]:
         """Get Kp forecast for next dark period at given location."""
         # Set default start time to now
         if start_time is None:
@@ -296,7 +296,7 @@ class Forecast:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         timezone: str = "US/Mountain",
-    ) -> Dict[datetime, float]:
+    ) -> dict[datetime, float]:
         """Get Kp forecast for specified time range in given timezone."""
         tz = pytz.timezone(timezone)
 
@@ -370,7 +370,6 @@ def aurora_forecast(cloud_cover: float = 0.0) -> str:
     # Get the dark period and forecast
     latitude, longitude = 48.528, -113.989
     timezone = "US/Mountain"
-    tz = pytz.timezone(timezone)
     start_time = datetime.now(pytz.UTC)
 
     dark_period = f.get_next_dark_period(latitude, longitude, start_time)
