@@ -19,7 +19,7 @@ An automated system that generates and distributes daily email updates about con
 ## Quick Start (For Users)
 
 ### Prerequisites
-- Python 3.9
+- Python 3.11
 - [uv](https://docs.astral.sh/uv/) package manager
 - API keys and FTP access (see Configuration)
 

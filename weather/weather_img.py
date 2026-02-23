@@ -5,8 +5,6 @@ The module creates weather maps with temperature and condition overlays for vari
 locations within the park, then uploads them to an FTP server.
 """
 
-from typing import Optional
-
 from PIL import Image, ImageDraw, ImageFont
 
 from shared.datetime_utils import format_date_readable, now_mountain
@@ -82,7 +80,7 @@ def _get_base_image(season: str) -> Image.Image:
 
 def weather_image(
     results: list[tuple[str, int, int, str]], skip_upload: bool = False
-) -> Optional[str]:
+) -> str | None:
     """
     Create a weather image based on the provided forecast results and upload it.
 

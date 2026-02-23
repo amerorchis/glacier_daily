@@ -1,4 +1,4 @@
-#!/home/pi/.local/bin/uv run --python 3.9 python
+#!/home/pi/.local/bin/uv run --python 3.11 python
 
 """
 This script performs the Glacier Daily Update by retrieving subscribers,

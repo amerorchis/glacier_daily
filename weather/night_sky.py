@@ -5,15 +5,17 @@ Retrieve and process aurora forecast.
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import NamedTuple, Optional
+from typing import NamedTuple
+from zoneinfo import ZoneInfo
 
-import pytz
 import requests
 from astral import LocationInfo
 from astral.sun import sun
 from requests.exceptions import RequestException
 
 from shared.datetime_utils import format_time_with_timezone
+
+UTC = ZoneInfo("UTC")
 
 
 class ForecastError(Exception):
@@ -67,7 +69,7 @@ class Forecast:
         "visible": (5.0, 9.0),  # Strong aurora display
     }
 
-    def __init__(self, forecast_text: Optional[str] = None):
+    def __init__(self, forecast_text: str | None = None):
         """Initialize forecast object, fetching from NOAA if no text provided."""
         if forecast_text is None:
             try:
@@ -115,7 +117,7 @@ class Forecast:
         try:
             date_str = match.group(1)
             self.issue_date = datetime.strptime(date_str, "%Y %b %d %H%M")
-            self.issue_date = pytz.UTC.localize(self.issue_date)
+            self.issue_date = self.issue_date.replace(tzinfo=UTC)
         except ValueError as e:
             raise ForecastValidationError(f"Invalid date format: {e}") from e
 
@@ -270,12 +272,12 @@ class Forecast:
         latitude: float,
         longitude: float,
         timezone: str,
-        start_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
     ) -> dict[datetime, float]:
         """Get Kp forecast for next dark period at given location."""
         # Set default start time to now
         if start_time is None:
-            start_time = datetime.now(pytz.UTC)
+            start_time = datetime.now(tz=UTC)
         elif start_time.tzinfo is None:
             raise ValueError("start_time must be timezone-aware")
 
@@ -293,23 +295,23 @@ class Forecast:
 
     def get_forecast(
         self,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
         timezone: str = "US/Mountain",
     ) -> dict[datetime, float]:
         """Get Kp forecast for specified time range in given timezone."""
-        tz = pytz.timezone(timezone)
+        tz = ZoneInfo(timezone)
 
         # Convert time range to UTC for comparison
         if start_time and start_time.tzinfo is None:
-            start_time = tz.localize(start_time)
+            start_time = start_time.replace(tzinfo=tz)
         if end_time and end_time.tzinfo is None:
-            end_time = tz.localize(end_time)
+            end_time = end_time.replace(tzinfo=tz)
 
         if start_time:
-            start_time = start_time.astimezone(pytz.UTC)
+            start_time = start_time.astimezone(UTC)
         if end_time:
-            end_time = end_time.astimezone(pytz.UTC)
+            end_time = end_time.astimezone(UTC)
 
         # Filter and convert periods to target timezone
         filtered_periods = [
@@ -370,7 +372,7 @@ def aurora_forecast(cloud_cover: float = 0.0) -> tuple[str, str]:
     # Get the dark period and forecast
     latitude, longitude = 48.528, -113.989
     timezone = "US/Mountain"
-    start_time = datetime.now(pytz.UTC)
+    start_time = datetime.now(tz=UTC)
 
     dark_period = f.get_next_dark_period(latitude, longitude, start_time)
     wg_forecast = f.get_forecast_by_location(

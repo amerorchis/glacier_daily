@@ -6,11 +6,11 @@ correctly on both Unix and Windows platforms.
 """
 
 import platform
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 
 from shared.datetime_utils import (
     cross_platform_strftime,
@@ -166,19 +166,19 @@ class TestFormatTimeWithTimezone:
 
     def test_timezone_formatting(self):
         """Test time with timezone formatting."""
-        dt = pytz.timezone("America/Denver").localize(datetime(2025, 1, 5, 13, 30, 0))
+        dt = datetime(2025, 1, 5, 13, 30, 0, tzinfo=ZoneInfo("America/Denver"))
         result = format_time_with_timezone(dt)
         assert result == "1:30 pm MST"
 
     def test_timezone_formatting_summer(self):
         """Test time with timezone formatting in summer (MDT)."""
-        dt = pytz.timezone("America/Denver").localize(datetime(2025, 7, 15, 13, 30, 0))
+        dt = datetime(2025, 7, 15, 13, 30, 0, tzinfo=ZoneInfo("America/Denver"))
         result = format_time_with_timezone(dt)
         assert result == "1:30 pm MDT"
 
     def test_utc_timezone(self):
         """Test UTC timezone formatting."""
-        dt = pytz.UTC.localize(datetime(2025, 1, 5, 20, 30, 0))
+        dt = datetime(2025, 1, 5, 20, 30, 0, tzinfo=UTC)
         result = format_time_with_timezone(dt)
         assert result == "8:30 pm UTC"
 
@@ -236,7 +236,7 @@ class TestRealWorldUseCases:
 
     def test_gnpc_datetime_format(self):
         """Test the format used in gnpc_datetime module."""
-        dt = pytz.timezone("America/Denver").localize(datetime(2025, 1, 5, 13, 30, 0))
+        dt = datetime(2025, 1, 5, 13, 30, 0, tzinfo=ZoneInfo("America/Denver"))
         result = (
             cross_platform_strftime(dt, "%A, %B %-d, %Y, %-I:%M %p %Z")
             .lower()

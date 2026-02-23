@@ -7,7 +7,6 @@ import json
 import random
 from datetime import date
 from pathlib import Path
-from typing import Optional
 
 from peak.sat import peak_sat
 from shared.logging_config import get_logger
@@ -19,7 +18,7 @@ SCRIPT_DIR = Path(__file__).parent
 WIKIPEDIA_JSON = SCRIPT_DIR / "peaks_wikipedia.json"
 
 
-def _get_peak_summary(name: str, lat: float, lon: float) -> Optional[str]:
+def _get_peak_summary(name: str, lat: float, lon: float) -> str | None:
     """Get the Wikipedia summary for a peak if available."""
     if not WIKIPEDIA_JSON.exists():
         return None

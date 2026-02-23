@@ -155,7 +155,7 @@ class WeatherAPI:
         """Process forecast data into required format."""
 
         results = []
-        for location, forecast in zip(self.locations, forecasts):
+        for location, forecast in zip(self.locations, forecasts, strict=True):
             daily = forecast["daily"]
             low = round(daily["temperature_2m_min"][0])
             high = round(daily["temperature_2m_max"][0])

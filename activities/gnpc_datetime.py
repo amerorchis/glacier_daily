@@ -5,8 +5,7 @@ Convert date strings from Glacier National Park Conservancy format to a localize
 import calendar
 import re
 from datetime import datetime
-
-import pytz
+from zoneinfo import ZoneInfo
 
 from shared.datetime_utils import cross_platform_strftime
 
@@ -60,7 +59,7 @@ def convert_gnpc_datetimes(date_string: str):
             dt = datetime(year, month_num, day, hour, minute)
 
             # Return localized datetime
-            return pytz.timezone("America/Denver").localize(dt)
+            return dt.replace(tzinfo=ZoneInfo("America/Denver"))
 
         except (ValueError, TypeError):
             # Return original string if any conversion fails

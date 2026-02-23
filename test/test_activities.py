@@ -1,8 +1,8 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 import requests
 
 from activities.events import events_today
@@ -102,7 +102,7 @@ def test_events_today_no_events_summer(mock_nps_api):
 
 @pytest.fixture
 def mst_timezone():
-    return pytz.timezone("America/Denver")
+    return ZoneInfo("America/Denver")
 
 
 @pytest.fixture
@@ -123,7 +123,7 @@ def test_convert_gnpc_datetimes_valid_dates(sample_dates, mst_timezone):
     """Test conversion of valid date strings."""
     for date_string, expected_dt in sample_dates:
         result = convert_gnpc_datetimes(date_string)
-        expected = mst_timezone.localize(expected_dt)
+        expected = expected_dt.replace(tzinfo=mst_timezone)
         assert result == expected
         assert result.tzinfo == expected.tzinfo
 
@@ -160,24 +160,24 @@ def test_convert_gnpc_datetimes_edge_cases(mst_timezone):
 
     for date_string, expected_dt in edge_cases:
         result = convert_gnpc_datetimes(date_string)
-        expected = mst_timezone.localize(expected_dt)
+        expected = expected_dt.replace(tzinfo=mst_timezone)
         assert result == expected
 
 
 def test_datetime_to_string_standard():
     """Test standard datetime string formatting."""
-    tz = pytz.timezone("America/Denver")
+    tz = ZoneInfo("America/Denver")
     test_cases = [
         (
-            tz.localize(datetime(2024, 7, 15, 19, 30)),
+            datetime(2024, 7, 15, 19, 30, tzinfo=tz),
             "Monday, July 15, 2024, 7:30 pm MDT",
         ),
         (
-            tz.localize(datetime(2024, 12, 25, 18, 45)),
+            datetime(2024, 12, 25, 18, 45, tzinfo=tz),
             "Wednesday, December 25, 2024, 6:45 pm MST",
         ),
         (
-            tz.localize(datetime(2024, 1, 1, 12, 0)),
+            datetime(2024, 1, 1, 12, 0, tzinfo=tz),
             "Monday, January 1, 2024, 12:00 pm MST",
         ),
     ]
@@ -189,8 +189,8 @@ def test_datetime_to_string_standard():
 
 def test_datetime_to_string_single_digit_hours():
     """Test formatting of times with single-digit hours."""
-    tz = pytz.timezone("America/Denver")
-    dt = tz.localize(datetime(2024, 7, 15, 9, 5))
+    tz = ZoneInfo("America/Denver")
+    dt = datetime(2024, 7, 15, 9, 5, tzinfo=tz)
     result = datetime_to_string(dt)
     assert result == "Monday, July 15, 2024, 9:05 am MDT"
 
@@ -198,11 +198,11 @@ def test_datetime_to_string_single_digit_hours():
 def test_datetime_to_string_timezone_handling():
     """Test handling of different timezones."""
     # Create datetime in different timezone
-    pst = pytz.timezone("America/Los_Angeles")
-    dt_pst = pst.localize(datetime(2024, 7, 15, 18, 30))
+    pst = ZoneInfo("America/Los_Angeles")
+    dt_pst = datetime(2024, 7, 15, 18, 30, tzinfo=pst)
 
     # Convert to MST/MDT
-    mst = pytz.timezone("America/Denver")
+    mst = ZoneInfo("America/Denver")
     dt_mst = dt_pst.astimezone(mst)
 
     result = datetime_to_string(dt_mst)

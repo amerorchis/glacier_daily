@@ -3,7 +3,6 @@ This module fetches and processes various weather-related data including forecas
 """
 
 import concurrent.futures
-from typing import Optional
 
 from weather.forecast import get_forecast
 from weather.night_sky import aurora_forecast
@@ -40,10 +39,10 @@ class WeatherContent:
         """
         Initialize WeatherContent instance and fetch weather data.
         """
-        self.results: Optional[list[tuple[str, int, int, str]]] = None
+        self.results: list[tuple[str, int, int, str]] | None = None
         self.message1: str = ""
         self.message2: str = ""
-        self.season: Optional[str] = None
+        self.season: str | None = None
         self._fetch_weather_data()
         self.message1 += "<br><br>Forecasts Around the Park:"
 

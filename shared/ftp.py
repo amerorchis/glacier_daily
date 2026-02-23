@@ -6,7 +6,6 @@ import contextlib
 import ftplib
 from datetime import datetime, timedelta
 from ftplib import FTP
-from typing import Optional
 
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
@@ -50,7 +49,7 @@ class FTPSession:
     for multiple uploads."""
 
     def __init__(self) -> None:
-        self._ftp: Optional[FTP] = None
+        self._ftp: FTP | None = None
         self._cleaned_dirs: set[str] = set()
 
     def __enter__(self) -> "FTPSession":
@@ -66,7 +65,7 @@ class FTPSession:
             self._ftp = None
 
     def upload(
-        self, directory: str, filename: str, file: Optional[str] = None
+        self, directory: str, filename: str, file: str | None = None
     ) -> tuple[str, list[str]]:
         """Upload a file reusing the existing connection. Runs delete_on_first once per directory."""
         assert self._ftp is not None, "FTPSession must be used as a context manager"
@@ -96,7 +95,7 @@ class FTPSession:
 
 
 def upload_file(
-    directory: str, filename: str, file: Optional[str] = None
+    directory: str, filename: str, file: str | None = None
 ) -> tuple[str, list[str]]:
     """
     Uploads a file to the specified directory on the FTP server and deletes old files if necessary.

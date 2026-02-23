@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -96,7 +95,7 @@ def test_closure_distance_logan(mock_gtsr):
 def test_hiker_biker_status_success(mock_get, mock_closure_data, mock_gtsr):
     """Test successful status retrieval"""
 
-    def mock_closed_roads() -> dict[str, Optional[Road]]:
+    def mock_closed_roads() -> dict[str, Road | None]:
         mock_gtsr.west_loc = ("Lake McDonald Lodge", 10.7)
         mock_gtsr.east_loc = ("Rising Sun", 43.4)
         return {"Going-to-the-Sun Road": mock_gtsr}
@@ -124,7 +123,7 @@ def test_hiker_biker_status_no_closures(mock_get, mock_gtsr):
     mock_response.text = json.dumps({"features": []})
     mock_get.return_value = mock_response
 
-    def mock_closed_roads() -> dict[str, Optional[Road]]:
+    def mock_closed_roads() -> dict[str, Road | None]:
         mock_gtsr.west_loc = ("Lake McDonald Lodge", 10.7)
         mock_gtsr.east_loc = ("Rising Sun", 43.4)
         return {"Going-to-the-Sun Road": mock_gtsr}

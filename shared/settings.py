@@ -9,7 +9,6 @@ instead of reading ``os.environ`` directly.
 import dataclasses
 import logging
 import os
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +105,7 @@ class Settings:
 # Singleton access
 # ---------------------------------------------------------------------------
 
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:

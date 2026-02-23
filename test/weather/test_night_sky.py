@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 from requests.exceptions import RequestException
 
 from weather.night_sky import (
@@ -111,7 +111,7 @@ def test_get_aurora_strength():
 
 def test_get_next_dark_period(sample_forecast):
     """Test dark period calculation"""
-    test_time = datetime(2025, 1, 10, 12, 0, tzinfo=pytz.UTC)
+    test_time = datetime(2025, 1, 10, 12, 0, tzinfo=UTC)
     dark_period = sample_forecast.get_next_dark_period(
         latitude=48.528, longitude=-113.989, start_time=test_time
     )
@@ -123,7 +123,7 @@ def test_get_next_dark_period(sample_forecast):
 
 def test_get_forecast_by_location(sample_forecast):
     """Test location-based forecast retrieval"""
-    test_time = datetime(2025, 1, 10, 12, 0, tzinfo=pytz.UTC)
+    test_time = datetime(2025, 1, 10, 12, 0, tzinfo=UTC)
     forecast = sample_forecast.get_forecast_by_location(
         latitude=48.528,
         longitude=-113.989,
@@ -138,7 +138,7 @@ def test_get_forecast_by_location(sample_forecast):
 
 def test_kp_period_str():
     """Test KpPeriod string representation"""
-    test_time = datetime(2024, 1, 10, 12, 0, tzinfo=pytz.UTC)
+    test_time = datetime(2024, 1, 10, 12, 0, tzinfo=UTC)
     period = KpPeriod(test_time, test_time, 3.0)
     assert str(period).startswith("2024-01-10 12:00")
     assert "Kp 3.0" in str(period)
@@ -163,7 +163,7 @@ def test_get_forecast_different_timezones(sample_forecast, timezone):
     """Test forecast retrieval in different timezones"""
     forecast = sample_forecast.get_forecast(timezone=timezone)
     assert isinstance(forecast, dict)
-    assert all(dt.tzinfo.zone == timezone for dt in forecast)
+    assert all(dt.tzinfo.key == timezone for dt in forecast)
 
 
 def test_aurora_forecast():
@@ -172,18 +172,18 @@ def test_aurora_forecast():
         mock_instance = MockForecast.return_value
 
         # Mock the dark period (e.g., 8pm to 6am next day in Mountain time)
-        tz = pytz.timezone("US/Mountain")
-        dark_start = tz.localize(datetime(2025, 1, 10, 20, 0))  # 8pm
-        dark_end = tz.localize(datetime(2025, 1, 11, 6, 0))  # 6am next day
+        tz = ZoneInfo("US/Mountain")
+        dark_start = datetime(2025, 1, 10, 20, 0, tzinfo=tz)  # 8pm
+        dark_end = datetime(2025, 1, 11, 6, 0, tzinfo=tz)  # 6am next day
         mock_instance.get_next_dark_period.return_value = DarkPeriod(
             start=dark_start, end=dark_end
         )
 
         # Mock forecast with 3-hour periods that will be interpolated
         mock_instance.get_forecast_by_location.return_value = {
-            tz.localize(datetime(2025, 1, 10, 18, 0)): 4.0,  # 6pm-9pm period (Kp 4.0)
-            tz.localize(
-                datetime(2025, 1, 10, 21, 0)
+            datetime(2025, 1, 10, 18, 0, tzinfo=tz): 4.0,  # 6pm-9pm period (Kp 4.0)
+            datetime(
+                2025, 1, 10, 21, 0, tzinfo=tz
             ): 3.0,  # 9pm-midnight period (Kp 3.0)
         }
         MockForecast.get_aurora_strength = Forecast.get_aurora_strength
@@ -260,10 +260,8 @@ def test_invalid_data_line():
 def test_get_next_dark_period_after_sunset(sample_forecast):
     """Test dark period calculation when start_time is after sunset (uses next day)."""
     # Use MST time after sunset (sunset is ~5:10 PM MST in January)
-    mst = pytz.timezone("US/Mountain")
-    test_time = mst.localize(
-        datetime(2025, 1, 10, 22, 0)
-    )  # 10pm MST, well after sunset
+    mst = ZoneInfo("US/Mountain")
+    test_time = datetime(2025, 1, 10, 22, 0, tzinfo=mst)  # 10pm MST, well after sunset
     dark_period = sample_forecast.get_next_dark_period(
         latitude=48.528, longitude=-113.989, start_time=test_time
     )
@@ -296,7 +294,7 @@ def test_get_forecast_by_location_naive_start_time(sample_forecast):
 
 def test_get_forecast_by_location_none_timezone(sample_forecast):
     """Test that None timezone raises ValueError."""
-    test_time = datetime(2025, 1, 10, 12, 0, tzinfo=pytz.UTC)
+    test_time = datetime(2025, 1, 10, 12, 0, tzinfo=UTC)
     with pytest.raises(ValueError, match="timezone must be provided"):
         sample_forecast.get_forecast_by_location(
             latitude=48.528,
@@ -333,8 +331,8 @@ def test_forecast_str(sample_forecast):
 
 def test_strftime():
     """Test Forecast.strftime classmethod."""
-    tz = pytz.timezone("US/Mountain")
-    dt = tz.localize(datetime(2025, 1, 10, 20, 0))
+    tz = ZoneInfo("US/Mountain")
+    dt = datetime(2025, 1, 10, 20, 0, tzinfo=tz)
     result = Forecast.strftime(dt)
     assert isinstance(result, str)
     assert "8" in result or "20" in result  # 8pm or 20:00
@@ -344,15 +342,15 @@ def test_aurora_forecast_cloudy():
     """Test aurora forecast with cloudy skies and visible aurora."""
     with patch("weather.night_sky.Forecast") as MockForecast:
         mock_instance = MockForecast.return_value
-        tz = pytz.timezone("US/Mountain")
-        dark_start = tz.localize(datetime(2025, 1, 10, 20, 0))
-        dark_end = tz.localize(datetime(2025, 1, 11, 6, 0))
+        tz = ZoneInfo("US/Mountain")
+        dark_start = datetime(2025, 1, 10, 20, 0, tzinfo=tz)
+        dark_end = datetime(2025, 1, 11, 6, 0, tzinfo=tz)
         mock_instance.get_next_dark_period.return_value = DarkPeriod(
             start=dark_start, end=dark_end
         )
         # High Kp values that trigger aurora message
         mock_instance.get_forecast_by_location.return_value = {
-            tz.localize(datetime(2025, 1, 10, 21, 0)): 5.0,
+            datetime(2025, 1, 10, 21, 0, tzinfo=tz): 5.0,
         }
         MockForecast.get_aurora_strength = Forecast.get_aurora_strength
         MockForecast.strftime = Forecast.strftime
@@ -366,14 +364,14 @@ def test_aurora_forecast_clear_and_visible():
     """Test aurora forecast with clear skies and visible aurora."""
     with patch("weather.night_sky.Forecast") as MockForecast:
         mock_instance = MockForecast.return_value
-        tz = pytz.timezone("US/Mountain")
-        dark_start = tz.localize(datetime(2025, 1, 10, 20, 0))
-        dark_end = tz.localize(datetime(2025, 1, 11, 6, 0))
+        tz = ZoneInfo("US/Mountain")
+        dark_start = datetime(2025, 1, 10, 20, 0, tzinfo=tz)
+        dark_end = datetime(2025, 1, 11, 6, 0, tzinfo=tz)
         mock_instance.get_next_dark_period.return_value = DarkPeriod(
             start=dark_start, end=dark_end
         )
         mock_instance.get_forecast_by_location.return_value = {
-            tz.localize(datetime(2025, 1, 10, 21, 0)): 5.0,
+            datetime(2025, 1, 10, 21, 0, tzinfo=tz): 5.0,
         }
         MockForecast.get_aurora_strength = Forecast.get_aurora_strength
         MockForecast.strftime = Forecast.strftime
@@ -387,15 +385,15 @@ def test_aurora_forecast_no_dark_hours():
     """Test aurora forecast when no dark hours overlap with forecast."""
     with patch("weather.night_sky.Forecast") as MockForecast:
         mock_instance = MockForecast.return_value
-        tz = pytz.timezone("US/Mountain")
-        dark_start = tz.localize(datetime(2025, 1, 10, 20, 0))
-        dark_end = tz.localize(datetime(2025, 1, 11, 6, 0))
+        tz = ZoneInfo("US/Mountain")
+        dark_start = datetime(2025, 1, 10, 20, 0, tzinfo=tz)
+        dark_end = datetime(2025, 1, 11, 6, 0, tzinfo=tz)
         mock_instance.get_next_dark_period.return_value = DarkPeriod(
             start=dark_start, end=dark_end
         )
         # Return forecast periods that don't overlap with dark period
         mock_instance.get_forecast_by_location.return_value = {
-            tz.localize(datetime(2025, 1, 10, 12, 0)): 2.0,  # noon, before dark
+            datetime(2025, 1, 10, 12, 0, tzinfo=tz): 2.0,  # noon, before dark
         }
         MockForecast.get_aurora_strength = Forecast.get_aurora_strength
 
