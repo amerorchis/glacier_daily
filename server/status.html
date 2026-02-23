@@ -259,7 +259,7 @@
       timeZone: "America/Denver", hour: "numeric", minute: "2-digit", hour12: true
     });
 
-    fetch("status.json")
+    fetch("status.json?_=" + Date.now())
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();

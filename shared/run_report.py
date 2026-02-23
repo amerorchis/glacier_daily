@@ -6,11 +6,9 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import timedelta
-from pathlib import Path
 from typing import Any
 
 from shared.datetime_utils import now_mountain
-from shared.ftp import upload_file
 from shared.logging_config import get_logger
 from shared.run_context import get_run
 from shared.timing import get_timing
@@ -18,7 +16,6 @@ from shared.timing import get_timing
 logger = get_logger(__name__)
 
 STATUS_FILE = "server/status.json"
-STATUS_HTML = Path(__file__).resolve().parent.parent / "server" / "status.html"
 HISTORY_DAYS = 7
 
 
@@ -102,7 +99,6 @@ def upload_status_report(report: RunReport) -> None:
     with open(STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(status_data, f, indent=2, default=str)
 
-    upload_file("api", "status.json", STATUS_FILE)
-    if STATUS_HTML.exists():
-        upload_file("api", "status.html", str(STATUS_HTML))
-    logger.info("Status report uploaded (%d runs in history)", len(runs))
+    # status.json is served directly via Cloudflare Tunnel
+    # (api.glacierconservancy.org → localhost:8000 → server/)
+    logger.info("Status report written (%d runs in history)", len(runs))

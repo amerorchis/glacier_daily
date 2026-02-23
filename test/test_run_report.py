@@ -2,7 +2,6 @@
 
 import json
 import os
-from unittest.mock import patch
 
 from shared.run_context import start_run
 from shared.run_report import (
@@ -97,7 +96,7 @@ class TestBuildReport:
 
 
 class TestUploadStatusReport:
-    def test_creates_status_file_and_uploads(self, tmp_path, monkeypatch):
+    def test_creates_status_file(self, tmp_path, monkeypatch):
         status_file = str(tmp_path / "server" / "status.json")
         monkeypatch.setattr("shared.run_report.STATUS_FILE", status_file)
 
@@ -108,18 +107,13 @@ class TestUploadStatusReport:
             overall_status="success",
         )
 
-        with patch("shared.run_report.upload_file") as mock_upload:
-            upload_status_report(report)
+        upload_status_report(report)
 
         assert os.path.exists(status_file)
         with open(status_file, encoding="utf-8") as f:
             data = json.load(f)
         assert len(data["runs"]) == 1
         assert data["runs"][0]["run_id"] == "abc123"
-        # First call uploads status.json, second uploads status.html
-        calls = mock_upload.call_args_list
-        assert calls[0].args == ("api", "status.json", status_file)
-        assert calls[1].args[:2] == ("api", "status.html")
 
     def test_appends_to_existing_history(self, tmp_path, monkeypatch):
         status_file = str(tmp_path / "status.json")
@@ -144,8 +138,7 @@ class TestUploadStatusReport:
             end_time="2026-02-20T08:00:00",
         )
 
-        with patch("shared.run_report.upload_file"):
-            upload_status_report(report)
+        upload_status_report(report)
 
         with open(status_file, encoding="utf-8") as f:
             data = json.load(f)
@@ -176,8 +169,7 @@ class TestUploadStatusReport:
             end_time="2026-02-20T08:00:00",
         )
 
-        with patch("shared.run_report.upload_file"):
-            upload_status_report(report)
+        upload_status_report(report)
 
         with open(status_file, encoding="utf-8") as f:
             data = json.load(f)
@@ -197,8 +189,7 @@ class TestUploadStatusReport:
             run_id="fresh", run_type="web_update", end_time="2026-02-20T10:00:00"
         )
 
-        with patch("shared.run_report.upload_file"):
-            upload_status_report(report)
+        upload_status_report(report)
 
         with open(status_file, encoding="utf-8") as f:
             data = json.load(f)
