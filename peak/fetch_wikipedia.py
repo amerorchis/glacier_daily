@@ -11,7 +11,6 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import requests_cache
 from requests.adapters import HTTPAdapter
@@ -128,9 +127,7 @@ def search_wikipedia(session: requests_cache.CachedSession, query: str) -> list[
     return data.get("query", {}).get("search", [])
 
 
-def get_page_by_title(
-    session: requests_cache.CachedSession, title: str
-) -> Optional[dict]:
+def get_page_by_title(session: requests_cache.CachedSession, title: str) -> dict | None:
     """Try to get a Wikipedia page by exact title."""
     params = {
         "action": "query",
@@ -154,7 +151,7 @@ def get_page_by_title(
 
 def get_page_content(
     session: requests_cache.CachedSession, page_id: int
-) -> Optional[dict]:
+) -> dict | None:
     """Get full content of a Wikipedia page by ID."""
     params = {
         "action": "query",
@@ -173,7 +170,7 @@ def get_page_content(
 
 
 def verify_article(
-    article_text: str, peak_lat: float, peak_lon: float, article_coords: Optional[list]
+    article_text: str, peak_lat: float, peak_lon: float, article_coords: list | None
 ) -> bool:
     """Verify that an article is about a peak in Glacier National Park."""
     text_lower = article_text.lower()
@@ -201,7 +198,7 @@ def verify_article(
 
 def find_wikipedia_article(
     session: requests_cache.CachedSession, peak: dict
-) -> Optional[dict]:
+) -> dict | None:
     """
     Find the Wikipedia article for a peak using multi-pass search.
     Returns article info or None if not found.

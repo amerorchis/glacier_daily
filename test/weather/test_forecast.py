@@ -31,6 +31,7 @@ def weather_api():
     with patch("requests_cache.CachedSession") as mock_session:
         api = WeatherAPI()
         api.session = mock_session
+        api.locations = [SAMPLE_LOCATION]
         yield api
 
 
@@ -113,7 +114,10 @@ class TestGetForecast:
         mock_response.json.return_value = [MOCK_API_RESPONSE]
         mock_session.return_value.get.return_value = mock_response
 
-        results, length_str = get_forecast()
+        with patch.object(
+            WeatherAPI, "_load_locations", return_value=[SAMPLE_LOCATION]
+        ):
+            results, length_str = get_forecast()
         assert isinstance(results, list)
         assert isinstance(length_str, str)
         assert all(isinstance(item, tuple) for item in results)

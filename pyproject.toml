@@ -10,11 +10,11 @@ authors = [
     {name = "Andrew Smith", email = "andrew@glacier.org"},
 ]
 readme = "readme.MD"
-requires-python = "==3.9.*"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "astral==2.2",
@@ -25,7 +25,6 @@ dependencies = [
     "pillow>=11.3.0",
     "protobuf>=6.31.1",
     "python-dotenv>=1.1.1",
-    "pytz>=2025.2",
     "requests>=2.32.4",
     "requests-cache>=1.3.0",
     "tzdata>=2024.1",
@@ -48,7 +47,7 @@ glacier-daily = "main:main"
 packages = ["activities", "drip", "image_otd", "notices", "peak", "product_otd", "roads", "shared", "sunrise_timelapse", "trails_and_cgs", "weather"]
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
@@ -75,7 +74,7 @@ docstring-code-format = true
 "test/**/*.py" = ["S"]   # disable security warnings in tests
 
 [tool.ty.environment]
-python-version = "3.9"
+python-version = "3.11"
 
 [tool.ty.src]
 exclude = [
@@ -110,6 +109,7 @@ include = ["activities/gnpc_events.py"]
 [tool.ty.overrides.rules]
 unresolved-attribute = "ignore"
 invalid-argument-type = "ignore"
+no-matching-overload = "ignore"
 
 # Roads module uses dynamically typed attributes (initialized as empty
 # tuples, later reassigned to strings/tuples with data)
@@ -121,8 +121,7 @@ unresolved-attribute = "ignore"
 unsupported-operator = "ignore"
 invalid-argument-type = "ignore"
 
-# pytz.UTC is typed as BaseTzInfo but doesn't satisfy tzinfo in ty's
-# type resolution - known pytz stubs limitation
+# night_sky.py has complex datetime/timezone typing that ty struggles with
 [[tool.ty.overrides]]
 include = ["weather/night_sky.py"]
 [tool.ty.overrides.rules]

@@ -7,7 +7,6 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
-from typing import Optional
 
 import requests
 
@@ -52,7 +51,7 @@ class WeatherAlertService:
     )
 
     @staticmethod
-    def parse_alert_time(text: str) -> Optional[datetime]:
+    def parse_alert_time(text: str) -> datetime | None:
         """Parse alert time from text string."""
         match = re.match(r"^(.+?) issued (.*?)\sM[DS]T", text)
         if not match:

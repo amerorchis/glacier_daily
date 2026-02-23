@@ -10,12 +10,11 @@ by the vibe in GNP, not the actual season dates.
 """
 
 from datetime import datetime
-from typing import Optional
 
 from shared.datetime_utils import now_mountain
 
 
-def get_season(date: Optional[datetime] = None) -> str:
+def get_season(date: datetime | None = None) -> str:
     """
     Determine the season based on the given date or current date.
 

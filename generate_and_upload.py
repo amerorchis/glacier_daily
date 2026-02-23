@@ -1,4 +1,4 @@
-#!/home/pi/.local/bin/uv run --python 3.9 python
+#!/home/pi/.local/bin/uv run --python 3.11 python
 """
 Generate all of the data with a ThreadPoolExecutor, then upload it to the glacier.org
 server with FTP.

@@ -4,7 +4,6 @@ It includes functions to resize the image and upload it to a specified directory
 """
 
 from pathlib import Path
-from typing import Optional
 
 from PIL import Image, UnidentifiedImageError
 
@@ -96,7 +95,7 @@ def process_image(image_path: Path, dimensions: tuple[int, int, int]) -> Path:
         raise ImageProcessingError(f"Image processing failed: {str(e)}") from e
 
 
-def resize_full(skip_upload: bool = False) -> tuple[Optional[str], str, str]:
+def resize_full(skip_upload: bool = False) -> tuple[str | None, str, str]:
     """
     Main function to retrieve and process the image of the day.
 
@@ -124,7 +123,7 @@ def resize_full(skip_upload: bool = False) -> tuple[Optional[str], str, str]:
     return upload_address, image_data.title, image_data.link
 
 
-def get_image_otd(skip_upload: bool = False) -> tuple[Optional[str], str, str]:
+def get_image_otd(skip_upload: bool = False) -> tuple[str | None, str, str]:
     """
     Get the image of the day from Flickr.
     """

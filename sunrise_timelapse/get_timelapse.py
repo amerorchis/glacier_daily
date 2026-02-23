@@ -2,8 +2,6 @@
 Select the best thumbnail frame from the timelapse video.
 """
 
-from typing import Optional
-
 import requests
 
 from shared.datetime_utils import now_mountain
@@ -68,7 +66,7 @@ def fetch_glacier_data(endpoint_type: str) -> list:
 
 def select_video(
     timelapse_data: list,
-) -> tuple[Optional[str], Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None, str | None]:
     """
     Select video based on today's date first, then fallback to latest.
 
@@ -114,7 +112,7 @@ def select_video(
         return None, None, None
 
 
-def find_matching_thumbnail(video_id: str, thumbnail_data: list) -> Optional[str]:
+def find_matching_thumbnail(video_id: str, thumbnail_data: list) -> str | None:
     """
     Find thumbnail that matches the selected video.
 

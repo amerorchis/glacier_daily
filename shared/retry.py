@@ -2,8 +2,8 @@
 A decorator to retry an operation.
 """
 
+from collections.abc import Callable
 from time import sleep
-from typing import Callable
 
 from shared.logging_config import get_logger
 

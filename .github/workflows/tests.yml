@@ -13,6 +13,9 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
       - name: Install dependencies
         run: |
           uv sync --extra dev
@@ -45,6 +48,10 @@ jobs:
       - name: Install uv (Windows)
         if: runner.os == 'Windows'
         run: irm https://astral.sh/uv/install.ps1 | iex
+
+      - name: Install Python 3.11
+        if: "!contains(matrix.os, 'self-hosted')"
+        run: uv python install 3.11
 
       - name: Install dependencies
         run: |

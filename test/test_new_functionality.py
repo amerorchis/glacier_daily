@@ -14,9 +14,9 @@ Covers:
 import json
 from datetime import datetime
 from unittest.mock import Mock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 
 # ============================================================================
 # 5.1: Timezone helper tests
@@ -67,34 +67,34 @@ class TestGNPCDatetimeAMPM:
 
     @pytest.fixture
     def mst(self):
-        return pytz.timezone("America/Denver")
+        return ZoneInfo("America/Denver")
 
     def test_pm_time(self, mst):
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 3:30 pm")
-        expected = mst.localize(datetime(2024, 7, 15, 15, 30))
+        expected = datetime(2024, 7, 15, 15, 30, tzinfo=mst)
         assert result == expected
 
     def test_am_time(self, mst):
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 9:00 am")
-        expected = mst.localize(datetime(2024, 7, 15, 9, 0))
+        expected = datetime(2024, 7, 15, 9, 0, tzinfo=mst)
         assert result == expected
 
     def test_noon(self, mst):
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 12:00 pm")
-        expected = mst.localize(datetime(2024, 7, 15, 12, 0))
+        expected = datetime(2024, 7, 15, 12, 0, tzinfo=mst)
         assert result == expected
 
     def test_midnight(self, mst):
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 12:00 am")
-        expected = mst.localize(datetime(2024, 7, 15, 0, 0))
+        expected = datetime(2024, 7, 15, 0, 0, tzinfo=mst)
         assert result == expected
 
     def test_no_ampm_defaults_to_pm(self, mst):
@@ -102,21 +102,21 @@ class TestGNPCDatetimeAMPM:
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 3:30")
-        expected = mst.localize(datetime(2024, 7, 15, 15, 30))
+        expected = datetime(2024, 7, 15, 15, 30, tzinfo=mst)
         assert result == expected
 
     def test_pm_with_dots(self, mst):
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 3:30 p.m.")
-        expected = mst.localize(datetime(2024, 7, 15, 15, 30))
+        expected = datetime(2024, 7, 15, 15, 30, tzinfo=mst)
         assert result == expected
 
     def test_am_with_dots(self, mst):
         from activities.gnpc_datetime import convert_gnpc_datetimes
 
         result = convert_gnpc_datetimes("July 15, 2024 9:00 a.m.")
-        expected = mst.localize(datetime(2024, 7, 15, 9, 0))
+        expected = datetime(2024, 7, 15, 9, 0, tzinfo=mst)
         assert result == expected
 
 

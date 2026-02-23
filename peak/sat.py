@@ -3,7 +3,6 @@ Generate a static image of peak of the day using Mapbox API and upload to websit
 """
 
 from io import BytesIO
-from typing import Optional
 
 import PIL
 import requests
@@ -34,7 +33,7 @@ def upload_peak() -> str:
     return address
 
 
-def peak_sat(peak: dict, skip_upload: bool = False) -> Optional[str]:
+def peak_sat(peak: dict, skip_upload: bool = False) -> str | None:
     """
     Use mapbox API to get peak image, then send to FTP function.
     return: URL of peak image/header.
