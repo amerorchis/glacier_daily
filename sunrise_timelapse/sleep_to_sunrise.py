@@ -8,6 +8,10 @@ from zoneinfo import ZoneInfo
 
 from astral import LocationInfo, sun
 
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 MAX_WAIT_SECONDS = 3 * 60 * 60  # 3 hours
 SUNRISE_BUFFER_MINUTES = 52
 
@@ -44,13 +48,15 @@ def sleep_time():
     timelapse_ready_in = sunrise_timelapse_complete_time()
 
     if timelapse_ready_in > MAX_WAIT_SECONDS:
-        print(
-            f"WARNING: Computed sleep time ({round(timelapse_ready_in / 60)} minutes) exceeds maximum wait of "
-            f"{MAX_WAIT_SECONDS // 3600} hours. Skipping sleep."
+        logger.warning(
+            "Computed sleep time (%d minutes) exceeds maximum wait of %d hours. Skipping sleep.",
+            round(timelapse_ready_in / 60),
+            MAX_WAIT_SECONDS // 3600,
         )
     elif timelapse_ready_in > 0:
-        print(
-            f"Waiting {round(timelapse_ready_in / 60)} minutes for timelapse to finish."
+        logger.info(
+            "Waiting %d minutes for timelapse to finish.",
+            round(timelapse_ready_in / 60),
         )
         sleep(timelapse_ready_in)
 

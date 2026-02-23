@@ -12,9 +12,11 @@ from shared.logging_config import get_logger, setup_logging
 def reset_root_logger():
     root = logging.getLogger()
     original_handlers = root.handlers[:]
+    original_filters = root.filters[:]
     original_level = root.level
     yield
     root.handlers = original_handlers
+    root.filters = original_filters
     root.level = original_level
 
 
@@ -34,6 +36,15 @@ def test_setup_logging_production(monkeypatch, tmp_path):
     assert any(
         isinstance(h, logging.handlers.RotatingFileHandler) for h in root.handlers
     )
+    # Production also adds a stderr handler at ERROR level for cron alerting
+    stderr_handlers = [
+        h
+        for h in root.handlers
+        if isinstance(h, logging.StreamHandler)
+        and not isinstance(h, logging.handlers.RotatingFileHandler)
+    ]
+    assert len(stderr_handlers) == 1
+    assert stderr_handlers[0].level == logging.ERROR
 
 
 def test_setup_logging_clears_existing_handlers(monkeypatch):

@@ -11,7 +11,10 @@ from PIL import Image
 
 from shared.datetime_utils import now_mountain
 from shared.ftp import upload_file
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 def prepare_peak_upload() -> tuple[str, str, str]:
@@ -63,7 +66,7 @@ def peak_sat(peak: dict, skip_upload: bool = False) -> Optional[str]:
 
     except (requests.RequestException, PIL.UnidentifiedImageError) as e:
         # If it fails, give the default peak header.
-        print(f"Peak sat image failed. {e}")
+        logger.error("Peak sat image failed: %s", e)
         return "https://glacier.org/daily/summer/peak.jpg"
 
 

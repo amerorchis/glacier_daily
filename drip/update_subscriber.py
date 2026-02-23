@@ -7,7 +7,10 @@ import urllib.parse
 
 import requests
 
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 def update_subscriber(updates: dict):
@@ -36,11 +39,11 @@ def update_subscriber(updates: dict):
     r = response.json()
 
     if response.status_code == 200:
-        print(f"Drip: {email} was updated!")
+        logger.info("Drip: %s was updated", email)
     else:
-        print(
-            f"Failed to update {email}. Error message:",
+        logger.error(
+            "Failed to update %s: %s - %s",
+            email,
             r["errors"][0]["code"],
-            " - ",
             r["errors"][0]["message"],
         )

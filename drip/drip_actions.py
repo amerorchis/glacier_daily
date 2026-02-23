@@ -3,6 +3,7 @@ This module provides functions to interact with the Drip email marketing platfor
 """
 
 import json
+from dataclasses import dataclass
 
 import requests
 
@@ -14,6 +15,14 @@ from shared.settings import get_settings
 logger = get_logger(__name__)
 
 DRIP_BATCH_SIZE = 1000
+
+
+@dataclass
+class BatchResult:
+    """Result of a bulk workflow trigger operation."""
+
+    sent: int = 0
+    failed: int = 0
 
 
 def record_drip_event(email: str, event: str = "Glacier Daily Update trigger") -> None:
@@ -78,7 +87,7 @@ def get_subs(tag: str) -> list:
     return subs
 
 
-def bulk_workflow_trigger(sub_list: list) -> None:
+def bulk_workflow_trigger(sub_list: list) -> BatchResult:
     """
     Trigger a bulk workflow action in Drip to increase capacity from 3,600/hour to 50,000/hour.
 
@@ -86,8 +95,9 @@ def bulk_workflow_trigger(sub_list: list) -> None:
         sub_list (list): A list of subscriber emails.
 
     Returns:
-        None
+        BatchResult: Counts of sent and failed subscribers.
     """
+    result = BatchResult()
     settings = get_settings()
 
     url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/events/batches"
@@ -126,15 +136,20 @@ def bulk_workflow_trigger(sub_list: list) -> None:
                 f"Failed to parse JSON response from Drip bulk workflow. "
                 f"Status: {response.status_code}, Body: {response.text[:200]}"
             )
+            result.failed += len(subs)
             continue
 
         if response.status_code == 201:
             logger.info("Drip: Bulk workflow add successful!")
+            result.sent += len(subs)
         else:
             logger.error(
                 f"Failed to add subscribers to the campaign. Error message: "
                 f"{r['errors'][0]['code']} - {r['errors'][0]['message']}"
             )
+            result.failed += len(subs)
+
+    return result
 
 
 def send_in_drip(

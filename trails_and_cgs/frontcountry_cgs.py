@@ -4,13 +4,14 @@ It retrieves data from the NPS API, processes it to identify closures and alerts
 """
 
 import json
-import sys
-import traceback
 
 import requests
 import urllib3
 
 from shared.datetime_utils import now_mountain
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,19 +27,13 @@ def campground_alerts():
     try:
         r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException:
-        print(
-            f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Campground status request failed", exc_info=True)
         return "The campgrounds page on the park website is currently down."
 
     try:
         status = json.loads(r.text)
     except json.JSONDecodeError:
-        print(
-            f"Handled error with Campground Status JSON decode, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Campground status JSON decode error", exc_info=True)
         return "The campgrounds page on the park website is currently down."
 
     try:
@@ -117,10 +112,7 @@ def get_campground_status() -> str:
     try:
         return campground_alerts()
     except requests.exceptions.HTTPError:
-        print(
-            f"Handled error with Campground Status, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Campground status HTTP error", exc_info=True)
         return ""
 
 

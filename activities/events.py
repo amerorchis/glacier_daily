@@ -2,15 +2,16 @@
 This module retrieves and processes daily events from the National Park Service API for Glacier National Park.
 """
 
-import sys
-import traceback
 from datetime import datetime
 
 import requests
 from requests.exceptions import JSONDecodeError, ReadTimeout
 
 from shared.datetime_utils import now_mountain
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 def time_sortable(time: str):
@@ -127,8 +128,7 @@ def events_today(now=None):
         return seasonal_message(now_dt)
 
     except (JSONDecodeError, ReadTimeout) as e:
-        print(f"Failed to retrieve events. {e}", file=sys.stderr)
-        traceback.print_exc()
+        logger.error("Failed to retrieve events: %s", e)
         year, month, day = (int(i) for i in now.split("-"))
         now_dt = datetime(year, month, day)
         seasonal_message_str = seasonal_message(now_dt)
@@ -141,8 +141,7 @@ def events_today(now=None):
             return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
 
     except requests.HTTPError as e:
-        print(f"Failed to retrieve events. {e}", file=sys.stderr)
-        traceback.print_exc()
+        logger.error("Failed to retrieve events (HTTP): %s", e)
         return "502 Response"
 
 

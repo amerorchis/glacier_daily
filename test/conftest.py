@@ -10,7 +10,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from shared.run_context import reset_run
 from shared.settings import Settings, reset_settings
+from shared.timing import reset_timing
 
 # ============================================================================
 # Settings Fixtures
@@ -24,10 +26,14 @@ def _reset_settings(monkeypatch):
     inject real values from ``email.env``.  This mirrors how the CI workflow
     sets all env vars to ``""``."""
     reset_settings()
+    reset_run()
+    reset_timing()
     for f in dataclasses.fields(Settings):
         monkeypatch.setenv(f.name, "")
     yield
     reset_settings()
+    reset_run()
+    reset_timing()
 
 
 # ============================================================================

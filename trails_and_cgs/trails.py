@@ -4,11 +4,13 @@ from the Glacier National Park website.
 """
 
 import json
-import sys
-import traceback
 
 import requests
 import urllib3
+
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -60,11 +62,7 @@ def closed_trails() -> str:
     try:
         r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
-        print(
-            f"Error fetching trail closures: {e}\n"
-            "This may be due to the Glacier National Park website being down.",
-            file=sys.stderr,
-        )
+        logger.error("Error fetching trail closures: %s", e)
         return "The trail closures page on the park website is currently down."
     status = json.loads(r.text)
 
@@ -151,10 +149,7 @@ def get_closed_trails() -> str:
     try:
         return closed_trails()
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
-        print(
-            f"Handled error with Trail Status, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Trail status error", exc_info=True)
         return ""
 
 

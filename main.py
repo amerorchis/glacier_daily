@@ -12,6 +12,8 @@ from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
 from shared.logging_config import get_logger, setup_logging
+from shared.run_context import start_run
+from shared.run_report import build_report, upload_status_report
 from shared.settings import get_settings
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 
@@ -28,24 +30,43 @@ def main(
         tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
         force (bool): Clear cached data and re-fetch everything fresh.
     """
-    get_settings()  # Load email.env so ENVIRONMENT is available
+    settings = get_settings()  # Load email.env so ENVIRONMENT is available
+    run = start_run("email")
     setup_logging()
+    logger.info("Starting run %s (type=%s)", run.run_id, run.run_type)
     validate_config()
 
     sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
 
     # Retrieve subscribers from Drip.
     subscribers: list[str] = get_subs(tag)
-    logger.info("Subscribers found")
+    logger.info("Subscribers found: %d", len(subscribers))
 
-    # Generated data and upload to website.
-    serve_api(force=force)
+    batch_result = None
+    try:
+        # Generate data and upload to website.
+        serve_api(force=force)
 
-    # See if this fixes the issue with timelapse not showing.
-    sleep(10 if not test else 0)
+        # See if this fixes the issue with timelapse not showing.
+        sleep(10 if not test else 0)
 
-    # Send the email to each subscriber using Drip API.
-    bulk_workflow_trigger(subscribers)
+        # Send the email to each subscriber using Drip API.
+        batch_result = bulk_workflow_trigger(subscribers)
+    finally:
+        report = build_report(environment=settings.ENVIRONMENT)
+        report.subscriber_count = len(subscribers)
+        if batch_result:
+            report.email_delivery = {
+                "sent": batch_result.sent,
+                "failed": batch_result.failed,
+            }
+        logger.info("Run complete: %s", report.overall_status)
+        logger.info("Run report: %s", report.to_json())
+        if settings.ENVIRONMENT == "production":
+            try:
+                upload_status_report(report)
+            except Exception:
+                logger.error("Failed to upload status report", exc_info=True)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -4,7 +4,6 @@ This module fetches and processes weather alerts from the National Weather Servi
 
 import json
 import re
-import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
@@ -13,6 +12,9 @@ from typing import Optional
 import requests
 
 from shared.datetime_utils import now_mountain
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -123,7 +125,7 @@ class WeatherAlertService:
             )
             if response.status_code == 200:
                 return json.loads(response.content)["features"]
-            print(f"Weather error for alerts: status code {response.status_code}")
+            logger.warning("Weather alert API returned status %s", response.status_code)
             sleep(self.RETRY_DELAY)
         return []
 
@@ -190,7 +192,7 @@ def weather_alerts() -> str:
         return service.format_html_message(processed_alerts)
 
     except Exception as e:
-        print(f"Error processing weather alerts: {e}, {traceback.format_exc()}")
+        logger.error("Error processing weather alerts: %s", e, exc_info=True)
         return ""
 
 

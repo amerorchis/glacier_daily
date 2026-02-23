@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
 
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class GNPCError(Exception):
@@ -97,7 +100,7 @@ def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
                 )
             except (AttributeError, IndexError, KeyError) as e:
                 # Log error but continue processing other events
-                print(f"Error parsing event: {str(e)}")
+                logger.warning("Error parsing GNPC event: %s", e)
                 continue
 
         return events
@@ -127,7 +130,7 @@ def get_gnpc_events() -> list[dict[str, str]]:
             page_events = scrape_events_page(url, event_type)
             events.extend(page_events)
         except GNPCError as e:
-            print(f"Error processing {event_path}: {str(e)}")
+            logger.error("Error processing %s: %s", event_path, e)
             continue
 
     if not events:

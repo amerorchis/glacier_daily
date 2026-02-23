@@ -12,7 +12,10 @@ from urllib.error import URLError
 
 from flickrapi import FlickrAPI
 
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 class FlickrAPIError(Exception):
@@ -103,8 +106,8 @@ def get_flickr() -> FlickrImage:
                         # Too Many Requests, backoff and retry
                         if attempt < max_retries - 1:
                             wait = backoff * (2**attempt)
-                            print(
-                                f"Received 429 Too Many Requests. Backing off for {wait} seconds..."
+                            logger.warning(
+                                "Flickr 429 Too Many Requests, backing off %ds", wait
                             )
                             time.sleep(wait)
                             continue
@@ -119,8 +122,8 @@ def get_flickr() -> FlickrImage:
                 if hasattr(e, "code") and e.code == 429:
                     if attempt < max_retries - 1:
                         wait = backoff * (2**attempt)
-                        print(
-                            f"Received 429 Too Many Requests. Backing off for {wait} seconds..."
+                        logger.warning(
+                            "Flickr 429 Too Many Requests, backing off %ds", wait
                         )
                         time.sleep(wait)
                         continue

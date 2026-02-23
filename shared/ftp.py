@@ -9,7 +9,10 @@ from ftplib import FTP
 from typing import Optional
 
 from shared.datetime_utils import now_mountain
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 def delete_on_first(ftp: FTP) -> None:
@@ -22,7 +25,7 @@ def delete_on_first(ftp: FTP) -> None:
     current_date = now_mountain()
 
     if current_date.day == 1:
-        print("First of the Month: Deleting files over 6 months old.")
+        logger.info("First of the month: deleting files over 6 months old.")
         six_months_ago = current_date - timedelta(days=6 * 30)
         files = ftp.nlst()
 
@@ -85,7 +88,7 @@ class FTPSession:
             files = self._ftp.nlst()
             url = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
         except Exception as e:
-            print(f"Failed upload {filename}: {e}")
+            logger.error("Failed upload %s: %s", filename, e)
             files = []
             url = ""
 
@@ -133,7 +136,7 @@ def upload_file(
 
         url = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
     except Exception as e:
-        print(f"Failed upload {filename}: {e}")
+        logger.error("Failed upload %s: %s", filename, e)
         files = []
         url = ""
     finally:

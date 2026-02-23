@@ -204,17 +204,19 @@ class TestGetSunsetHue:
             assert "longitude=-113.991674" in call_url
             assert "type=sunset" in call_url
 
-    def test_test_mode_prints_values(self, mock_env, capsys):
-        """Verify test mode prints debug values."""
+    def test_test_mode_logs_values(self, mock_env, caplog):
+        """Verify test mode logs debug values."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "data": {"quality": 0.8, "quality_text": "great", "cloud_cover": 0.3}
         }
 
-        with patch("weather.sunset_hue.requests.get", return_value=mock_response):
+        with (
+            patch("weather.sunset_hue.requests.get", return_value=mock_response),
+            caplog.at_level("DEBUG", logger="weather.sunset_hue"),
+        ):
             get_sunset_hue(test=True)
-            captured = capsys.readouterr()
-            assert "0.8" in captured.out
-            assert "great" in captured.out
-            assert "0.3" in captured.out
+            assert "0.8" in caplog.text
+            assert "great" in caplog.text
+            assert "0.3" in caplog.text
