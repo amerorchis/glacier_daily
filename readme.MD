@@ -137,7 +137,7 @@ uv run python -W ignore -m peak.peak
 - `sunrise_timelapse/` - Video processing and timelapse compilation
 - `notices/` - Administrative notices from Google Sheets
 - `drip/` - Email delivery and subscriber management
-- `shared/` - FTP operations, retry mechanisms, centralized settings, config validation, logging, utilities
+- `shared/` - FTP operations, retry mechanisms, centralized settings, config validation, logging, LKG fallback cache, utilities
 - `server/` - PHP templates and web interface components
 - `frontend_files/` - JavaScript and PHP for the web interface
 
@@ -146,9 +146,9 @@ uv run python -W ignore -m peak.peak
 2. **Processing**: Format data for HTML email templates
 3. **Distribution**: Upload to glacier.org via FTP and trigger emails through Drip
 
-### Error Handling
+### Error Handling & Data Reliability
 
-The system uses a custom retry decorator (`shared/retry.py`) with exponential backoff for API calls. Most modules have fallback mechanisms to ensure emails can still be sent even if individual data sources fail.
+The system uses a custom retry decorator (`shared/retry.py`) with exponential backoff for API calls. When a module fails despite retries, a Last Known Good (LKG) cache (`shared/lkg_cache.py`) provides today's most recent successful output as a fallback, so subscribers receive an email with stale-but-valid data rather than missing sections. Date-deterministic modules (peak, image of the day, product) are cached after first successful fetch each day; dynamic modules (weather, roads, trails, etc.) always attempt a fresh fetch with LKG as a safety net.
 
 ---
 
