@@ -144,4 +144,4 @@ def weather_image(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    print(weather_image(weather_data().results or []))
+    print(weather_image(weather_data().forecasts or []))

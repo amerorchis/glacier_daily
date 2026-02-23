@@ -1,5 +1,5 @@
 """
-Get road status from NPS and format into HTML.
+Get road status from NPS.
 """
 
 import json
@@ -8,6 +8,7 @@ import requests
 import urllib3
 
 from roads.Road import Road
+from shared.data_types import RoadsResult
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -197,9 +198,9 @@ def closed_roads() -> dict[str, Road]:
     return {key: value for (key, value) in roads.items() if value}
 
 
-def format_road_closures(roads: dict[str, Road]) -> str:
+def format_road_closures(roads: dict[str, Road]) -> RoadsResult:
     """
-    Take list of Road objects and turn into html formatted string.
+    Take list of Road objects and return structured closure data.
     """
     entirely_closed = []
     statuses = []
@@ -222,21 +223,14 @@ def format_road_closures(roads: dict[str, Road]) -> str:
         statuses.append(f"{entirely_closed[0]} is closed in its entirety.")
 
     if statuses:
-        message = (
-            '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px;'
-            'line-height:18px; color:#333333;">\n'
-        )
-        for i in statuses:
-            message += f"<li>{i}</li>\n"
-        return message + "</ul>"
+        return RoadsResult(closures=statuses)
 
-    return (
-        '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'
-        "There are no closures on major roads today!</p>"
+    return RoadsResult(
+        no_closures_message="There are no closures on major roads today!"
     )
 
 
-def get_road_status() -> str:
+def get_road_status() -> RoadsResult:
     """
     Wrap the closed roads function to catch errors and allow email to send if there is an issue.
     """
@@ -244,12 +238,11 @@ def get_road_status() -> str:
         return format_road_closures(closed_roads())
     except requests.exceptions.HTTPError:
         logger.error("Road status HTTP error", exc_info=True)
-        return ""
+        return RoadsResult()
     except NPSWebsiteError:
         logger.error("NPS website error", exc_info=True)
-        return (
-            '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'
-            "The road status page on the park website is currently down.</p>"
+        return RoadsResult(
+            error_message="The road status page on the park website is currently down."
         )
 
 

@@ -5,6 +5,7 @@ import gspread
 import pytest
 
 from notices.notices import get_notices
+from shared.data_types import NoticesResult
 
 
 @pytest.fixture
@@ -61,12 +62,9 @@ def test_get_notices_with_current_notices(
 
     # Call function and verify result
     result = get_notices()
-    expected = (
-        '<ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">'
-        + "<li>Test notice 1</li>\n<li>Test notice 2</li></ul>"
-    )
-
-    assert result == expected
+    assert isinstance(result, NoticesResult)
+    assert result.notices == ["Test notice 1", "Test notice 2"]
+    assert result.fallback_message == ""
 
 
 def test_get_notices_with_no_current_notices(
@@ -83,9 +81,9 @@ def test_get_notices_with_no_current_notices(
     mock_gspread.get_all_values.return_value = mock_data
 
     result = get_notices()
-    expected = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
-
-    assert result == expected
+    assert isinstance(result, NoticesResult)
+    assert result.notices == []
+    assert result.fallback_message == "There were no notices for today."
 
 
 def test_get_notices_with_empty_sheet(mock_gspread, mock_credentials, mock_env_vars):
@@ -93,9 +91,8 @@ def test_get_notices_with_empty_sheet(mock_gspread, mock_credentials, mock_env_v
     mock_gspread.get_all_values.return_value = [["Start Date", "End Date", "Notice"]]
 
     result = get_notices()
-    expected = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
-
-    assert result == expected
+    assert isinstance(result, NoticesResult)
+    assert result.fallback_message == "There were no notices for today."
 
 
 def test_get_notices_with_invalid_data(mock_gspread, mock_credentials, mock_env_vars):
@@ -107,9 +104,8 @@ def test_get_notices_with_invalid_data(mock_gspread, mock_credentials, mock_env_
     mock_gspread.get_all_values.return_value = mock_data
 
     result = get_notices()
-    expected = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
-
-    assert result == expected
+    assert isinstance(result, NoticesResult)
+    assert result.fallback_message == "There were no notices for today."
 
 
 def test_get_notices_api_error(mock_gspread, mock_credentials, mock_env_vars):
@@ -122,9 +118,9 @@ def test_get_notices_api_error(mock_gspread, mock_credentials, mock_env_vars):
     # Mock API error with proper Response object
     mock_gspread.get_all_values.side_effect = gspread.exceptions.APIError(mock_response)
 
-    expected = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There was an error retrieving notices today.</p>'
     result = get_notices()
-    assert result == expected
+    assert isinstance(result, NoticesResult)
+    assert result.fallback_message == "There was an error retrieving notices today."
 
 
 def test_get_notices_with_incomplete_data(
@@ -145,9 +141,5 @@ def test_get_notices_with_incomplete_data(
     mock_gspread.get_all_values.return_value = mock_data
 
     result = get_notices()
-    expected = (
-        '<ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">'
-        + "<li>Valid notice</li></ul>"
-    )
-
-    assert result == expected
+    assert isinstance(result, NoticesResult)
+    assert result.notices == ["Valid notice"]

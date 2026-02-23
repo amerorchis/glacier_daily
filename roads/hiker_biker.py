@@ -1,5 +1,5 @@
 """
-Retrieve and format the hiker/biker status.
+Retrieve the hiker/biker status.
 """
 
 import contextlib
@@ -10,6 +10,7 @@ import urllib3
 
 from roads.HikerBiker import HikerBiker
 from roads.roads import NPSWebsiteError, closed_roads
+from shared.data_types import HikerBikerResult
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -17,9 +18,9 @@ logger = get_logger(__name__)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def hiker_biker() -> str:
-    """ "
-    Retrieve and format hiker biker closure locations.
+def hiker_biker() -> HikerBikerResult:
+    """
+    Retrieve hiker biker closure locations.
     """
     try:
         # Find GTSR road closure info.
@@ -44,9 +45,9 @@ def hiker_biker() -> str:
             r.raise_for_status()
             data.extend(json.loads(r.text).get("features", ""))
 
-        # If there is no hiker/biker info or no GTSR closure return empty string.
+        # If there is no hiker/biker info or no GTSR closure return empty result.
         if not data or not gtsr:
-            return ""
+            return HikerBikerResult()
 
         # Make sure this is the right type of closure.
         data = [
@@ -80,37 +81,26 @@ def hiker_biker() -> str:
             else:
                 continue
 
-        # Return empty string if there are no hiker biker restrictions listed.
+        # Return empty result if there are no hiker biker restrictions listed.
         if not statuses or all("None listed" in item for item in statuses):
-            return ""
+            return HikerBikerResult()
 
         # Sort by side (term between : and -)
         with contextlib.suppress(IndexError):
             statuses.sort(key=lambda x: x.split(":")[1].split("-")[0], reverse=True)
 
-        # Generate HTML for this section of the email.
-        message = (
-            '<ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px;'
-            'line-height:18px; color:#333333;">\n'
-        )
-        for i in statuses:
-            message += f"<li>{i}</li>\n"
-
-        style = "margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;"
-        return (
-            message
-            + "</ul>"
-            + (
-                f'<p style="{style}">'
+        return HikerBikerResult(
+            closures=statuses,
+            explanatory_note=(
                 "Road Crew Closures are in effect during work hours, "
-                "Avalanche Hazard Closures are in effect at all times.</p>"
-            )
+                "Avalanche Hazard Closures are in effect at all times."
+            ),
         )
     except (requests.exceptions.HTTPError, NPSWebsiteError):
-        return ""
+        return HikerBikerResult()
 
 
-def get_hiker_biker_status() -> str:
+def get_hiker_biker_status() -> HikerBikerResult:
     """
     Wrap the hiker biker function to catch errors and allow email to send if there is an issue.
     """
@@ -125,7 +115,7 @@ def get_hiker_biker_status() -> str:
         NPSWebsiteError,
     ):
         logger.error("Hiker/biker status error", exc_info=True)
-        return ""
+        return HikerBikerResult()
 
 
 if __name__ == "__main__":  # pragma: no cover

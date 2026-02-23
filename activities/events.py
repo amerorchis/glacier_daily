@@ -7,6 +7,7 @@ from datetime import datetime
 import requests
 from requests.exceptions import JSONDecodeError, ReadTimeout
 
+from shared.data_types import Event, EventsResult
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
 from shared.settings import get_settings
@@ -30,7 +31,7 @@ def time_sortable(time: str):
     return datetime.combine(today, time_obj)
 
 
-def events_today(now=None):
+def events_today(now=None) -> EventsResult:
     """
     Retrieve and process today's events from the National Park Service API.
 
@@ -38,7 +39,7 @@ def events_today(now=None):
         now (str): The current date in the format '%Y-%m-%d'. Defaults to today's date.
 
     Returns:
-        str: An HTML string containing the list of events or a message if no events are available.
+        EventsResult: Structured events data.
     """
 
     def fetch_events(endpoint, headers):
@@ -52,7 +53,7 @@ def events_today(now=None):
 
     def process_event(event):
         """
-        Make text clearer and more readable
+        Extract structured event data.
         """
         deletions = [
             "Meet in front of the ",
@@ -85,23 +86,27 @@ def events_today(now=None):
         for deletion in deletions:
             loc = loc.replace(deletion, "")
         link = f"http://www.nps.gov/planyourvisit/event-details.htm?id={event['id']}"
-        return {
-            "sortable": sortable,
-            "string": f'<li style="font-size:12px; line-height:18px; color:#333333;">{start} - {end}: {name}, {loc} <a href="{link}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>',
-        }
+        return Event(
+            start_time=start,
+            end_time=end,
+            name=name,
+            location=loc,
+            link=link,
+            sortable=sortable,
+        )
 
-    def seasonal_message(now_dt):
+    def seasonal_message(now_dt) -> str:
         """Return the correct seasonal message for a given datetime object."""
         year = now_dt.year
         if datetime(year, 9, 20, 1, 30) < now_dt < datetime(year, 12, 6, 23, 30):
-            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs have concluded for the season.</p>'
+            return "Ranger programs have concluded for the season."
         if datetime(year, 12, 6, 1, 30) < now_dt < datetime(
             year, 12, 31, 23, 30
         ) or datetime(year, 1, 1, 1, 30) < now_dt < datetime(year, 4, 1, 1, 29):
             return ""
         if datetime(year, 4, 1, 1, 30) < now_dt < datetime(year, 6, 1, 1, 30):
-            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger programs not started for the season.</p>'
-        return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
+            return "Ranger programs not started for the season."
+        return "There are no ranger programs today."
 
     if now is None:
         now = now_mountain().strftime("%Y-%m-%d")
@@ -120,29 +125,27 @@ def events_today(now=None):
         now_dt = datetime(year, month, day)
         if raw_events:
             events = [process_event(event) for event in raw_events]
-            events.sort(key=lambda x: x["sortable"])
-            message = '<ul style="margin:0 0 25px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
-            message += "\n".join(event["string"] for event in events)
-            return message + "</ul>"
+            events.sort(key=lambda x: x.sortable)
+            return EventsResult(events=events)
 
-        return seasonal_message(now_dt)
+        msg = seasonal_message(now_dt)
+        return EventsResult(seasonal_message=msg)
 
     except (JSONDecodeError, ReadTimeout) as e:
         logger.error("Failed to retrieve events: %s", e)
         year, month, day = (int(i) for i in now.split("-"))
         now_dt = datetime(year, month, day)
-        seasonal_message_str = seasonal_message(now_dt)
-        if (
-            seasonal_message_str
-            != '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">There are no ranger programs today.</p>'
-        ):
-            return seasonal_message_str
+        msg = seasonal_message(now_dt)
+        if msg != "There are no ranger programs today.":
+            return EventsResult(seasonal_message=msg)
         else:
-            return '<p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">Ranger program schedule could not be retrieved.</p>'
+            return EventsResult(
+                error_message="Ranger program schedule could not be retrieved."
+            )
 
     except requests.HTTPError as e:
         logger.error("Failed to retrieve events (HTTP): %s", e)
-        return "502 Response"
+        return EventsResult(error_message="502 Response")
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from time import sleep
 
 import requests
 
+from shared.data_types import AlertBullet
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
 
@@ -173,26 +174,31 @@ class WeatherAlertService:
         return sorted(processed_alerts, key=lambda x: x.issued_time, reverse=True)
 
 
-def weather_alerts() -> str:
+def weather_alerts() -> list[AlertBullet]:
     """
-    Fetch and format weather alerts for Glacier National Park.
+    Fetch and process weather alerts for Glacier National Park.
 
     Returns:
-        str: Formatted weather alerts as HTML string.
+        list[AlertBullet]: Structured alert data.
     """
     try:
         service = WeatherAlertService()
         raw_alerts = service.fetch_alerts()
         if not raw_alerts:
-            return ""
+            return []
 
         local_alerts = service.filter_local_alerts(raw_alerts)
         processed_alerts = service.process_alerts(local_alerts)
-        return service.format_html_message(processed_alerts)
+
+        result = []
+        for alert in processed_alerts:
+            headline, bullets = service.parse_nested_bullets(alert.full_text)
+            result.append(AlertBullet(headline=headline, bullets=bullets))
+        return result
 
     except Exception as e:
         logger.error("Error processing weather alerts: %s", e, exc_info=True)
-        return ""
+        return []
 
 
 if __name__ == "__main__":  # pragma: no cover

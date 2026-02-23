@@ -7,6 +7,7 @@ import requests
 from roads.hiker_biker import get_hiker_biker_status, hiker_biker
 from roads.HikerBiker import HikerBiker
 from roads.Road import Road
+from shared.data_types import HikerBikerResult
 
 
 @pytest.fixture
@@ -107,12 +108,15 @@ def test_hiker_biker_status_success(mock_get, mock_closure_data, mock_gtsr):
 
     with patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads):
         result = get_hiker_biker_status()
-        print(result)
-        assert isinstance(result, str)
-        assert "Road Crew Closure" in result
-        assert "Avalanche Hazard Closure" in result
-        assert "Road Crew Closures are in effect during work hours" in result
-        assert "miles from gate at Lake McDonald Lodge" in result
+        assert isinstance(result, HikerBikerResult)
+        closure_text = " ".join(result.closures)
+        assert "Road Crew Closure" in closure_text
+        assert "Avalanche Hazard Closure" in closure_text
+        assert (
+            "Road Crew Closures are in effect during work hours"
+            in result.explanatory_note
+        )
+        assert "miles from gate at Lake McDonald Lodge" in closure_text
 
 
 @patch("requests.get")
@@ -130,7 +134,8 @@ def test_hiker_biker_status_no_closures(mock_get, mock_gtsr):
 
     with patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads):
         result = get_hiker_biker_status()
-        assert result == ""
+        assert isinstance(result, HikerBikerResult)
+        assert result.closures == []
 
 
 @patch("requests.get")
@@ -138,7 +143,8 @@ def test_hiker_biker_status_error_handling(mock_get):
     """Test error handling"""
     mock_get.side_effect = requests.exceptions.HTTPError("Test error")
     result = get_hiker_biker_status()
-    assert result == ""
+    assert isinstance(result, HikerBikerResult)
+    assert result.closures == []
 
 
 def test_hiker_biker_string_representation(mock_gtsr):
@@ -148,14 +154,14 @@ def test_hiker_biker_string_representation(mock_gtsr):
     assert isinstance(string_rep, str)
     assert "miles from gate" in string_rep
 
-    """Test behavior when GTSR info is not available"""
+
+def test_hiker_biker_returns_hiker_biker_result(mock_gtsr):
+    """Test hiker_biker() returns HikerBikerResult."""
     import urllib3
 
     urllib3.disable_warnings()
     result = hiker_biker()
-    assert result == "" or result.startswith(
-        '<ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px;line-height:18px; color:#333333;">'
-    )
+    assert isinstance(result, HikerBikerResult)
 
 
 def test_closure_location_names(mock_gtsr):
@@ -207,7 +213,7 @@ def test_hiker_biker_request_exception_on_url(monkeypatch, mock_gtsr):
         patch("requests.get", side_effect=mock_get),
     ):
         result = get_hiker_biker_status()
-        assert result == ""
+        assert result == HikerBikerResult()
         assert call_count["n"] == 2  # Both URLs attempted
 
 
@@ -237,7 +243,7 @@ def test_hiker_biker_no_geometry(monkeypatch, mock_gtsr):
         patch("requests.get", return_value=mock_response),
     ):
         result = get_hiker_biker_status()
-        assert result == ""
+        assert result == HikerBikerResult()
 
 
 def test_closure_dist_unknown_side(mock_gtsr):

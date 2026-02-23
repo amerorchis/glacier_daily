@@ -1,5 +1,5 @@
 """
-This module retrieves notices from a Google Sheets document and formats them for display.
+This module retrieves notices from a Google Sheets document.
 """
 
 from datetime import datetime, timedelta
@@ -7,20 +7,21 @@ from datetime import datetime, timedelta
 import gspread
 from google.oauth2.service_account import Credentials
 
+from shared.data_types import NoticesResult
 from shared.datetime_utils import now_mountain
 from shared.retry import retry
 from shared.settings import get_settings
 
-default = '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">Notices could not be retrieved.</p>'
+default = NoticesResult(fallback_message="Notices could not be retrieved.")
 
 
 @retry(3, (gspread.exceptions.APIError,), default, 3)
-def get_notices():
+def get_notices() -> NoticesResult:
     """
-    Retrieves notices from a Google Sheets document and formats them as an HTML list.
+    Retrieves notices from a Google Sheets document.
 
     Returns:
-        str: An HTML string containing the current notices or a default message if no notices are found.
+        NoticesResult: Structured notices data.
     """
     try:
         # Load credentials
@@ -45,7 +46,9 @@ def get_notices():
         values = worksheet.get_all_values()
 
     except gspread.exceptions.APIError:
-        return '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There was an error retrieving notices today.</p>'
+        return NoticesResult(
+            fallback_message="There was an error retrieving notices today."
+        )
 
     date_format = "%m/%d/%Y"
     if len(values) > 1:
@@ -62,20 +65,18 @@ def get_notices():
                 for i in notices
             ]  # create a dict for each one
             current_notices = [
-                i["notice"]
+                str(i["notice"])
                 for i in notices
                 if i["start"] < now_mountain().replace(tzinfo=None) < i["last"]
             ]  # isolate the content of the current notices
 
             if current_notices:
-                message = '<ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">'
-                message += "\n".join(f"<li>{i}</li>" for i in current_notices)
-                return message + "</ul>"
+                return NoticesResult(notices=current_notices)
 
         except ValueError:
             pass
 
-    return '<p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">There were no notices for today.</p>'
+    return NoticesResult(fallback_message="There were no notices for today.")
 
 
 if __name__ == "__main__":
