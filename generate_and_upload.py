@@ -69,15 +69,20 @@ def _safe_result(future, name, default):
         return default
 
 
-def gen_data(ftp_session=None):
+def gen_data():
     """
     Use threads to gather the data from every module, then store it in a dictionary.
     Make sure text is all HTML safe, then return it.
 
-    When ftp_session is provided, image uploads are deferred out of threads
-    and performed sequentially on the shared connection.
+    Image uploads are always deferred — callers handle uploading via the
+    returned pending_uploads list so the FTP connection is only opened
+    after all data collection is complete.
+
+    Returns:
+        tuple: (drip_template_fields dict, pending_uploads list)
+            pending_uploads contains (field_key, upload_args) tuples for
+            images that still need to be uploaded via FTPSession.upload().
     """
-    defer = ftp_session is not None
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         weather_future = _submit_timed(executor, "weather", weather_data)
@@ -89,12 +94,12 @@ def gen_data(ftp_session=None):
         )
         events_future = _submit_timed(executor, "events", events_today)
         image_future = _submit_timed(
-            executor, "image_otd", get_image_otd, skip_upload=defer
+            executor, "image_otd", get_image_otd, skip_upload=True
         )
-        peak_future = _submit_timed(executor, "peak", peak, skip_upload=defer)
+        peak_future = _submit_timed(executor, "peak", peak, skip_upload=True)
         sunrise_future = _submit_timed(executor, "sunrise", process_video)
         product_future = _submit_timed(
-            executor, "product", get_product, skip_upload=defer
+            executor, "product", get_product, skip_upload=True
         )
         notices_futures = _submit_timed(executor, "notices", get_notices)
 
@@ -112,18 +117,18 @@ def gen_data(ftp_session=None):
             peak_future, "peak", ("", None, "")
         )
 
-    weather_img = weather_image(weather.results or [], skip_upload=defer)
+    weather_img = weather_image(weather.results or [], skip_upload=True)
 
-    # Upload all images on the shared FTP session
-    if ftp_session:
-        if image_otd is None:
-            image_otd, _ = ftp_session.upload(*prepare_pic_otd())
-        if peak_img is None:
-            peak_img, _ = ftp_session.upload(*prepare_peak_upload())
-        if potd_image is None:
-            potd_image, _ = ftp_session.upload(*prepare_potd_upload())
-        if weather_img is None:
-            weather_img, _ = ftp_session.upload(*prepare_weather_upload())
+    # Collect deferred image uploads for the caller to process
+    pending_uploads = []
+    if image_otd is None:
+        pending_uploads.append(("image_otd", prepare_pic_otd()))
+    if peak_img is None:
+        pending_uploads.append(("peak_image", prepare_peak_upload()))
+    if potd_image is None:
+        pending_uploads.append(("product_image", prepare_potd_upload()))
+    if weather_img is None:
+        pending_uploads.append(("weather_image", prepare_weather_upload()))
 
     drip_template_fields = {
         "date": now_mountain().strftime("%Y-%m-%d"),
@@ -159,7 +164,7 @@ def gen_data(ftp_session=None):
         else:
             drip_template_fields[key] = html_safe(value)
 
-    return drip_template_fields
+    return drip_template_fields, pending_uploads
 
 
 def write_data_to_json(data: dict, doctype: str) -> str:
@@ -242,13 +247,18 @@ def clear_cache():
 def serve_api(force: bool = False):
     """
     Get the data, then upload it to server for API.
-    Uses a single FTP session for all uploads.
+    FTP session is created after data collection to avoid idle timeouts.
     """
     if force:
         clear_cache()
 
+    data, pending_uploads = gen_data()
+
     with FTPSession() as ftp:
-        data = gen_data(ftp_session=ftp)
+        for field_key, upload_args in pending_uploads:
+            url, _ = ftp.upload(*upload_args)
+            data[field_key] = html_safe(url) if url else ""
+
         web = web_version(data)
         printable = web_version(data, "server/printable.html", "printable.html")
         json_file = write_data_to_json(data, "email.json")
@@ -287,7 +297,7 @@ if __name__ == "__main__":  # pragma: no cover
     try:
         environment = settings.ENVIRONMENT
         if environment == "development":
-            gen_data()
+            gen_data()  # Pending uploads ignored in development
         elif environment == "production":
             serve_api(force=_args.force)
     finally:

@@ -54,7 +54,8 @@ def generated_data():
         # Mock file operations that might fail
         patch("shared.ftp.upload_file", return_value=("mocked_url", [])),
     ):
-        return gen_data()
+        data, _ = gen_data()
+        return data
 
 
 @pytest.fixture
