@@ -10,6 +10,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import shared.lkg_cache as _lkg_module
+from shared.lkg_cache import LKGCache
 from shared.run_context import reset_run
 from shared.settings import Settings, reset_settings
 from shared.timing import reset_timing
@@ -28,12 +30,15 @@ def _reset_settings(monkeypatch):
     reset_settings()
     reset_run()
     reset_timing()
+    LKGCache.reset()
+    monkeypatch.setattr(_lkg_module, "DB_PATH", ":memory:")
     for f in dataclasses.fields(Settings):
         monkeypatch.setenv(f.name, "")
     yield
     reset_settings()
     reset_run()
     reset_timing()
+    LKGCache.reset()
 
 
 # ============================================================================

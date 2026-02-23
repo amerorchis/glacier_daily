@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import generate_and_upload as gau
+from shared.lkg_cache import LKGCache
 
 
 def make_fake_weather():
@@ -401,3 +402,192 @@ def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
     monkeypatch.setattr(gau, "peak", lambda **kw: ("peak", None, "peak_map"))
     data, _ = gau.gen_data()
     assert data["peak_image"] == ""
+
+
+# ============================================================================
+# LKG Cache Integration Tests
+# ============================================================================
+
+
+class TestLKGSave:
+    """Verify that successful module data is saved to LKG."""
+
+    def test_successful_modules_saved_to_lkg(self, mock_all_data_sources):
+        """gen_data should save successful module outputs to LKG cache."""
+        gau.gen_data()
+        cache = LKGCache.get_cache()
+        # Dynamic modules saved
+        assert cache.load("trails", ["trails"]) == {"trails": "trails"}
+        assert cache.load("roads", ["roads"]) == {"roads": "roads"}
+        assert cache.load("events", ["events"]) == {"events": "events"}
+        # Date-deterministic modules saved
+        peak_data = cache.load("peak", ["peak", "peak_map"])
+        assert peak_data is not None
+        assert peak_data["peak"] == "peak"
+
+    def test_failed_module_not_saved_to_lkg(self, monkeypatch):
+        """Failed modules should not overwrite LKG data with empty strings."""
+        # Set up: all modules succeed
+        monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
+        monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails_data")
+        monkeypatch.setattr(gau, "get_campground_status", lambda: "cg")
+        monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
+        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hb")
+        monkeypatch.setattr(gau, "events_today", lambda: "events")
+        monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
+        monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "pk_map"))
+        monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
+        monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
+        monkeypatch.setattr(gau, "get_notices", lambda: "notices")
+        monkeypatch.setattr(gau, "html_safe", lambda x: x)
+        monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+
+        # First run: everything succeeds, LKG populated
+        gau.gen_data()
+        cache = LKGCache.get_cache()
+        assert cache.load("trails", ["trails"]) == {"trails": "trails_data"}
+
+        # Second run: trails fails
+        monkeypatch.setattr(
+            gau, "get_closed_trails", lambda: (_ for _ in ()).throw(ConnectionError)
+        )
+        gau.gen_data()
+        # LKG for trails should still have the old good data
+        assert cache.load("trails", ["trails"]) == {"trails": "trails_data"}
+
+
+class TestLKGFallback:
+    """Verify that LKG data is used as fallback when modules fail."""
+
+    def _setup_all_mocks(self, monkeypatch):
+        monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
+        monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
+        monkeypatch.setattr(gau, "get_campground_status", lambda: "cg")
+        monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
+        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hb")
+        monkeypatch.setattr(gau, "events_today", lambda: "events")
+        monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
+        monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
+        monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
+        monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
+        monkeypatch.setattr(gau, "get_notices", lambda: "notices")
+        monkeypatch.setattr(gau, "html_safe", lambda x: x)
+        monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
+
+    def test_dynamic_module_uses_lkg_on_failure(self, monkeypatch):
+        """When a dynamic module fails, its LKG data is returned."""
+        self._setup_all_mocks(monkeypatch)
+        gau.gen_data()  # Populate LKG
+
+        # Now trails fails
+        monkeypatch.setattr(
+            gau,
+            "get_closed_trails",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        assert result["trails"] == "trails"  # From LKG, not empty default
+
+    def test_weather_lkg_fallback(self, monkeypatch):
+        """Weather LKG fills in weather fields when weather module fails."""
+        self._setup_all_mocks(monkeypatch)
+        gau.gen_data()  # Populate LKG with weather1="Weather1"
+
+        # Now weather fails
+        monkeypatch.setattr(
+            gau,
+            "weather_data",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        assert result["weather1"] == "Weather1"
+        assert result["weather2"] == "Weather2"
+
+    def test_sunrise_lkg_fallback(self, monkeypatch):
+        """Sunrise tuple is reconstructed from LKG on failure."""
+        self._setup_all_mocks(monkeypatch)
+        gau.gen_data()  # Populate LKG
+
+        # Now sunrise fails
+        monkeypatch.setattr(
+            gau,
+            "process_video",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        assert result["sunrise_vid"] == "v"
+        assert result["sunrise_still"] == "s"
+        assert result["sunrise_str"] == "d"
+
+
+class TestLKGDateDeterministic:
+    """Verify date-deterministic modules use LKG as primary cache."""
+
+    def _setup_all_mocks(self, monkeypatch):
+        monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
+        monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
+        monkeypatch.setattr(gau, "get_campground_status", lambda: "cg")
+        monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
+        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hb")
+        monkeypatch.setattr(gau, "events_today", lambda: "events")
+        monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
+        monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
+        monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
+        monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
+        monkeypatch.setattr(gau, "get_notices", lambda: "notices")
+        monkeypatch.setattr(gau, "html_safe", lambda x: x)
+        monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
+
+    def test_cached_module_skips_api_call(self, monkeypatch):
+        """Date-deterministic modules skip API calls when LKG has today's data."""
+        self._setup_all_mocks(monkeypatch)
+        # Pre-populate LKG with all fields including image URL
+        cache = LKGCache.get_cache()
+        cache.save(
+            "peak", {"peak": "Cached Peak", "peak_image": "cached_url", "peak_map": "m"}
+        )
+
+        call_count = 0
+        original_peak = gau.peak
+
+        def counting_peak(**kw):
+            nonlocal call_count
+            call_count += 1
+            return original_peak(**kw)
+
+        monkeypatch.setattr(gau, "peak", counting_peak)
+
+        result, pending = gau.gen_data()
+        assert call_count == 0  # Peak module was NOT called
+        assert result["peak"] == "Cached Peak"
+        assert result["peak_image"] == "cached_url"
+        # No pending upload for peak_image (it has a URL, not None)
+        assert not any(k == "peak_image" for k, _ in pending)
+
+    def test_uncached_module_calls_api(self, monkeypatch):
+        """Date-deterministic modules call API when LKG is empty."""
+        self._setup_all_mocks(monkeypatch)
+        # LKG is empty (fresh :memory: DB)
+
+        result, _ = gau.gen_data()
+        assert result["peak"] == "pk"  # From the mocked peak function
+
+
+class TestClearCache:
+    """Verify clear_cache clears date-deterministic LKG modules."""
+
+    def test_clear_cache_removes_deterministic_lkg(self):
+        """--force clears date-deterministic LKG data."""
+        cache = LKGCache.get_cache()
+        cache.save("peak", {"peak": "data"})
+        cache.save("image_otd", {"image_otd": "data"})
+        cache.save("product", {"product_title": "data"})
+        cache.save("weather", {"weather1": "data"})  # Dynamic, should survive
+
+        gau.clear_cache()
+
+        assert cache.load("peak", ["peak"]) is None
+        assert cache.load("image_otd", ["image_otd"]) is None
+        assert cache.load("product", ["product_title"]) is None
+        # Dynamic module LKG preserved
+        assert cache.load("weather", ["weather1"]) == {"weather1": "data"}
