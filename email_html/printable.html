@@ -100,24 +100,55 @@
     </div>
 
     <div class="section">
-        <h2>What You Need to Know for {{ my.daily_update.today | base64_decode }}</h2>
+        <h2>What You Need to Know for {{ my.daily_update.today }}</h2>
     </div>
 
-    {% if my.daily_update.events != "" %}
-        {% if my.daily_update.events | base64_decode != "502 Response" %}
+    {% if my.daily_update.events.events or my.daily_update.events.seasonal_message %}
+        {% if not my.daily_update.events.error_message %}
             <div class="section">
                 <h2>Park Activities Today</h2>
-                {{ my.daily_update.events | base64_decode }}
+                {% if my.daily_update.events.events %}
+                <ul class="events-list">
+                    {% for event in my.daily_update.events.events %}
+                    <li>{{ event.start_time }} - {{ event.end_time }}: {{ event.name }}, {{ event.location }} <a href="{{ event.link }}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>
+                    {% endfor %}
+                </ul>
+                {% elif my.daily_update.events.seasonal_message %}
+                <p>{{ my.daily_update.events.seasonal_message }}</p>
+                {% endif %}
             </div>
         {% endif %}
     {% endif %}
 
     <div class="section">
         <h2>Weather</h2>
-        <p>{{ my.daily_update.weather1 | base64_decode }}</p>
-        <img class="weather-img" src="{{ my.daily_update.weather_image | base64_decode }}"
+        <p>{{ my.daily_update.weather.daylight_message }}<br><br>Forecasts Around the Park:</p>
+        <img class="weather-img" src="{{ my.daily_update.weather_image }}"
             alt="Today's weather forecast in Glacier">
-        <p>{{ my.daily_update.weather2 | base64_decode }}</p>
+        {% if my.daily_update.weather.aqi_value != None %}
+        <p>The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}. This air quality is considered {{ my.daily_update.weather.aqi_category }}</p>
+        {% endif %}
+        <p>Evening Viewing Forecasts:<br>
+            Aurora: {{ my.daily_update.weather.aurora_quality }} |
+            Sunset Color: {{ my.daily_update.weather.sunset_quality }} |
+            Cloud Cover: {{ my.daily_update.weather.cloud_cover_pct }}%</p>
+        {% if my.daily_update.weather.aurora_message or my.daily_update.weather.sunset_message %}
+        <p>{{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
+        {% endif %}
+        {% if my.daily_update.weather.alerts %}
+        <h3><a href="https://weather.gov">Alerts from the National Weather Service</a></h3>
+        <ul>
+            {% for alert in my.daily_update.weather.alerts %}
+            <li>{{ alert.headline }}
+                {% if alert.bullets %}
+                <ul>
+                    {% for b in alert.bullets %}<li>{{ b }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <p><em>Air quality data from <a
                     href="https://www.nps.gov/subjects/air/current-data.htm?site=glac&location=west-glacier-horse-stables&">the
                     National Park Service.</a></em></p>
@@ -125,21 +156,48 @@
 
     <div class="section">
         <h2>Trail Closures</h2>
-        <p>{{ my.daily_update.trails | base64_decode }}</p>
+        {% if my.daily_update.trails.closures %}
+        <ul>
+            {% for c in my.daily_update.trails.closures %}<li>{{ c }}</li>{% endfor %}
+        </ul>
+        {% elif my.daily_update.trails.no_closures_message %}
+        <p>{{ my.daily_update.trails.no_closures_message }}</p>
+        {% elif my.daily_update.trails.error_message %}
+        <p>{{ my.daily_update.trails.error_message }}</p>
+        {% endif %}
 
-        {% if my.daily_update.roads != "" %}
+        {% if my.daily_update.roads.closures or my.daily_update.roads.no_closures_message or my.daily_update.roads.error_message %}
         <h2>Road Closures</h2>
-        {{ my.daily_update.roads | base64_decode }}
+        {% if my.daily_update.roads.closures %}
+        <ul>
+            {% for c in my.daily_update.roads.closures %}<li>{{ c }}</li>{% endfor %}
+        </ul>
+        {% elif my.daily_update.roads.no_closures_message %}
+        <p>{{ my.daily_update.roads.no_closures_message }}</p>
+        {% elif my.daily_update.roads.error_message %}
+        <p>{{ my.daily_update.roads.error_message }}</p>
+        {% endif %}
         {% endif %}
 
-        {% if my.daily_update.hikerbiker != "" %}
+        {% if my.daily_update.hikerbiker.closures %}
         <h2>Going-to-the-Sun Road Hiker/Biker Closures</h2>
-        {{ my.daily_update.hikerbiker | base64_decode }}
+        <ul>
+            {% for c in my.daily_update.hikerbiker.closures %}<li>{{ c }}</li>{% endfor %}
+        </ul>
+        {% if my.daily_update.hikerbiker.explanatory_note %}
+        <p>{{ my.daily_update.hikerbiker.explanatory_note }}</p>
+        {% endif %}
         {% endif %}
 
-        {% if my.daily_update.campgrounds != "" %}
-        <h2>Campground Closures</h2>
-        {{ my.daily_update.campgrounds | base64_decode }}
+        {% if my.daily_update.campgrounds.statuses or my.daily_update.campgrounds.error_message %}
+        <h2>Campground Status</h2>
+        {% if my.daily_update.campgrounds.statuses %}
+        <ul>
+            {% for s in my.daily_update.campgrounds.statuses %}<li>{{ s }}</li>{% endfor %}
+        </ul>
+        {% elif my.daily_update.campgrounds.error_message %}
+        <p>{{ my.daily_update.campgrounds.error_message }}</p>
+        {% endif %}
         {% endif %}
 
         <p><em>Trail, road, and campground conditions can change throughout the day, check the <a
@@ -150,34 +208,40 @@
     <div class="section two-column">
         <div class="column">
             <h2>Notices</h2>
-            {{ my.daily_update.notices | base64_decode }}
+            {% if my.daily_update.notices.notices %}
+            <ul>
+                {% for n in my.daily_update.notices.notices %}<li>{{ n }}</li>{% endfor %}
+            </ul>
+            {% elif my.daily_update.notices.fallback_message %}
+            <p>{{ my.daily_update.notices.fallback_message }}</p>
+            {% endif %}
         </div>
         <div class="column">
             <h2>Glacier Peak of the Day</h2>
-            <img src="{{ my.daily_update.peak_image | base64_decode }}" alt="Glacier Peak of the Day">
-            <p>{{ my.daily_update.peak | base64_decode }}</p>
-            <p><em>(<a href="{{ my.daily_update.peak_image | base64_decode }}">Full size peak image</a>,
-                    <a href="{{ my.daily_update.peak_map | base64_decode }}">peak location on map</a>)</em></p>
+            <img src="{{ my.daily_update.peak_image }}" alt="Glacier Peak of the Day">
+            <p>{{ my.daily_update.peak }}</p>
+            <p><em>(<a href="{{ my.daily_update.peak_image }}">Full size peak image</a>,
+                    <a href="{{ my.daily_update.peak_map }}">peak location on map</a>)</em></p>
         </div>
     </div>
 
     <div class="section two-column">
         <div class="column">
             <h2>Product of the Day</h2>
-            <img src="{{ my.daily_update.product_image | base64_decode }}" alt="Today's product of the day">
-            <h3>{{ my.daily_update.product_title | base64_decode }}</h3>
-            <p>{{ my.daily_update.product_desc | base64_decode }} <a
-                    href="{{ my.daily_update.product_link | base64_decode }}">
+            <img src="{{ my.daily_update.product_image }}" alt="Today's product of the day">
+            <h3>{{ my.daily_update.product_title }}</h3>
+            <p>{{ my.daily_update.product_desc }} <a
+                    href="{{ my.daily_update.product_link }}">
                     (Product Link)</a>.</p>
         </div>
         <div class="column">
             {% if my.daily_update.image_otd != "Flickr API Error" %}
                 <h2>Glacier Image of the Day</h2>
-                <img src="{{ my.daily_update.image_otd | base64_decode }}" alt="Today's picture of the day">
+                <img src="{{ my.daily_update.image_otd }}" alt="Today's picture of the day">
                 {% if my.daily_update.image_otd_title != "" %}
-                <p>{{ my.daily_update.image_otd_title | base64_decode }}</p>
+                <p>{{ my.daily_update.image_otd_title }}</p>
                 {% endif %}
-                <p>Image courtesy of <a href="{{ my.daily_update.image_otd_link | base64_decode }}">Glacier National
+                <p>Image courtesy of <a href="{{ my.daily_update.image_otd_link }}">Glacier National
                         Park.</a></p>
             {% endif %}
         </div>
@@ -185,9 +249,9 @@
 
     {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
     <div class="section">
-        <h2>{{ my.daily_update.sunrise_str | base64_decode }} Sunrise</h2>
-        <a href="{{ my.daily_update.sunrise_vid | base64_decode }}"><img
-                src="{{ my.daily_update.sunrise_still | base64_decode }}" alt="{{ my.daily_update.sunrise_str | base64_decode }} Sunrise"></a>
+        <h2>{{ my.daily_update.sunrise_str }} Sunrise</h2>
+        <a href="{{ my.daily_update.sunrise_vid }}"><img
+                src="{{ my.daily_update.sunrise_still }}" alt="{{ my.daily_update.sunrise_str }} Sunrise"></a>
         <p>Find the timelapse video at <a href="https://glacier.org/daily-updates">glacier.org/daily-updates</a>.</p>
     </div>
     {% endif %}
