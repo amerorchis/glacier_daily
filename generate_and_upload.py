@@ -28,6 +28,7 @@ from shared.datetime_utils import (
     now_mountain,
 )
 from shared.ftp import FTPSession, upload_file
+from shared.lkg_cache import LKGCache
 from shared.logging_config import get_logger
 from shared.settings import get_settings
 from shared.timing import timed
@@ -50,6 +51,56 @@ class _EmptyWeather:
     season = None
 
 
+# Date-deterministic: checked BEFORE API call, skip if cached today
+CACHED_MODULE_KEYS = {
+    "peak": ["peak", "peak_image", "peak_map"],
+    "image_otd": ["image_otd", "image_otd_title", "image_otd_link"],
+    "product": ["product_title", "product_image", "product_link", "product_desc"],
+}
+
+# Dynamic: always fetch fresh, LKG used only as fallback on failure
+FALLBACK_MODULE_KEYS = {
+    "weather": ["weather1", "weather2", "season", "weather_image"],
+    "trails": ["trails"],
+    "campgrounds": ["campgrounds"],
+    "roads": ["roads"],
+    "hiker_biker": ["hikerbiker"],
+    "events": ["events"],
+    "notices": ["notices"],
+    "sunrise": ["sunrise_vid", "sunrise_still", "sunrise_str"],
+}
+
+_ALL_MODULE_KEYS = {**CACHED_MODULE_KEYS, **FALLBACK_MODULE_KEYS}
+
+# Maps pending_upload field keys to their LKG module name
+_FIELD_TO_MODULE = {
+    "image_otd": "image_otd",
+    "peak_image": "peak",
+    "product_image": "product",
+    "weather_image": "weather",
+}
+
+
+def _save_module_lkg(module_name, data):
+    """Save successful module output to LKG cache."""
+    try:
+        cache = LKGCache.get_cache()
+        valid = {k: v for k, v in data.items() if v}
+        if valid:
+            cache.save(module_name, valid)
+    except Exception:
+        logger.debug("Failed to save LKG for %s", module_name, exc_info=True)
+
+
+def _load_module_lkg(module_name, keys):
+    """Load today's LKG data for a module, or None."""
+    try:
+        return LKGCache.get_cache().load(module_name, keys)
+    except Exception:
+        logger.debug("Failed to load LKG for %s", module_name, exc_info=True)
+        return None
+
+
 def _submit_timed(executor, name, func, *args, **kwargs):
     """Submit a function to the executor with timing instrumentation."""
 
@@ -60,12 +111,19 @@ def _submit_timed(executor, name, func, *args, **kwargs):
     return executor.submit(wrapped)
 
 
-def _safe_result(future, name, default):
-    """Safely get a future's result, returning default on error."""
+def _safe_result(future, name, default, lkg_keys=None):
+    """Safely get a future's result, falling back to LKG then default."""
     try:
         return future.result()
     except Exception as e:
         logger.error("Module '%s' failed: %s", name, e, exc_info=True)
+        if lkg_keys:
+            lkg_data = _load_module_lkg(name, lkg_keys)
+            if lkg_data:
+                logger.info("Using LKG fallback for '%s'", name)
+                if len(lkg_keys) == 1:
+                    return lkg_data[lkg_keys[0]]
+                return tuple(lkg_data.get(k, "") for k in lkg_keys)
         return default
 
 
@@ -73,6 +131,11 @@ def gen_data():
     """
     Use threads to gather the data from every module, then store it in a dictionary.
     Make sure text is all HTML safe, then return it.
+
+    Date-deterministic modules (peak, image_otd, product) are checked in
+    the LKG cache first and skipped if today's data already exists.
+    Dynamic modules always fetch fresh data, with LKG as a fallback on
+    failure.
 
     Image uploads are always deferred — callers handle uploading via the
     returned pending_uploads list so the FTP connection is only opened
@@ -84,7 +147,16 @@ def gen_data():
             images that still need to be uploaded via FTPSession.upload().
     """
 
+    # Check LKG cache for date-deterministic modules
+    cached = {}
+    for module_name, keys in CACHED_MODULE_KEYS.items():
+        lkg_data = _load_module_lkg(module_name, keys)
+        if lkg_data:
+            cached[module_name] = lkg_data
+            logger.info("Using cached data for '%s' (date-deterministic)", module_name)
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Dynamic modules: always fetch fresh
         weather_future = _submit_timed(executor, "weather", weather_data)
         trails_future = _submit_timed(executor, "trails", get_closed_trails)
         cg_future = _submit_timed(executor, "campgrounds", get_campground_status)
@@ -93,29 +165,64 @@ def gen_data():
             executor, "hiker_biker", get_hiker_biker_status
         )
         events_future = _submit_timed(executor, "events", events_today)
-        image_future = _submit_timed(
-            executor, "image_otd", get_image_otd, skip_upload=True
-        )
-        peak_future = _submit_timed(executor, "peak", peak, skip_upload=True)
         sunrise_future = _submit_timed(executor, "sunrise", process_video)
-        product_future = _submit_timed(
-            executor, "product", get_product, skip_upload=True
-        )
-        notices_futures = _submit_timed(executor, "notices", get_notices)
+        notices_future = _submit_timed(executor, "notices", get_notices)
 
+        # Date-deterministic modules: skip if cached today
+        image_future = None
+        if "image_otd" not in cached:
+            image_future = _submit_timed(
+                executor, "image_otd", get_image_otd, skip_upload=True
+            )
+        peak_future = None
+        if "peak" not in cached:
+            peak_future = _submit_timed(executor, "peak", peak, skip_upload=True)
+        product_future = None
+        if "product" not in cached:
+            product_future = _submit_timed(
+                executor, "product", get_product, skip_upload=True
+            )
+
+        # Extract dynamic module results (with LKG fallback)
         sunrise_vid, sunrise_still, sunrise_str = _safe_result(
-            sunrise_future, "sunrise", ("", "", "")
-        )
-        potd_title, potd_image, potd_link, potd_desc = _safe_result(
-            product_future, "product", ("", None, "", "")
+            sunrise_future,
+            "sunrise",
+            ("", "", ""),
+            lkg_keys=["sunrise_vid", "sunrise_still", "sunrise_str"],
         )
         weather = _safe_result(weather_future, "weather", _EmptyWeather())
-        image_otd, image_otd_title, image_otd_link = _safe_result(
-            image_future, "image_otd", ("", "", "")
-        )
-        peak_name, peak_img, peak_map = _safe_result(
-            peak_future, "peak", ("", None, "")
-        )
+
+        # Extract date-deterministic results from cache or futures
+        if "image_otd" in cached:
+            c = cached["image_otd"]
+            image_otd = c.get("image_otd", "")
+            image_otd_title = c.get("image_otd_title", "")
+            image_otd_link = c.get("image_otd_link", "")
+        else:
+            image_otd, image_otd_title, image_otd_link = _safe_result(
+                image_future, "image_otd", ("", "", "")
+            )
+
+        if "peak" in cached:
+            c = cached["peak"]
+            peak_name = c.get("peak", "")
+            peak_img = c.get("peak_image")
+            peak_map = c.get("peak_map", "")
+        else:
+            peak_name, peak_img, peak_map = _safe_result(
+                peak_future, "peak", ("", None, "")
+            )
+
+        if "product" in cached:
+            c = cached["product"]
+            potd_title = c.get("product_title", "")
+            potd_image = c.get("product_image")
+            potd_link = c.get("product_link", "")
+            potd_desc = c.get("product_desc", "")
+        else:
+            potd_title, potd_image, potd_link, potd_desc = _safe_result(
+                product_future, "product", ("", None, "", "")
+            )
 
     weather_img = weather_image(weather.results or [], skip_upload=True)
 
@@ -133,16 +240,20 @@ def gen_data():
     drip_template_fields = {
         "date": now_mountain().strftime("%Y-%m-%d"),
         "today": format_date_readable(now_mountain()),
-        "events": _safe_result(events_future, "events", ""),
+        "events": _safe_result(events_future, "events", "", lkg_keys=["events"]),
         "weather1": weather.message1,
         "weather_image": weather_img,
         "weather2": weather.message2,
         "season": weather.season,
-        "trails": _safe_result(trails_future, "trails", ""),
-        "campgrounds": _safe_result(cg_future, "campgrounds", ""),
-        "roads": _safe_result(roads_future, "roads", ""),
-        "hikerbiker": _safe_result(hiker_biker_future, "hiker_biker", ""),
-        "notices": _safe_result(notices_futures, "notices", ""),
+        "trails": _safe_result(trails_future, "trails", "", lkg_keys=["trails"]),
+        "campgrounds": _safe_result(
+            cg_future, "campgrounds", "", lkg_keys=["campgrounds"]
+        ),
+        "roads": _safe_result(roads_future, "roads", "", lkg_keys=["roads"]),
+        "hikerbiker": _safe_result(
+            hiker_biker_future, "hiker_biker", "", lkg_keys=["hikerbiker"]
+        ),
+        "notices": _safe_result(notices_future, "notices", "", lkg_keys=["notices"]),
         "peak": peak_name,
         "peak_image": peak_img,
         "peak_map": peak_map,
@@ -157,6 +268,30 @@ def gen_data():
         "sunrise_still": sunrise_still,
         "sunrise_str": sunrise_str,
     }
+
+    # LKG: Apply weather fallback if weather module failed
+    if not drip_template_fields["weather1"]:
+        lkg = _load_module_lkg(
+            "weather", ["weather1", "weather2", "season", "weather_image"]
+        )
+        if lkg:
+            logger.info("Using LKG fallback for 'weather'")
+            drip_template_fields["weather1"] = lkg.get("weather1", "")
+            drip_template_fields["weather2"] = lkg.get("weather2", "")
+            drip_template_fields["season"] = lkg.get("season", "")
+            if lkg.get("weather_image"):
+                drip_template_fields["weather_image"] = lkg["weather_image"]
+                pending_uploads[:] = [
+                    (k, v) for k, v in pending_uploads if k != "weather_image"
+                ]
+
+    # LKG: Save successful module data (pre-html_safe)
+    for module_name, keys in _ALL_MODULE_KEYS.items():
+        module_data = {
+            k: drip_template_fields[k] for k in keys if drip_template_fields.get(k)
+        }
+        if module_data:
+            _save_module_lkg(module_name, module_data)
 
     for key, value in drip_template_fields.items():
         if value is None:
@@ -238,10 +373,14 @@ def refresh_cache():
 
 
 def clear_cache():
-    """Remove cached email.json so all modules re-fetch fresh data."""
+    """Remove cached email.json and date-deterministic LKG data."""
     cache_file = "server/email.json"
     if os.path.exists(cache_file):
         os.remove(cache_file)
+    try:
+        LKGCache.get_cache().clear_modules(list(CACHED_MODULE_KEYS))
+    except Exception:
+        logger.debug("Failed to clear LKG cache", exc_info=True)
 
 
 def serve_api(force: bool = False):
@@ -258,6 +397,10 @@ def serve_api(force: bool = False):
         for field_key, upload_args in pending_uploads:
             url, _ = ftp.upload(*upload_args)
             data[field_key] = html_safe(url) if url else ""
+            # Save resolved image URL to LKG for future cache hits
+            module = _FIELD_TO_MODULE.get(field_key)
+            if module and url:
+                _save_module_lkg(module, {field_key: url})
 
         web = web_version(data)
         printable = web_version(data, "server/printable.html", "printable.html")
