@@ -54,7 +54,7 @@ def mock_all_data_sources(monkeypatch):
 
 def test_gen_data_keys_present(mock_all_data_sources):
     """Verify all expected keys are present in gen_data output."""
-    data = gau.gen_data()
+    data, _ = gau.gen_data()
 
     expected_keys = [
         "date",
@@ -90,7 +90,7 @@ def test_gen_data_keys_present(mock_all_data_sources):
 
 def test_gen_data_string_fields_are_strings(mock_all_data_sources):
     """Verify string fields return str type (empty string is valid)."""
-    data = gau.gen_data()
+    data, _ = gau.gen_data()
 
     # These fields should always be strings (possibly empty)
     string_fields = [
@@ -128,7 +128,7 @@ def test_gen_data_string_fields_are_strings(mock_all_data_sources):
 
 def test_gen_data_nullable_image_fields(mock_all_data_sources):
     """Verify image fields can be str or None."""
-    data = gau.gen_data()
+    data, _ = gau.gen_data()
 
     # These fields may be None or str (URL or empty string)
     nullable_fields = [
@@ -144,11 +144,12 @@ def test_gen_data_nullable_image_fields(mock_all_data_sources):
 
 
 def test_gen_data_returns_dict(mock_all_data_sources):
-    """Verify gen_data returns a dictionary."""
-    data = gau.gen_data()
+    """Verify gen_data returns a (dict, list) tuple."""
+    data, pending = gau.gen_data()
     assert isinstance(data, dict), (
         f"gen_data should return dict, got {type(data).__name__}"
     )
+    assert isinstance(pending, list)
 
 
 def test_gen_data_with_empty_returns(monkeypatch):
@@ -169,7 +170,7 @@ def test_gen_data_with_empty_returns(monkeypatch):
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "")  # Empty
 
     # Should not raise even with empty values
-    data = gau.gen_data()
+    data, _ = gau.gen_data()
     assert isinstance(data, dict)
     assert "date" in data  # Should still have date
 
@@ -201,7 +202,7 @@ def test_send_to_server(monkeypatch):
 
 def test_serve_api(monkeypatch, tmp_path):
     # Patch everything to avoid side effects
-    monkeypatch.setattr(gau, "gen_data", lambda ftp_session=None: {"foo": "bar"})
+    monkeypatch.setattr(gau, "gen_data", lambda: ({"foo": "bar"}, []))
     monkeypatch.setattr(gau, "web_version", lambda data, *a, **k: "server/webfile")
     monkeypatch.setattr(
         gau, "write_data_to_json", lambda data, doctype: str(tmp_path / "email.json")
@@ -217,7 +218,7 @@ def test_serve_api(monkeypatch, tmp_path):
 def test_serve_api_gen_data_raises(monkeypatch):
     """Verify serve_api propagates exceptions from gen_data."""
 
-    def failing_gen_data(ftp_session=None):
+    def failing_gen_data():
         raise RuntimeError("data fetch failed")
 
     monkeypatch.setattr(gau, "gen_data", failing_gen_data)
@@ -247,7 +248,7 @@ def test_gen_data_module_exception_handling(monkeypatch):
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
     # gen_data should not raise — it should use fallback values
-    result = gau.gen_data()
+    result, _ = gau.gen_data()
     assert isinstance(result, dict)
     assert result["peak"] == ""
     assert result["peak_map"] == ""
@@ -276,7 +277,7 @@ def test_gen_data_multiple_module_failures(monkeypatch):
     monkeypatch.setattr(gau, "html_safe", lambda x: x)
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
-    result = gau.gen_data()
+    result, _ = gau.gen_data()
     assert isinstance(result, dict)
     # Weather fallback: empty strings
     assert result["weather1"] == ""
@@ -398,5 +399,5 @@ def test_purge_cache_request_exception(monkeypatch, mock_required_settings):
 def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
     """Verify that None values in gen_data output are replaced with empty strings."""
     monkeypatch.setattr(gau, "peak", lambda **kw: ("peak", None, "peak_map"))
-    data = gau.gen_data()
+    data, _ = gau.gen_data()
     assert data["peak_image"] == ""
