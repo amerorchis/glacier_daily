@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import Optional
 
 from peak.sat import peak_sat
+from shared.logging_config import get_logger
 from shared.retrieve_from_json import retrieve_from_json
+
+logger = get_logger(__name__)
 
 SCRIPT_DIR = Path(__file__).parent
 WIKIPEDIA_JSON = SCRIPT_DIR / "peaks_wikipedia.json"
@@ -37,7 +40,7 @@ def peak(test=False, skip_upload: bool = False):
     Select a random peak, and return the relevant information.
     """
     if test:
-        print("Test mode.")
+        logger.debug("Test mode.")
 
     # Check if we already have today's peak
     else:

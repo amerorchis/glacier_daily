@@ -2,13 +2,15 @@
 Select the best thumbnail frame from the timelapse video.
 """
 
-import sys
 from typing import Optional
 
 import requests
 
 from shared.datetime_utils import now_mountain
+from shared.logging_config import get_logger
 from shared.retrieve_from_json import retrieve_from_json
+
+logger = get_logger(__name__)
 
 
 class TimelapseError(Exception):
@@ -45,7 +47,7 @@ def fetch_glacier_data(endpoint_type: str) -> list:
     }
 
     if endpoint_type not in endpoint_map:
-        print(f"Invalid endpoint type: {endpoint_type}", file=sys.stderr)
+        logger.error("Invalid timelapse endpoint type: %s", endpoint_type)
         return []
 
     try:
@@ -60,7 +62,7 @@ def fetch_glacier_data(endpoint_type: str) -> list:
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        print(f"Error fetching {endpoint_type} data: {e}", file=sys.stderr)
+        logger.error("Error fetching %s data: %s", endpoint_type, e)
         return []
 
 
@@ -108,7 +110,7 @@ def select_video(
         return None, None, None
 
     except Exception as e:
-        print(f"Error selecting video: {e}", file=sys.stderr)
+        logger.error("Error selecting video: %s", e)
         return None, None, None
 
 
@@ -146,7 +148,7 @@ def find_matching_thumbnail(video_id: str, thumbnail_data: list) -> Optional[str
         return None
 
     except Exception as e:
-        print(f"Error finding matching thumbnail: {e}", file=sys.stderr)
+        logger.error("Error finding matching thumbnail: %s", e)
         return None
 
 
@@ -173,27 +175,27 @@ def process_video() -> tuple[str, str, str]:
         thumbnail_data = fetch_glacier_data("thumbnails")
 
         if not timelapse_data or not thumbnail_data:
-            print("Failed to fetch remote data", file=sys.stderr)
+            logger.warning("Failed to fetch remote timelapse data")
             return "", "", ""
 
         # Select video based on today's date first, then latest
         video_id, video_url, descriptor = select_video(timelapse_data)
 
         if not video_id or not video_url:
-            print("No suitable video found", file=sys.stderr)
+            logger.warning("No suitable video found")
             return "", "", ""
 
         # Find matching thumbnail
         thumbnail_url = find_matching_thumbnail(video_id, thumbnail_data)
 
         if not thumbnail_url:
-            print(f"No matching thumbnail found for video {video_id}", file=sys.stderr)
+            logger.warning("No matching thumbnail found for video %s", video_id)
             return "", "", ""
 
         return video_url, thumbnail_url, descriptor or ""
 
     except Exception as e:
-        print(f"Unexpected error in process_video: {e}", file=sys.stderr)
+        logger.error("Unexpected error in process_video: %s", e, exc_info=True)
         return "", "", ""
 
 

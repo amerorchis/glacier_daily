@@ -3,13 +3,14 @@ Get road status from NPS and format into HTML.
 """
 
 import json
-import sys
-import traceback
 
 import requests
 import urllib3
 
 from roads.Road import Road
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -130,10 +131,7 @@ def closed_roads() -> dict[str, Road]:
     try:
         r = requests.get(url, timeout=5, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
-        print(
-            f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Road status request failed", exc_info=True)
         raise NPSWebsiteError from e
     r.raise_for_status()
     status = json.loads(r.text)
@@ -245,16 +243,10 @@ def get_road_status() -> str:
     try:
         return format_road_closures(closed_roads())
     except requests.exceptions.HTTPError:
-        print(
-            f"Handled error with Road Status, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Road status HTTP error", exc_info=True)
         return ""
     except NPSWebsiteError:
-        print(
-            f"Handled error with NPS website, here is the traceback:\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("NPS website error", exc_info=True)
         return (
             '<p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">'
             "The road status page on the park website is currently down.</p>"

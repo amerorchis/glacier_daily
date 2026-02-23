@@ -6,7 +6,10 @@ from datetime import datetime
 
 import requests
 
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
@@ -45,7 +48,9 @@ def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
     )
 
     if test:
-        print(quality, quality_text, cloud_cover)
+        logger.debug(
+            "quality=%s text=%s cloud_cover=%s", quality, quality_text, cloud_cover
+        )
 
     if not quality_text:
         return ERROR_RETURN

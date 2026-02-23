@@ -30,6 +30,7 @@ from shared.datetime_utils import (
 from shared.ftp import FTPSession, upload_file
 from shared.logging_config import get_logger
 from shared.settings import get_settings
+from shared.timing import timed
 from sunrise_timelapse.get_timelapse import process_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
 from trails_and_cgs.trails import get_closed_trails
@@ -38,6 +39,34 @@ from weather.weather_img import prepare_weather_upload, weather_image
 from web_version import web_version
 
 logger = get_logger(__name__)
+
+
+class _EmptyWeather:
+    """Fallback weather object when the weather module fails."""
+
+    results = None
+    message1 = ""
+    message2 = ""
+    season = None
+
+
+def _submit_timed(executor, name, func, *args, **kwargs):
+    """Submit a function to the executor with timing instrumentation."""
+
+    @timed(name)
+    def wrapped():
+        return func(*args, **kwargs)
+
+    return executor.submit(wrapped)
+
+
+def _safe_result(future, name, default):
+    """Safely get a future's result, returning default on error."""
+    try:
+        return future.result()
+    except Exception as e:
+        logger.error("Module '%s' failed: %s", name, e, exc_info=True)
+        return default
 
 
 def gen_data(ftp_session=None):
@@ -51,23 +80,37 @@ def gen_data(ftp_session=None):
     defer = ftp_session is not None
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        weather_future = executor.submit(weather_data)
-        trails_future = executor.submit(get_closed_trails)
-        cg_future = executor.submit(get_campground_status)
-        roads_future = executor.submit(get_road_status)
-        hiker_biker_future = executor.submit(get_hiker_biker_status)
-        events_future = executor.submit(events_today)
-        image_future = executor.submit(get_image_otd, skip_upload=defer)
-        peak_future = executor.submit(peak, skip_upload=defer)
-        sunrise_future = executor.submit(process_video)
-        product_future = executor.submit(get_product, skip_upload=defer)
-        notices_futures = executor.submit(get_notices)
+        weather_future = _submit_timed(executor, "weather", weather_data)
+        trails_future = _submit_timed(executor, "trails", get_closed_trails)
+        cg_future = _submit_timed(executor, "campgrounds", get_campground_status)
+        roads_future = _submit_timed(executor, "roads", get_road_status)
+        hiker_biker_future = _submit_timed(
+            executor, "hiker_biker", get_hiker_biker_status
+        )
+        events_future = _submit_timed(executor, "events", events_today)
+        image_future = _submit_timed(
+            executor, "image_otd", get_image_otd, skip_upload=defer
+        )
+        peak_future = _submit_timed(executor, "peak", peak, skip_upload=defer)
+        sunrise_future = _submit_timed(executor, "sunrise", process_video)
+        product_future = _submit_timed(
+            executor, "product", get_product, skip_upload=defer
+        )
+        notices_futures = _submit_timed(executor, "notices", get_notices)
 
-        sunrise_vid, sunrise_still, sunrise_str = sunrise_future.result()
-        potd_title, potd_image, potd_link, potd_desc = product_future.result()
-        weather = weather_future.result()
-        image_otd, image_otd_title, image_otd_link = image_future.result()
-        peak_name, peak_img, peak_map = peak_future.result()
+        sunrise_vid, sunrise_still, sunrise_str = _safe_result(
+            sunrise_future, "sunrise", ("", "", "")
+        )
+        potd_title, potd_image, potd_link, potd_desc = _safe_result(
+            product_future, "product", ("", None, "", "")
+        )
+        weather = _safe_result(weather_future, "weather", _EmptyWeather())
+        image_otd, image_otd_title, image_otd_link = _safe_result(
+            image_future, "image_otd", ("", "", "")
+        )
+        peak_name, peak_img, peak_map = _safe_result(
+            peak_future, "peak", ("", None, "")
+        )
 
     weather_img = weather_image(weather.results or [], skip_upload=defer)
 
@@ -85,16 +128,16 @@ def gen_data(ftp_session=None):
     drip_template_fields = {
         "date": now_mountain().strftime("%Y-%m-%d"),
         "today": format_date_readable(now_mountain()),
-        "events": events_future.result(),
+        "events": _safe_result(events_future, "events", ""),
         "weather1": weather.message1,
         "weather_image": weather_img,
         "weather2": weather.message2,
         "season": weather.season,
-        "trails": trails_future.result(),
-        "campgrounds": cg_future.result(),
-        "roads": roads_future.result(),
-        "hikerbiker": hiker_biker_future.result(),
-        "notices": notices_futures.result(),
+        "trails": _safe_result(trails_future, "trails", ""),
+        "campgrounds": _safe_result(cg_future, "campgrounds", ""),
+        "roads": _safe_result(roads_future, "roads", ""),
+        "hikerbiker": _safe_result(hiker_biker_future, "hiker_biker", ""),
+        "notices": _safe_result(notices_futures, "notices", ""),
         "peak": peak_name,
         "peak_image": peak_img,
         "peak_map": peak_map,
@@ -222,9 +265,13 @@ if __name__ == "__main__":  # pragma: no cover
     import argparse as _argparse
 
     from shared.logging_config import setup_logging
+    from shared.run_context import start_run
+    from shared.run_report import build_report, upload_status_report
 
-    get_settings()  # Load email.env so ENVIRONMENT is available
+    settings = get_settings()  # Load email.env so ENVIRONMENT is available
+    run = start_run("web_update")
     setup_logging()
+    logger.info("Starting run %s (type=%s)", run.run_id, run.run_type)
 
     _parser = _argparse.ArgumentParser(description="Generate and upload data")
     _parser.add_argument(
@@ -237,8 +284,18 @@ if __name__ == "__main__":  # pragma: no cover
     if _args.force:
         clear_cache()
 
-    environment = get_settings().ENVIRONMENT
-    if environment == "development":
-        gen_data()
-    elif environment == "production":
-        serve_api(force=_args.force)
+    try:
+        environment = settings.ENVIRONMENT
+        if environment == "development":
+            gen_data()
+        elif environment == "production":
+            serve_api(force=_args.force)
+    finally:
+        report = build_report(environment=settings.ENVIRONMENT)
+        logger.info("Run complete: %s", report.overall_status)
+        logger.info("Run report: %s", report.to_json())
+        if settings.ENVIRONMENT == "production":
+            try:
+                upload_status_report(report)
+            except Exception:
+                logger.error("Failed to upload status report", exc_info=True)

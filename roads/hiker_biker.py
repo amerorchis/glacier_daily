@@ -4,14 +4,15 @@ Retrieve and format the hiker/biker status.
 
 import contextlib
 import json
-import sys
-import traceback
 
 import requests
 import urllib3
 
 from roads.HikerBiker import HikerBiker
 from roads.roads import NPSWebsiteError, closed_roads
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -38,10 +39,7 @@ def hiker_biker() -> str:
             try:
                 r = requests.get(url, timeout=5, verify=False)  # noqa: S501
             except requests.exceptions.RequestException:
-                print(
-                    f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
-                    file=sys.stderr,
-                )
+                logger.error("Hiker/biker status request failed", exc_info=True)
                 continue
             r.raise_for_status()
             data.extend(json.loads(r.text).get("features", ""))
@@ -126,10 +124,7 @@ def get_hiker_biker_status() -> str:
         json.JSONDecodeError,
         NPSWebsiteError,
     ):
-        print(
-            f"Handled error with Hiker/Biker Status, here is the traceback:\n\n{traceback.format_exc()}",
-            file=sys.stderr,
-        )
+        logger.error("Hiker/biker status error", exc_info=True)
         return ""
 
 

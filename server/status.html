@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glacier Daily — System Status</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+    background: #f0f2ea;
+    line-height: 1.5;
+    padding: 1rem;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  /* Header */
+  header {
+    background: #6c7e44;
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  header h1 { font-size: 1.25rem; font-weight: 600; }
+  header .updated { font-size: 0.8rem; opacity: 0.85; }
+
+  /* Summary cards */
+  .summary {
+    display: flex;
+    gap: 1px;
+    background: #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+  }
+  .summary .card {
+    flex: 1;
+    background: #fff;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    min-width: 0;
+  }
+  .card .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #777; }
+  .card .value { font-size: 1.4rem; font-weight: 700; margin-top: 0.15rem; }
+
+  /* Run list */
+  .runs { border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
+  .run { border-top: 1px solid #eee; }
+  .run:first-child { border-top: none; }
+
+  .run-header {
+    display: grid;
+    grid-template-columns: 10rem 6.5rem 5.5rem 4.5rem 5rem 1fr;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+  .run-header:hover { background: #f8f9f5; }
+
+  .run-detail {
+    background: #fafbf7;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #eee;
+    display: none;
+  }
+  .run.open .run-detail { display: block; }
+
+  /* Badges & pills */
+  .pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .pill-success { background: #e8f5e9; color: #2e7d32; }
+  .pill-partial { background: #fff3e0; color: #e65100; }
+  .pill-failure { background: #ffebee; color: #c62828; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge-email { background: #e3f2fd; color: #1565c0; }
+  .badge-web { background: #f3e5f5; color: #7b1fa2; }
+
+  /* Module detail table */
+  .mod-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.25rem; }
+  .mod-table th { text-align: left; padding: 0.3rem 0.5rem; color: #777; font-weight: 600; border-bottom: 1px solid #ddd; }
+  .mod-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee; }
+  .mod-table .mod-error { color: #c62828; font-family: monospace; font-size: 0.75rem; }
+  .mod-table .mod-ok { color: #2e7d32; }
+  .mod-table .mod-fail { color: #c62828; font-weight: 600; }
+  .delivery { font-size: 0.8rem; margin-top: 0.5rem; color: #555; }
+  .delivery strong { color: #333; }
+  .run-id { font-family: monospace; font-size: 0.75rem; color: #999; }
+
+  /* Error state */
+  .error-msg { text-align: center; padding: 3rem 1rem; color: #999; background: #fff; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .run-header {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.25rem 0.75rem;
+    }
+    .summary { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Glacier Daily &mdash; System Status</h1>
+    <span class="updated" id="last-updated"></span>
+  </header>
+  <div class="summary" id="summary"></div>
+  <div class="runs" id="runs"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+
+  function formatTime(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString("en-US", {
+      timeZone: "America/Denver",
+      month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  function formatDuration(s) {
+    if (s == null) return "—";
+    if (s < 60) return s.toFixed(1) + "s";
+    return Math.floor(s / 60) + "m " + Math.round(s % 60) + "s";
+  }
+
+  function statusPill(status) {
+    var cls = status === "success" ? "pill-success"
+            : status === "partial" ? "pill-partial"
+            : "pill-failure";
+    return '<span class="pill ' + cls + '">' + status + "</span>";
+  }
+
+  function typeBadge(runType) {
+    if (runType === "email") return '<span class="badge badge-email">email</span>';
+    return '<span class="badge badge-web">web</span>';
+  }
+
+  function moduleSummary(modules) {
+    if (!modules) return "—";
+    var names = Object.keys(modules);
+    var ok = names.filter(function (n) { return modules[n].status === "success"; }).length;
+    return ok + "/" + names.length + " ok";
+  }
+
+  function renderModuleTable(run) {
+    var modules = run.modules || {};
+    var names = Object.keys(modules);
+    if (names.length === 0) return '<p style="font-size:0.8rem;color:#999;">No module data</p>';
+
+    var html = '<table class="mod-table"><tr><th>Module</th><th>Status</th><th>Duration</th><th>Error</th></tr>';
+    names.forEach(function (name) {
+      var m = modules[name];
+      var cls = m.status === "success" ? "mod-ok" : "mod-fail";
+      html += "<tr>"
+        + "<td>" + name + "</td>"
+        + '<td class="' + cls + '">' + m.status + "</td>"
+        + "<td>" + formatDuration(m.duration_seconds) + "</td>"
+        + '<td class="mod-error">' + (m.error || "") + "</td>"
+        + "</tr>";
+    });
+    html += "</table>";
+
+    if (run.run_type === "email") {
+      var parts = [];
+      if (run.subscriber_count) parts.push("<strong>" + run.subscriber_count + "</strong> subscribers");
+      if (run.email_delivery && run.email_delivery.sent != null) {
+        parts.push("<strong>" + run.email_delivery.sent + "</strong> sent");
+        if (run.email_delivery.failed) parts.push("<strong>" + run.email_delivery.failed + "</strong> failed");
+      }
+      if (parts.length) html += '<div class="delivery">' + parts.join(" · ") + "</div>";
+    }
+
+    html += '<div class="run-id" style="margin-top:0.4rem;">Run ID: ' + (run.run_id || "—") + "</div>";
+    return html;
+  }
+
+  function render(data) {
+    var runs = (data && data.runs) || [];
+    runs.sort(function (a, b) { return (b.end_time || "").localeCompare(a.end_time || ""); });
+
+    // Summary: last 24h
+    var now = Date.now();
+    var day = 24 * 60 * 60 * 1000;
+    var recent = runs.filter(function (r) { return r.end_time && (now - new Date(r.end_time).getTime()) < day; });
+    var ok = recent.filter(function (r) { return r.overall_status === "success"; }).length;
+    var fail = recent.filter(function (r) { return r.overall_status === "failure"; }).length;
+    var partial = recent.length - ok - fail;
+
+    var latestStatus = runs.length ? runs[0].overall_status : "—";
+    var latestTime = runs.length ? formatTime(runs[0].end_time) : "—";
+
+    document.getElementById("summary").innerHTML =
+      '<div class="card"><div class="label">Last 24h</div><div class="value">' + recent.length + " runs</div></div>"
+      + '<div class="card"><div class="label">Success / Partial / Fail</div><div class="value" style="color:#2e7d32">' + ok + '<span style="color:#e65100;margin:0 0.25rem"> ' + partial + '</span><span style="color:#c62828"> ' + fail + "</span></div></div>"
+      + '<div class="card"><div class="label">Latest Run</div><div class="value" style="font-size:1rem;">' + statusPill(latestStatus) + "</div></div>"
+      + '<div class="card"><div class="label">Latest Time</div><div class="value" style="font-size:0.95rem">' + latestTime + "</div></div>";
+
+    // Run list
+    if (runs.length === 0) {
+      document.getElementById("runs").innerHTML = '<div class="error-msg">No runs recorded yet.</div>';
+      return;
+    }
+
+    var html = "";
+    runs.forEach(function (run, i) {
+      var extra = run.run_type === "email" && run.subscriber_count
+        ? run.subscriber_count + " subs"
+        : "";
+      html += '<div class="run" id="run-' + i + '">'
+        + '<div class="run-header" onclick="document.getElementById(\'run-' + i + "').classList.toggle('open')\">"
+        + "<span>" + formatTime(run.end_time) + "</span>"
+        + "<span>" + typeBadge(run.run_type) + "</span>"
+        + "<span>" + statusPill(run.overall_status) + "</span>"
+        + "<span>" + formatDuration(run.duration_seconds) + "</span>"
+        + "<span>" + moduleSummary(run.modules) + "</span>"
+        + "<span>" + extra + "</span>"
+        + "</div>"
+        + '<div class="run-detail">' + renderModuleTable(run) + "</div>"
+        + "</div>";
+    });
+    document.getElementById("runs").innerHTML = html;
+  }
+
+  function load() {
+    document.getElementById("last-updated").textContent = "Updated " + new Date().toLocaleTimeString("en-US", {
+      timeZone: "America/Denver", hour: "numeric", minute: "2-digit", hour12: true
+    });
+
+    fetch("status.json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(render)
+      .catch(function (err) {
+        document.getElementById("summary").innerHTML = "";
+        document.getElementById("runs").innerHTML =
+          '<div class="error-msg">Could not load status data.<br><small>' + err.message + "</small></div>";
+      });
+  }
+
+  load();
+  setInterval(load, REFRESH_MS);
+})();
+</script>
+</body>
+</html>

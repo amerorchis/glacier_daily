@@ -9,6 +9,10 @@ import uuid
 
 import requests
 
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def add_cache_buster(url: str) -> str:
     """
@@ -74,11 +78,11 @@ def get_air_quality() -> int | str:
         return ""
 
     except requests.exceptions.JSONDecodeError:
-        print("JSON decoding error")
+        logger.error("AQI JSON decoding error")
         return ""
 
     except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+        logger.error("AQI request error: %s", e)
         return ""
 
 

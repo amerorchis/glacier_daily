@@ -227,7 +227,7 @@ def test_serve_api_gen_data_raises(monkeypatch):
 
 
 def test_gen_data_module_exception_handling(monkeypatch):
-    """Verify gen_data propagates exceptions from individual data modules."""
+    """Verify gen_data degrades gracefully when a module fails."""
 
     def failing_peak(**kw):
         raise ConnectionError("API unreachable")
@@ -246,8 +246,46 @@ def test_gen_data_module_exception_handling(monkeypatch):
     monkeypatch.setattr(gau, "html_safe", lambda x: x)
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
-    with pytest.raises(ConnectionError, match="API unreachable"):
-        gau.gen_data()
+    # gen_data should not raise — it should use fallback values
+    result = gau.gen_data()
+    assert isinstance(result, dict)
+    assert result["peak"] == ""
+    assert result["peak_map"] == ""
+    # Other modules should still have their real data
+    assert result["trails"] == "trails"
+    assert result["roads"] == "roads"
+
+
+def test_gen_data_multiple_module_failures(monkeypatch):
+    """Verify gen_data still produces output when multiple modules fail."""
+
+    def failing(**kw):
+        raise ConnectionError("down")
+
+    monkeypatch.setattr(gau, "weather_data", failing)
+    monkeypatch.setattr(gau, "get_closed_trails", failing)
+    monkeypatch.setattr(gau, "get_campground_status", failing)
+    monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
+    monkeypatch.setattr(gau, "events_today", lambda: "events")
+    monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
+    monkeypatch.setattr(gau, "peak", lambda **kw: ("peak_name", "peak_img", "map"))
+    monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
+    monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
+    monkeypatch.setattr(gau, "get_notices", lambda: "notices")
+    monkeypatch.setattr(gau, "html_safe", lambda x: x)
+    monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+
+    result = gau.gen_data()
+    assert isinstance(result, dict)
+    # Weather fallback: empty strings
+    assert result["weather1"] == ""
+    assert result["weather2"] == ""
+    # Trails fallback: empty string
+    assert result["trails"] == ""
+    # Working modules still populated
+    assert result["roads"] == "roads"
+    assert result["events"] == "events"
 
 
 def test_purge_cache_success(monkeypatch, mock_required_settings):

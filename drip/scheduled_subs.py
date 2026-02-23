@@ -12,6 +12,9 @@ except ModuleNotFoundError:
 from datetime import datetime, timedelta
 
 from shared.datetime_utils import now_mountain
+from shared.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def start(subs: list):
@@ -77,7 +80,7 @@ def update_scheduled_subs():
             start_day = datetime.strptime(start_day, date_format)
             if start_day < tomorrow:
                 start_today.append(email)
-                print(f"{email} is starting today!")
+                logger.info("%s is starting today", email)
 
         # If end date is yesterday or earlier, stop sending daily updates.
         if "Daily End Set" in tags:
@@ -85,7 +88,7 @@ def update_scheduled_subs():
             end_day = datetime.strptime(end_day, date_format)
             if end_day <= yesterday:
                 end_today.append(email)
-                print(f"{email} will no longer get daily updates :(")
+                logger.info("%s will no longer get daily updates", email)
 
     start(start_today)
     end(end_today)

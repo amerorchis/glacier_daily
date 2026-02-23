@@ -4,20 +4,25 @@ Centralized logging configuration for the Glacier Daily Update system.
 This module provides environment-aware logging configuration that:
 - Uses console logging for development
 - Uses file logging with rotation for production
+- Adds a stderr handler at ERROR level in production (triggers cron emails)
+- Injects run_id into every log record for correlation
 - Reads environment type from the ENVIRONMENT variable
 """
 
 import logging
 import logging.handlers
 import os
+import sys
 from pathlib import Path
+
+from shared.run_context import RunIdFilter
 
 
 def setup_logging() -> None:
     """
     Initialize logging configuration based on environment.
 
-    Should be called once at application startup.
+    Should be called once at application startup, after start_run().
     """
     environment = os.getenv("ENVIRONMENT", "development")
 
@@ -30,17 +35,24 @@ def setup_logging() -> None:
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
 
-    # Clear any existing handlers
+    # Clear any existing handlers and filters
     root_logger.handlers.clear()
 
-    # Create formatter
+    # Add run_id filter to root logger so all handlers inherit it
+    run_id_filter = RunIdFilter()
+    for f in root_logger.filters[:]:
+        if isinstance(f, RunIdFilter):
+            root_logger.removeFilter(f)
+    root_logger.addFilter(run_id_filter)
+
+    # Create formatter with run_id
     formatter = logging.Formatter(
-        fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        fmt="%(asctime)s - [%(run_id)s] %(name)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     if environment == "production":
-        # Production: Log to rotating file
+        # Production: Log to rotating file (INFO+)
         file_handler = logging.handlers.RotatingFileHandler(
             filename="logs/glacier_daily.log",
             maxBytes=10 * 1024 * 1024,  # 10MB
@@ -49,6 +61,12 @@ def setup_logging() -> None:
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
+
+        # Production: Also log ERROR+ to stderr (triggers cron emails)
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setLevel(logging.ERROR)
+        stderr_handler.setFormatter(formatter)
+        root_logger.addHandler(stderr_handler)
 
     else:
         # Development: Log to console
