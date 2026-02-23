@@ -148,7 +148,7 @@ class TestTupleUnpacking:
             from peak.peak import peak
 
             result = peak()
-            assert isinstance(result, (tuple, list)), "peak should return tuple or list"
+            assert isinstance(result, tuple | list), "peak should return tuple or list"
             assert len(result) == 3, "peak should return 3 elements (name, image, map)"
 
     def test_get_product_returns_4_tuple(self):
