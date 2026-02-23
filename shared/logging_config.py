@@ -35,15 +35,13 @@ def setup_logging() -> None:
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
 
-    # Clear any existing handlers and filters
+    # Clear any existing handlers
     root_logger.handlers.clear()
 
-    # Add run_id filter to root logger so all handlers inherit it
+    # Filter that injects run_id into every record — must be added to each
+    # handler (not the root logger) because logger-level filters only run on
+    # the originating logger, not on parents during propagation.
     run_id_filter = RunIdFilter()
-    for f in root_logger.filters[:]:
-        if isinstance(f, RunIdFilter):
-            root_logger.removeFilter(f)
-    root_logger.addFilter(run_id_filter)
 
     # Create formatter with run_id
     formatter = logging.Formatter(
@@ -60,12 +58,14 @@ def setup_logging() -> None:
         )
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
+        file_handler.addFilter(run_id_filter)
         root_logger.addHandler(file_handler)
 
         # Production: Also log ERROR+ to stderr (triggers cron emails)
         stderr_handler = logging.StreamHandler(sys.stderr)
         stderr_handler.setLevel(logging.ERROR)
         stderr_handler.setFormatter(formatter)
+        stderr_handler.addFilter(run_id_filter)
         root_logger.addHandler(stderr_handler)
 
     else:
@@ -73,6 +73,7 @@ def setup_logging() -> None:
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(formatter)
+        console_handler.addFilter(run_id_filter)
         root_logger.addHandler(console_handler)
 
 

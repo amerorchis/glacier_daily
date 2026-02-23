@@ -12,11 +12,9 @@ from shared.logging_config import get_logger, setup_logging
 def reset_root_logger():
     root = logging.getLogger()
     original_handlers = root.handlers[:]
-    original_filters = root.filters[:]
     original_level = root.level
     yield
     root.handlers = original_handlers
-    root.filters = original_filters
     root.level = original_level
 
 
@@ -60,3 +58,38 @@ def test_get_logger_returns_logger():
     logger = get_logger("test_module")
     assert isinstance(logger, logging.Logger)
     assert logger.name == "test_module"
+
+
+def test_run_id_filter_on_handlers(monkeypatch):
+    """RunIdFilter must be on each handler so child loggers get run_id injected."""
+    from shared.run_context import RunIdFilter
+
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    setup_logging()
+    root = logging.getLogger()
+    for handler in root.handlers:
+        assert any(isinstance(f, RunIdFilter) for f in handler.filters)
+
+
+def test_child_logger_formats_run_id(monkeypatch):
+    """A child logger's record must include run_id when formatted by root's handler."""
+    from shared.run_context import start_run
+
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    start_run("email")
+    setup_logging()
+
+    child = logging.getLogger("test.child.logger")
+    handler = logging.getLogger().handlers[0]
+
+    record = child.makeRecord(
+        "test.child.logger", logging.INFO, "", 0, "hello", (), None
+    )
+    # The handler's filter should inject run_id
+    handler.filter(record)
+    assert hasattr(record, "run_id")
+    assert record.run_id != "no-run"
+    # Formatting should not raise
+    formatted = handler.format(record)
+    assert "[" in formatted
+    assert "test.child.logger" in formatted
