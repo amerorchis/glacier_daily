@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Glacier National Park Daily Update</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: #444444;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px 40px;
+            background-color: #ffffff;
+        }
+
+        .header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header img {
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .date-title {
+            font-size: 36px;
+            font-weight: 300;
+            color: #3e2f13;
+            margin: 0 0 8px;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #028CA9;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: #666666;
+            margin: 0 0 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .category-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+
+        .category-activities { color: #a85900; }
+        .category-weather { color: #028CA9; }
+        .category-conditions { color: #546d41; }
+        .category-notices { color: #a85900; }
+        .category-featured { color: #6c8d3b; }
+        .category-shop { color: #028CA9; }
+        .category-photography { color: #5eade0; }
+        .category-timelapse { color: #a85900; }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3e2f13;
+            margin: 0 0 20px;
+            line-height: 1.3;
+        }
+
+        .section-title a {
+            color: #3e2f13;
+            text-decoration: none;
+        }
+
+        .subsection-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3e2f13;
+            margin: 0 0 10px;
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #444444;
+            margin: 0 0 12px;
+        }
+
+        ul {
+            margin: 0 0 20px;
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #444444;
+        }
+
+        ul.events-list {
+            margin-bottom: 25px;
+        }
+
+        li:not(:last-child) {
+            margin-bottom: 4px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .weather-img {
+            max-width: 65%;
+            height: auto;
+            display: block;
+            margin: 0 auto 20px;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .column {
+            width: 48%;
+        }
+
+        .disclaimer {
+            font-size: 11px;
+            color: #888888;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .disclaimer a {
+            color: #888888;
+        }
+
+        .meta-link {
+            font-size: 12px;
+            color: #666666;
+        }
+
+        .meta-link a {
+            color: #6c8d3b;
+        }
+
+        .footer {
+            padding-top: 20px;
+            margin-top: 10px;
+        }
+
+        .footer p {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3e2f13;
+            margin: 0 0 5px;
+        }
+
+        .footer a {
+            color: #6c8d3b;
+        }
+
+        a {
+            color: #028CA9;
+        }
+
+        @media print {
+            body {
+                font-size: 11pt;
+                padding: 0;
+            }
+
+            a {
+                text-decoration: none;
+                color: #444444;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <p class="last-updated">
+            <strong>Last Updated: 2/23/26 at 4:18 pm MT.</strong>
+            Check <a href="https://www.nps.gov/glac/index.htm">nps.gov/glac</a> for the latest.
+        </p>
+        <a href="http://glacier.org/">
+            <img src="https://www.dripuploads.com/uploads/image_upload/image/3049526/embeddable_9e5a933a-16c8-4a46-a560-16a94a8ea61b.png"
+                width="200" height="49" alt="GNPC Logo">
+        </a>
+        <p class="date-title">May 1, 2024</p>
+        <p class="subtitle">GLACIER NATIONAL PARK CONDITIONS</p>
+    </div>
+
+    
+        
+    <div class="section">
+        <p class="category-label category-activities">ACTIVITIES</p>
+        <p class="section-title">
+            <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm">Park Activities Today</a>
+        </p>
+        
+        <ul class="events-list">
+            
+            <li>8:30 am - 10 am: Creekside Stroll, Apgar VC <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=1" style="font-size: 10px; font-style: italic; text-decoration: underline;">(link)</a></li>
+            
+        </ul>
+        
+    </div>
+        
+    
+
+    <div class="section">
+        <p class="category-label category-weather">WEATHER</p>
+        <p class="section-title">
+            <a href="https://www.weather.gov/">Today's Forecast</a>
+        </p>
+        <p>Today, sunrise is at 6:14am and sunset is at 8:51pm. There will be 14 hours and 36 minutes of daylight.<br><br>Forecasts Around the Park:</p>
+        <img class="weather-img" src="https://glacier.org/daily/weather/5_1_2024_today_park_map.png"
+            alt="Today's weather forecast in Glacier">
+        
+        <p>The current AQI in West Glacier is 45. This air quality is considered good.</p>
+        
+        <p>Evening Viewing Forecasts:<br>
+            Aurora: 3.2 Kp (not visible) |
+            Sunset Color: good |
+            Cloud Cover: 30%</p>
+        
+        <p> Sunset color forecast: good.</p>
+        
+        
+        <p class="subsection-title">
+            <a href="https://weather.gov">Alerts from the National Weather Service</a>
+        </p>
+        <ul>
+            
+            <li>Winter Storm Warning
+                
+                <ul>
+                    <li>What: Heavy snow</li><li>Where: East Glacier</li>
+                </ul>
+                
+            </li>
+            
+        </ul>
+        
+        <p class="disclaimer">Air quality data from <a href="https://www.nps.gov/subjects/air/current-data.htm?site=glac&location=west-glacier-horse-stables&">the National Park Service</a>.</p>
+    </div>
+
+    <div class="section">
+        <p class="category-label category-conditions">CONDITIONS</p>
+        <p class="section-title">
+            <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm">Trails, Roads & Campgrounds</a>
+        </p>
+
+        <p class="subsection-title">Trail Closures</p>
+        
+        <ul>
+            <li>Grinnell Glacier: closed due to hazard snow - Josephine Lake to Glacier Overlook</li><li>Highline: Use caution: Snow and ice still present - Logan Pass - Granite Park Chalet</li>
+        </ul>
+        
+
+        
+        <p class="subsection-title">Road Closures</p>
+        
+        <ul>
+            <li>Going-to-the-Sun Road is closed from Lake McDonald Lodge to Rising Sun.</li><li>Kintla Road is closed from Doverspike Meadow to the campground.</li><li>Two Medicine Road, Bowman Lake Road, and Cut Bank Road are closed in their entirety.</li>
+        </ul>
+        
+        
+
+        
+        <p class="subsection-title">Going-to-the-Sun Road Hiker/Biker Closures</p>
+        <ul>
+            <li>Road Crew Closure: West - The Loop, 13.5 miles from gate at Lake McDonald Lodge.</li><li>Avalanche Hazard Closure: West - Road Camp, 16.3 miles from gate at Lake McDonald Lodge.</li>
+        </ul>
+        
+        <p>Road Crew Closures are in effect during work hours, Avalanche Hazard Closures are in effect at all times.</p>
+        
+        
+
+        
+        <p class="subsection-title">Campground Status</p>
+        
+        <ul>
+            <li>Closed for the season: Avalanche Creek, Bowman Lake, Cut Bank, Fish Creek, Kintla Lake, Logging Creek, Many Glacier, Quartz Creek, Rising Sun, Sprague Creek, Two Medicine Lake</li>
+        </ul>
+        
+        
+
+        <p class="disclaimer">Trail, road, and campground condition information provided by Glacier National Park's official website. Conditions can change throughout the day. Check the <a href="https://www.nps.gov/glac/planyourvisit/index.htm">park's website</a> for the latest information.</p>
+    </div>
+
+    <div class="section">
+        <p class="category-label category-notices">NOTICES</p>
+        <p class="section-title">
+            <a href="https://glacier.org">Daily Updates</a>
+        </p>
+        
+        <ul>
+            <li>Our next Glacier Book Club (5/29) will feature the book Ranger Confidential with author Andrea Lankford! Register at <a href="https://glacier.org/glacier-book-club/">glacier.org/glacier-book-club</a>.</li>
+        </ul>
+        
+    </div>
+
+    <div class="section two-column">
+        <div class="column">
+            <p class="category-label category-featured">FEATURED</p>
+            <p class="section-title">
+                <a href="https://glacier.org/daily/peak/5_1_2024_peak.jpg">Glacier Peak of the Day</a>
+            </p>
+            <img src="https://glacier.org/daily/peak/5_1_2024_peak.jpg" alt="Glacier Peak of the Day">
+            <p>Blackfoot Mountain - 9574 ft.</p>
+            <p class="meta-link">
+                <a href="https://glacier.org/daily/peak/5_1_2024_peak.jpg">Full size image</a> &middot;
+                <a href="https://www.google.com/maps/place/48.58182N+113.66847W">View on map</a>
+            </p>
+        </div>
+        <div class="column">
+            <p class="category-label category-shop">FROM THE SHOP</p>
+            <p class="section-title">
+                <a href="https://shop.glacier.org/hike-medallion-red-bus-12/">Red Bus Hiking Stick Medallion</a>
+            </p>
+            <img src="https://glacier.org/daily/product/5_1_2024_product_otd.jpg" alt="Today's product of the day">
+            <p>This hiking stick medallion features Glacier's historic Red Buses, with Clements Mountain in the background.</p>
+            <p class="meta-link">
+                <a href="https://shop.glacier.org/hike-medallion-red-bus-12/" style="color: #a85900; font-weight: 600;">Shop now &rarr;</a>
+            </p>
+        </div>
+    </div>
+
+    
+    <div class="section">
+        <p class="category-label category-photography">PHOTOGRAPHY</p>
+        <p class="section-title">
+            <a href="https://flickr.com/photos/glaciernps/49964910637">Glacier Image of the Day</a>
+        </p>
+        <img src="https://glacier.org/daily/picture/5_1_2024_pic_otd.jpg" alt="Today's picture of the day" style="max-width: 65%; display: block; margin: 0 auto 15px;">
+        
+        <p>Logan Pass Star Party 2019</p>
+        
+        <p class="meta-link">Image courtesy of <a href="https://flickr.com/photos/glaciernps/49964910637">Glacier National Park</a>.</p>
+    </div>
+    
+
+    
+
+    <div class="footer">
+        <p>Glacier National Park Conservancy</p>
+        <p style="font-weight: 400; font-size: 12px;"><a href="http://glacier.org/">glacier.org</a></p>
+    </div>
+</body>
+
+</html>
