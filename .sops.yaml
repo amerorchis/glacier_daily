@@ -10,5 +10,5 @@
 #   5. Edit:     sops email.enc.env
 
 creation_rules:
-  - path_regex: \.enc\.env$
+  - path_regex: email(\.enc)?\.env$
     age: "age1pu66zjfcnlnmjmle4mt22xq6eg99jkjjfla5cztf6terjw64f5sqxx65xr"
