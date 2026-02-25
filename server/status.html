@@ -109,6 +109,25 @@
   .delivery strong { color: #333; }
   .run-id { font-family: monospace; font-size: 0.75rem; color: #999; }
 
+  /* Copy logs button */
+  .copy-logs-btn {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    margin-top: 0.4rem;
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c7e44;
+    background: #f0f2ea;
+    border: 1px solid #c5cba8;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .copy-logs-btn:hover { background: #e2e7d4; }
+  .copy-logs-btn:active { background: #d5dbc4; }
+  .copy-logs-btn.copied { color: #2e7d32; border-color: #a5d6a7; background: #e8f5e9; }
+
   /* Error state */
   .error-msg { text-align: center; padding: 3rem 1rem; color: #999; background: #fff; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
 
@@ -137,6 +156,38 @@
   "use strict";
 
   var REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+  var _runData = {}; // keyed by btnId, stores run objects for log copying
+
+  window.copyLogs = function (btnId) {
+    var run = _runData[btnId];
+    if (!run || !run.log_lines) return;
+    var text = run.log_lines.join("\n");
+    var btn = document.getElementById(btnId);
+    navigator.clipboard.writeText(text).then(function () {
+      if (btn) {
+        var original = btn.textContent;
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(function () { btn.textContent = original; btn.classList.remove("copied"); }, 2000);
+      }
+    }).catch(function () {
+      // Fallback for non-HTTPS contexts
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (btn) {
+        var original = btn.textContent;
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(function () { btn.textContent = original; btn.classList.remove("copied"); }, 2000);
+      }
+    });
+  };
 
   function formatTime(iso) {
     if (!iso) return "—";
@@ -175,6 +226,35 @@
     return ok + "/" + names.length + " ok";
   }
 
+  function deliveryIndicator(run) {
+    if (run.run_type !== "email") return "";
+    var d = run.email_delivery || {};
+    var sent = d.sent;
+    var failed = d.failed;
+    var subCount = run.subscriber_count || 0;
+
+    if (sent == null && failed == null) {
+      return subCount ? subCount + " subs" : "";
+    }
+
+    var parts = [];
+    if (!failed || failed === 0) {
+      parts.push('<span style="color:#2e7d32;font-weight:600">\u2714 ' + sent + " sent</span>");
+    } else if (sent === 0) {
+      parts.push('<span style="color:#c62828;font-weight:600">\u2718 ' + failed + " rejected</span>");
+    } else {
+      parts.push('<span style="color:#e65100;font-weight:600">' + sent + "/" + (sent + failed) + " sent</span>");
+    }
+
+    if (d.canary_verified === true) {
+      parts.push('<span style="color:#2e7d32" title="Canary email received">\u2709\u2714</span>');
+    } else if (d.canary_verified === false) {
+      parts.push('<span style="color:#c62828" title="Canary email NOT received">\u2709\u2718</span>');
+    }
+
+    return parts.join(" ");
+  }
+
   function renderModuleTable(run) {
     var modules = run.modules || {};
     var names = Object.keys(modules);
@@ -197,13 +277,29 @@
       var parts = [];
       if (run.subscriber_count) parts.push("<strong>" + run.subscriber_count + "</strong> subscribers");
       if (run.email_delivery && run.email_delivery.sent != null) {
-        parts.push("<strong>" + run.email_delivery.sent + "</strong> sent");
-        if (run.email_delivery.failed) parts.push("<strong>" + run.email_delivery.failed + "</strong> failed");
+        parts.push('<strong style="color:#2e7d32">' + run.email_delivery.sent + "</strong> accepted");
+        if (run.email_delivery.failed) parts.push('<strong style="color:#c62828">' + run.email_delivery.failed + "</strong> rejected");
       }
-      if (parts.length) html += '<div class="delivery">' + parts.join(" · ") + "</div>";
+      if (run.email_delivery && run.email_delivery.canary_verified != null) {
+        var canaryOk = run.email_delivery.canary_verified;
+        var canaryColor = canaryOk ? "#2e7d32" : "#c62828";
+        var canaryLabel = canaryOk ? "Canary: delivered" : "Canary: NOT received";
+        parts.push('<strong style="color:' + canaryColor + '">' + canaryLabel + "</strong>");
+      }
+      if (parts.length) html += '<div class="delivery">' + parts.join(" &middot; ") + "</div>";
     }
 
     html += '<div class="run-id" style="margin-top:0.4rem;">Run ID: ' + (run.run_id || "—") + "</div>";
+
+    var logLines = run.log_lines || [];
+    if (logLines.length > 0) {
+      var btnId = "copy-logs-" + (run.run_id || "unknown");
+      _runData[btnId] = run;
+      html += '<button class="copy-logs-btn" id="' + btnId
+        + '" onclick="copyLogs(\'' + btnId + '\')">'
+        + "Copy Logs (" + logLines.length + " lines)</button>";
+    }
+
     return html;
   }
 
@@ -236,9 +332,7 @@
 
     var html = "";
     runs.forEach(function (run, i) {
-      var extra = run.run_type === "email" && run.subscriber_count
-        ? run.subscriber_count + " subs"
-        : "";
+      var extra = deliveryIndicator(run);
       html += '<div class="run" id="run-' + i + '">'
         + '<div class="run-header" onclick="document.getElementById(\'run-' + i + "').classList.toggle('open')\">"
         + "<span>" + formatTime(run.end_time) + "</span>"

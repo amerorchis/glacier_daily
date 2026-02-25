@@ -5,7 +5,14 @@ import logging.handlers
 
 import pytest
 
-from shared.logging_config import get_logger, setup_logging
+from shared.logging_config import (
+    MAX_LOG_LINES,
+    RunLogCapture,
+    get_log_capture,
+    get_logger,
+    reset_log_capture,
+    setup_logging,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +58,8 @@ def test_setup_logging_clears_existing_handlers(monkeypatch):
     root.addHandler(logging.StreamHandler())
     root.addHandler(logging.StreamHandler())
     setup_logging()
-    assert len(root.handlers) == 1
+    # Console handler + RunLogCapture handler
+    assert len(root.handlers) == 2
 
 
 def test_get_logger_returns_logger():
@@ -93,3 +101,61 @@ def test_child_logger_formats_run_id(monkeypatch):
     formatted = handler.format(record)
     assert "[" in formatted
     assert "test.child.logger" in formatted
+
+
+class TestRunLogCapture:
+    def test_capture_handler_created_by_setup(self, monkeypatch):
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        setup_logging()
+        capture = get_log_capture()
+        assert capture is not None
+        assert isinstance(capture, RunLogCapture)
+
+    def test_capture_records_info_lines(self, monkeypatch):
+        from shared.run_context import start_run
+
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        start_run("email")
+        setup_logging()
+        logger = logging.getLogger("test.capture")
+        logger.info("test message")
+        capture = get_log_capture()
+        assert any("test message" in line for line in capture.buffer)
+
+    def test_capture_ignores_debug(self, monkeypatch):
+        from shared.run_context import start_run
+
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        start_run("email")
+        setup_logging()
+        logger = logging.getLogger("test.capture.debug")
+        logger.debug("should not appear")
+        capture = get_log_capture()
+        assert not any("should not appear" in line for line in capture.buffer)
+
+    def test_capture_truncates_at_max(self, monkeypatch):
+        from shared.run_context import start_run
+
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        start_run("email")
+        setup_logging()
+        logger = logging.getLogger("test.capture.max")
+        for i in range(MAX_LOG_LINES + 50):
+            logger.info("line %d", i)
+        capture = get_log_capture()
+        assert len(capture.buffer) == MAX_LOG_LINES + 1  # +1 for truncation sentinel
+        assert "truncated" in capture.buffer[-1]
+
+    def test_reset_log_capture(self, monkeypatch):
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        setup_logging()
+        assert get_log_capture() is not None
+        reset_log_capture()
+        assert get_log_capture() is None
+
+    def test_capture_active_in_production(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.chdir(tmp_path)
+        setup_logging()
+        assert get_log_capture() is not None
+        assert isinstance(get_log_capture(), RunLogCapture)

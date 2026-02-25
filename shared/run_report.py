@@ -9,7 +9,7 @@ from datetime import timedelta
 from typing import Any
 
 from shared.datetime_utils import now_mountain
-from shared.logging_config import get_logger
+from shared.logging_config import get_log_capture, get_logger
 from shared.run_context import get_run
 from shared.timing import get_timing
 
@@ -34,12 +34,32 @@ class RunReport:
     email_delivery: dict[str, Any] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
     overall_status: str = "success"  # "success", "partial", "failure"
+    log_lines: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), indent=2, default=str)
+
+    def finalize_status(self) -> None:
+        """Re-evaluate overall_status after email_delivery data is available."""
+        if not self.email_delivery:
+            return
+
+        sent = self.email_delivery.get("sent", 0)
+        failed = self.email_delivery.get("failed", 0)
+
+        if failed > 0 and sent == 0:
+            self.overall_status = "failure"
+        elif failed > 0 and self.overall_status == "success":
+            self.overall_status = "partial"
+
+        # Canary failure is informational — add to errors but don't change status
+        canary = self.email_delivery.get("canary_verified")
+        if canary is False:
+            msg = self.email_delivery.get("canary_message", "not received")
+            self.errors.append(f"canary: {msg}")
 
 
 def build_report(environment: str = "") -> RunReport:
@@ -66,6 +86,11 @@ def build_report(environment: str = "") -> RunReport:
         report.overall_status = "partial"
 
     report.errors = [f"{m.name}: {m.error}" for m in failed]
+
+    # Attach captured log lines
+    capture = get_log_capture()
+    if capture:
+        report.log_lines = list(capture.buffer)
 
     return report
 

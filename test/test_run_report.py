@@ -1,8 +1,10 @@
 """Tests for shared.run_report module."""
 
 import json
+import logging
 import os
 
+from shared.logging_config import get_logger, setup_logging
 from shared.run_context import start_run
 from shared.run_report import (
     RunReport,
@@ -93,6 +95,103 @@ class TestBuildReport:
         start_run("web_update")
         report = build_report()
         assert report.run_type == "web_update"
+
+
+class TestBuildReportLogCapture:
+    """Tests for log_lines integration in build_report."""
+
+    @staticmethod
+    def _setup_logging(monkeypatch):
+        """Helper to set up logging with capture."""
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        root = logging.getLogger()
+        root.handlers.clear()
+        setup_logging()
+
+    def test_build_report_includes_log_lines(self, monkeypatch):
+        self._setup_logging(monkeypatch)
+        start_run("email")
+        logger = get_logger("test.report")
+        logger.info("hello from test")
+        report = build_report(environment="development")
+        assert len(report.log_lines) >= 1
+        assert any("hello from test" in line for line in report.log_lines)
+
+    def test_build_report_empty_without_capture(self):
+        start_run("email")
+        report = build_report()
+        assert report.log_lines == []
+
+    def test_log_lines_serialized_in_json(self, monkeypatch):
+        self._setup_logging(monkeypatch)
+        start_run("email")
+        get_logger("test.json").info("serialize me")
+        report = build_report()
+        parsed = json.loads(report.to_json())
+        assert "log_lines" in parsed
+        assert isinstance(parsed["log_lines"], list)
+        assert any("serialize me" in line for line in parsed["log_lines"])
+
+
+class TestFinalizeStatus:
+    def test_no_delivery_data(self):
+        report = RunReport(overall_status="success")
+        report.finalize_status()
+        assert report.overall_status == "success"
+
+    def test_all_sent(self):
+        report = RunReport(overall_status="success")
+        report.email_delivery = {"sent": 100, "failed": 0}
+        report.finalize_status()
+        assert report.overall_status == "success"
+
+    def test_some_failed_escalates_to_partial(self):
+        report = RunReport(overall_status="success")
+        report.email_delivery = {"sent": 90, "failed": 10}
+        report.finalize_status()
+        assert report.overall_status == "partial"
+
+    def test_all_failed_escalates_to_failure(self):
+        report = RunReport(overall_status="success")
+        report.email_delivery = {"sent": 0, "failed": 100}
+        report.finalize_status()
+        assert report.overall_status == "failure"
+
+    def test_partial_stays_partial_with_delivery_failures(self):
+        report = RunReport(overall_status="partial")
+        report.email_delivery = {"sent": 90, "failed": 10}
+        report.finalize_status()
+        assert report.overall_status == "partial"
+
+    def test_failure_stays_failure(self):
+        report = RunReport(overall_status="failure")
+        report.email_delivery = {"sent": 100, "failed": 0}
+        report.finalize_status()
+        assert report.overall_status == "failure"
+
+    def test_canary_failure_adds_error(self):
+        report = RunReport(overall_status="success")
+        report.email_delivery = {
+            "sent": 100,
+            "failed": 0,
+            "canary_verified": False,
+            "canary_message": "not received after 6 attempts",
+        }
+        report.finalize_status()
+        # Status stays success (canary is informational)
+        assert report.overall_status == "success"
+        assert any("canary" in e for e in report.errors)
+
+    def test_canary_success_no_error(self):
+        report = RunReport(overall_status="success")
+        report.email_delivery = {
+            "sent": 100,
+            "failed": 0,
+            "canary_verified": True,
+        }
+        report.finalize_status()
+        assert report.overall_status == "success"
+        assert len(report.errors) == 0
 
 
 class TestUploadStatusReport:

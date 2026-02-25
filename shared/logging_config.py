@@ -17,6 +17,42 @@ from pathlib import Path
 
 from shared.run_context import RunIdFilter
 
+MAX_LOG_LINES = 500
+
+
+class RunLogCapture(logging.Handler):
+    """In-memory handler that captures formatted log lines for the run report."""
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.INFO)
+        self.buffer: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            line = self.format(record)
+            if len(self.buffer) < MAX_LOG_LINES:
+                self.buffer.append(line)
+            elif len(self.buffer) == MAX_LOG_LINES:
+                self.buffer.append(
+                    f"... (log capture truncated at {MAX_LOG_LINES} lines)"
+                )
+        except Exception:
+            self.handleError(record)
+
+
+_log_capture: RunLogCapture | None = None
+
+
+def get_log_capture() -> RunLogCapture | None:
+    """Get the current log capture handler, or None if not set up."""
+    return _log_capture
+
+
+def reset_log_capture() -> None:
+    """Clear the log capture. Used in test teardown."""
+    global _log_capture
+    _log_capture = None
+
 
 def setup_logging() -> None:
     """
@@ -75,6 +111,14 @@ def setup_logging() -> None:
         console_handler.setFormatter(formatter)
         console_handler.addFilter(run_id_filter)
         root_logger.addHandler(console_handler)
+
+    # In-memory capture for run reports (both environments)
+    global _log_capture
+    capture = RunLogCapture()
+    capture.setFormatter(formatter)
+    capture.addFilter(run_id_filter)
+    root_logger.addHandler(capture)
+    _log_capture = capture
 
 
 def get_logger(name: str) -> logging.Logger:

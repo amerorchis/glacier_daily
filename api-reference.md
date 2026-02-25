@@ -155,3 +155,10 @@ DRIP_CAMPAIGN_ID=169298893             # default: "169298893"
 CACHE_PURGE=your_cloudflare_api_key
 ZONE_ID=your_cloudflare_zone_id
 ```
+
+### Optional Canary Email Verification (default to empty string)
+
+```bash
+CANARY_EMAIL=your_canary@gmail.com           # Gmail address for delivery verification
+CANARY_IMAP_PASSWORD=xxxx-xxxx-xxxx-xxxx     # Gmail app-specific password
+```
