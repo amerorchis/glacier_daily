@@ -54,6 +54,10 @@ class Settings:
     CACHE_PURGE: str = ""
     ZONE_ID: str = ""
 
+    # --- Optional: Canary email verification ---
+    CANARY_EMAIL: str = ""
+    CANARY_IMAP_PASSWORD: str = ""
+
     @classmethod
     def from_env(cls) -> "Settings":
         """Build a ``Settings`` instance from ``os.environ``.
