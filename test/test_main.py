@@ -20,8 +20,6 @@ def _patch_main(monkeypatch, calls):
         "bulk_workflow_trigger",
         lambda subs: calls.append(f"bulk_workflow_trigger:{subs}"),
     )
-    # Default: canary not configured
-    monkeypatch.setattr(main, "canary_configured", lambda: False)
     monkeypatch.setattr(main, "check_canary_delivery", lambda: None)
 
 
@@ -55,13 +53,12 @@ def test_main_default_tag(monkeypatch):
     assert any("get_subs:Glacier Daily Update" in c for c in calls)
 
 
-def test_main_runs_canary_when_configured(monkeypatch):
+def test_main_runs_canary_when_emails_sent(monkeypatch):
     from drip.canary_check import CanaryResult
     from drip.drip_actions import BatchResult
 
     calls = []
     _patch_main(monkeypatch, calls)
-    monkeypatch.setattr(main, "canary_configured", lambda: True)
     monkeypatch.setattr(
         main,
         "bulk_workflow_trigger",
@@ -77,16 +74,15 @@ def test_main_runs_canary_when_configured(monkeypatch):
     assert "canary" in calls
 
 
-def test_main_skips_canary_when_not_configured(monkeypatch):
+def test_main_skips_canary_when_no_emails_sent(monkeypatch):
     from drip.drip_actions import BatchResult
 
     calls = []
     _patch_main(monkeypatch, calls)
-    monkeypatch.setattr(main, "canary_configured", lambda: False)
     monkeypatch.setattr(
         main,
         "bulk_workflow_trigger",
-        lambda subs: BatchResult(sent=1, failed=0),
+        lambda subs: BatchResult(sent=0, failed=0),
     )
     monkeypatch.setattr(
         main,

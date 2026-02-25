@@ -9,7 +9,6 @@ import argparse
 from time import sleep
 
 from drip.canary_check import CanaryResult, check_canary_delivery
-from drip.canary_check import is_configured as canary_configured
 from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
@@ -57,7 +56,7 @@ def main(
         batch_result = bulk_workflow_trigger(subscribers)
 
         # Canary verification: check actual delivery if Drip accepted
-        if batch_result and batch_result.sent > 0 and canary_configured():
+        if batch_result and batch_result.sent > 0:
             canary_result = check_canary_delivery()
     finally:
         report = build_report(environment=settings.ENVIRONMENT)

@@ -6,7 +6,7 @@ the email. This provides proof of delivery beyond Drip's HTTP 201
 "events accepted" response.
 
 If CANARY_EMAIL or CANARY_IMAP_PASSWORD are not configured, the check
-is silently skipped (graceful degradation).
+is skipped with a warning log (visible in the run report).
 """
 
 from __future__ import annotations
@@ -65,6 +65,7 @@ def check_canary_delivery(
     """
     settings = get_settings()
     if not is_configured():
+        logger.warning("Canary: skipped — CANARY_EMAIL or CANARY_IMAP_PASSWORD not set")
         return CanaryResult(
             verified=False,
             message="Canary check skipped: credentials not configured",
