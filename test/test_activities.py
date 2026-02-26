@@ -12,6 +12,7 @@ from activities.gnpc_events import (
     get_gnpc_events,
     scrape_events_page,
 )
+from shared.data_types import EventsResult
 
 
 @pytest.fixture
@@ -39,7 +40,7 @@ def _make_nps_response(events):
 
 
 def test_activity_retrieval(mock_nps_api):
-    """Test that events are retrieved and formatted for a known day."""
+    """Test that events are retrieved and returned as EventsResult for a known day."""
     events = [
         _make_nps_event(
             "Campfire Talk", "Apgar Campground", "07:00 PM", "08:00 PM", "E1"
@@ -50,30 +51,34 @@ def test_activity_retrieval(mock_nps_api):
     ]
     mock_nps_api.return_value = _make_nps_response(events)
     result = events_today("2024-07-01")
-    assert "Campfire Talk" in result
-    assert "Boat Tour" in result
-    assert "<ul" in result
+    assert isinstance(result, EventsResult)
+    assert result.events
+    assert any("Campfire Talk" in e.name for e in result.events)
+    assert any("Boat Tour" in e.name for e in result.events)
 
 
 def test_no_activities_no_message(mock_nps_api):
-    """Test that winter dates with no events return empty string."""
+    """Test that winter dates with no events return empty EventsResult."""
     mock_nps_api.return_value = _make_nps_response([])
     result = events_today("2024-01-08")
-    assert result == ""
+    assert isinstance(result, EventsResult)
+    assert result.seasonal_message == ""
 
 
 def test_no_activities_season_concluded(mock_nps_api):
     """Test that late fall dates return season concluded message."""
     mock_nps_api.return_value = _make_nps_response([])
     result = events_today(f"{datetime.now().year}-12-05")
-    assert "concluded for the season" in result
+    assert isinstance(result, EventsResult)
+    assert "concluded" in result.seasonal_message.lower()
 
 
 def test_no_activities_season_not_started(mock_nps_api):
     """Test that early spring dates return season not started message."""
     mock_nps_api.return_value = _make_nps_response([])
     result = events_today(f"{datetime.now().year}-04-05")
-    assert "not started for the season" in result
+    assert isinstance(result, EventsResult)
+    assert "not started" in result.seasonal_message.lower()
 
 
 def test_events_today_json_decode_error(mock_nps_api):
@@ -83,21 +88,24 @@ def test_events_today_json_decode_error(mock_nps_api):
     mock_resp.json.side_effect = requests.exceptions.JSONDecodeError("fail", "", 0)
     mock_nps_api.return_value = mock_resp
     result = events_today("2024-07-01")
-    assert "could not be retrieved" in result
+    assert isinstance(result, EventsResult)
+    assert "could not be retrieved" in result.error_message
 
 
 def test_events_today_http_error(mock_nps_api):
-    """Test that HTTPError returns 502 Response."""
+    """Test that HTTPError returns EventsResult with error_message."""
     mock_nps_api.side_effect = requests.HTTPError("502 Server Error")
     result = events_today("2024-07-01")
-    assert result == "502 Response"
+    assert isinstance(result, EventsResult)
+    assert result.error_message == "502 Response"
 
 
 def test_events_today_no_events_summer(mock_nps_api):
     """Test that summer dates with no events return 'no ranger programs today'."""
     mock_nps_api.return_value = _make_nps_response([])
     result = events_today("2024-07-15")
-    assert "no ranger programs today" in result.lower()
+    assert isinstance(result, EventsResult)
+    assert "no ranger programs today" in result.seasonal_message.lower()
 
 
 @pytest.fixture

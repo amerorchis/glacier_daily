@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from shared.data_types import AlertBullet
 from weather.weather_alerts import WeatherAlert, WeatherAlertService, weather_alerts
 
 
@@ -164,17 +165,19 @@ class TestMainFunction:
     def test_weather_alerts_success(self, mock_fetch, sample_api_response):
         mock_fetch.return_value = sample_api_response["features"]
         result = weather_alerts()
-        assert isinstance(result, str)
-        assert "Weather Service" in result
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert isinstance(result[0], AlertBullet)
+        assert result[0].headline  # Should have a headline
 
     @patch.object(WeatherAlertService, "fetch_alerts")
     def test_weather_alerts_no_alerts(self, mock_fetch):
         mock_fetch.return_value = []
         result = weather_alerts()
-        assert result == ""
+        assert result == []
 
     @patch.object(WeatherAlertService, "fetch_alerts")
     def test_weather_alerts_error_handling(self, mock_fetch):
         mock_fetch.side_effect = Exception("Test error")
         result = weather_alerts()
-        assert result == ""
+        assert result == []

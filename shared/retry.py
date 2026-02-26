@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 
 def retry(
-    times: int, exceptions: tuple, default: str = "", backoff: int = 15
+    times: int, exceptions: tuple, default: object = "", backoff: int = 15
 ) -> Callable:
     """
     Retry Decorator

@@ -8,6 +8,7 @@ import json
 import requests
 import urllib3
 
+from shared.data_types import TrailsResult
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -51,25 +52,29 @@ def remove_duplicate_trails(trail_list: list) -> list:
     return filtered_list
 
 
-def closed_trails() -> str:
+def closed_trails() -> TrailsResult:
     """
     Fetch and process the list of closed trails from the Glacier National Park website.
 
     Returns:
-        str: HTML formatted string of closed trails or a message indicating no closures.
+        TrailsResult: Structured trail closure data.
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27"
     try:
         r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
         logger.error("Error fetching trail closures: %s", e)
-        return "The trail closures page on the park website is currently down."
+        return TrailsResult(
+            error_message="The trail closures page on the park website is currently down."
+        )
     status = json.loads(r.text)
 
     try:
         trails = status["features"]
     except KeyError:
-        return "The trail closures page on the park website is currently down."
+        return TrailsResult(
+            error_message="The trail closures page on the park website is currently down."
+        )
 
     trails = remove_duplicate_trails(trails)
     closures = []
@@ -131,26 +136,25 @@ def closed_trails() -> str:
     closures = sorted(list(closures))  # turn back into a list and sort
 
     if closures:
-        message = '<ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">\n'
-        for i in closures:
-            message += f"<li>{i}</li>\n"
-        return message + "</ul>"
+        return TrailsResult(closures=closures)
     else:
-        return "There are no trail closures in effect today!"
+        return TrailsResult(
+            no_closures_message="There are no trail closures in effect today!"
+        )
 
 
-def get_closed_trails() -> str:
+def get_closed_trails() -> TrailsResult:
     """
     Wrap the closed trails function to catch errors and allow email to send if there is an issue.
 
     Returns:
-        str: HTML formatted string of closed trails or an empty string if an error occurs.
+        TrailsResult: Structured trail closure data, or empty result on error.
     """
     try:
         return closed_trails()
     except (requests.exceptions.HTTPError, json.decoder.JSONDecodeError):
         logger.error("Trail status error", exc_info=True)
-        return ""
+        return TrailsResult()
 
 
 if __name__ == "__main__":  # pragma: no cover

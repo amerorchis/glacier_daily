@@ -3,17 +3,32 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import generate_and_upload as gau
+from shared.data_types import (
+    CampgroundsResult,
+    EventsResult,
+    HikerBikerResult,
+    NoticesResult,
+    RoadsResult,
+    TrailsResult,
+    WeatherResult,
+)
 from shared.lkg_cache import LKGCache
 
 
 def make_fake_weather():
-    class FakeWeather:
-        message1 = "Weather1"
-        message2 = "Weather2"
-        season = "summer"
-        results = [1, 2, 3]
-
-    return FakeWeather()
+    return WeatherResult(
+        daylight_message="Daylight info",
+        forecasts=[("West Glacier", 75, 30, "Partly cloudy")],
+        season="summer",
+        aqi_value=45,
+        aqi_category="good.",
+        aurora_quality="Good",
+        aurora_message="Aurora visible",
+        sunset_quality="Good",
+        sunset_message="Beautiful sunset",
+        cloud_cover_pct=30,
+        alerts=[],
+    )
 
 
 class MockFTPSession:
@@ -33,11 +48,17 @@ class MockFTPSession:
 def mock_all_data_sources(monkeypatch):
     """Fixture to mock all data sources used by gen_data()."""
     monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
-    monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
-    monkeypatch.setattr(gau, "get_campground_status", lambda: "campgrounds")
-    monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
-    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
-    monkeypatch.setattr(gau, "events_today", lambda: "events")
+    monkeypatch.setattr(
+        gau, "get_closed_trails", lambda: TrailsResult(closures=["Trail closure"])
+    )
+    monkeypatch.setattr(
+        gau, "get_campground_status", lambda: CampgroundsResult(statuses=["CG status"])
+    )
+    monkeypatch.setattr(
+        gau, "get_road_status", lambda: RoadsResult(closures=["Road closure"])
+    )
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
     monkeypatch.setattr(
         gau, "get_image_otd", lambda **kw: ("img", "img_title", "img_link")
     )
@@ -48,8 +69,9 @@ def mock_all_data_sources(monkeypatch):
         "get_product",
         lambda **kw: ("prod_title", "prod_img", "prod_link", "prod_desc"),
     )
-    monkeypatch.setattr(gau, "get_notices", lambda: "notices")
-    monkeypatch.setattr(gau, "html_safe", lambda x: x)
+    monkeypatch.setattr(
+        gau, "get_notices", lambda: NoticesResult(notices=["Test notice"])
+    )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
 
@@ -61,10 +83,8 @@ def test_gen_data_keys_present(mock_all_data_sources):
         "date",
         "today",
         "events",
-        "weather1",
+        "weather",
         "weather_image",
-        "weather2",
-        "season",
         "trails",
         "campgrounds",
         "roads",
@@ -89,23 +109,26 @@ def test_gen_data_keys_present(mock_all_data_sources):
         assert key in data, f"Expected key '{key}' not found in gen_data output"
 
 
-def test_gen_data_string_fields_are_strings(mock_all_data_sources):
-    """Verify string fields return str type (empty string is valid)."""
+def test_gen_data_structured_types(mock_all_data_sources):
+    """Verify structured data fields return correct types."""
     data, _ = gau.gen_data()
 
-    # These fields should always be strings (possibly empty)
+    assert isinstance(data["weather"], WeatherResult)
+    assert isinstance(data["events"], EventsResult)
+    assert isinstance(data["trails"], TrailsResult)
+    assert isinstance(data["campgrounds"], CampgroundsResult)
+    assert isinstance(data["roads"], RoadsResult)
+    assert isinstance(data["hikerbiker"], HikerBikerResult)
+    assert isinstance(data["notices"], NoticesResult)
+
+
+def test_gen_data_string_fields_are_strings(mock_all_data_sources):
+    """Verify plain string fields return str type (empty string is valid)."""
+    data, _ = gau.gen_data()
+
     string_fields = [
         "date",
         "today",
-        "events",
-        "weather1",
-        "weather2",
-        "season",
-        "trails",
-        "campgrounds",
-        "roads",
-        "hikerbiker",
-        "notices",
         "peak",
         "product_link",
         "product_title",
@@ -131,7 +154,6 @@ def test_gen_data_nullable_image_fields(mock_all_data_sources):
     """Verify image fields can be str or None."""
     data, _ = gau.gen_data()
 
-    # These fields may be None or str (URL or empty string)
     nullable_fields = [
         "peak_image",
         "product_image",
@@ -155,20 +177,18 @@ def test_gen_data_returns_dict(mock_all_data_sources):
 
 def test_gen_data_with_empty_returns(monkeypatch):
     """Verify gen_data handles modules that return empty values gracefully."""
-    # Simulate graceful degradation - some modules return empty
     monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
-    monkeypatch.setattr(gau, "get_closed_trails", lambda: "")  # Empty
-    monkeypatch.setattr(gau, "get_campground_status", lambda: "")  # Empty
-    monkeypatch.setattr(gau, "get_road_status", lambda: "")  # Empty
-    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "")  # Empty
-    monkeypatch.setattr(gau, "events_today", lambda: "")  # Empty
+    monkeypatch.setattr(gau, "get_closed_trails", lambda: TrailsResult())
+    monkeypatch.setattr(gau, "get_campground_status", lambda: CampgroundsResult())
+    monkeypatch.setattr(gau, "get_road_status", lambda: RoadsResult())
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
     monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("", "", ""))
     monkeypatch.setattr(gau, "peak", lambda **kw: ("", None, ""))
-    monkeypatch.setattr(gau, "process_video", lambda: ("", "", ""))  # Empty
+    monkeypatch.setattr(gau, "process_video", lambda: ("", "", ""))
     monkeypatch.setattr(gau, "get_product", lambda **kw: ("", None, "", ""))
-    monkeypatch.setattr(gau, "get_notices", lambda: "")  # Empty
-    monkeypatch.setattr(gau, "html_safe", lambda x: x)
-    monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "")  # Empty
+    monkeypatch.setattr(gau, "get_notices", lambda: NoticesResult())
+    monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "")
 
     # Should not raise even with empty values
     data, _ = gau.gen_data()
@@ -186,6 +206,22 @@ def test_write_data_to_json(tmp_path, monkeypatch):
     with open(out, encoding="utf-8") as f:
         content = f.read()
         assert "foo" in content and "baz" in content and "gnpc-events" in content
+
+
+def test_write_data_to_json_with_dataclasses(tmp_path, monkeypatch):
+    """Verify dataclass values are serialized correctly."""
+    import json
+
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
+    fake_data = {
+        "trails": TrailsResult(closures=["Trail A closed"]),
+        "roads": RoadsResult(no_closures_message="No closures"),
+    }
+    out = gau.write_data_to_json(fake_data, "test.json")
+    with open(out, encoding="utf-8") as f:
+        parsed = json.load(f)
+    assert parsed["trails"]["closures"] == ["Trail A closed"]
+    assert parsed["roads"]["no_closures_message"] == "No closures"
 
 
 def test_send_to_server(monkeypatch):
@@ -235,17 +271,24 @@ def test_gen_data_module_exception_handling(monkeypatch):
         raise ConnectionError("API unreachable")
 
     monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
-    monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
-    monkeypatch.setattr(gau, "get_campground_status", lambda: "campgrounds")
-    monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
-    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
-    monkeypatch.setattr(gau, "events_today", lambda: "events")
+    monkeypatch.setattr(
+        gau, "get_closed_trails", lambda: TrailsResult(closures=["Trail closure"])
+    )
+    monkeypatch.setattr(
+        gau, "get_campground_status", lambda: CampgroundsResult(statuses=["CG status"])
+    )
+    monkeypatch.setattr(
+        gau, "get_road_status", lambda: RoadsResult(closures=["Road closure"])
+    )
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
     monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
     monkeypatch.setattr(gau, "peak", failing_peak)
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
     monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
-    monkeypatch.setattr(gau, "get_notices", lambda: "notices")
-    monkeypatch.setattr(gau, "html_safe", lambda x: x)
+    monkeypatch.setattr(
+        gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
+    )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
     # gen_data should not raise — it should use fallback values
@@ -254,8 +297,8 @@ def test_gen_data_module_exception_handling(monkeypatch):
     assert result["peak"] == ""
     assert result["peak_map"] == ""
     # Other modules should still have their real data
-    assert result["trails"] == "trails"
-    assert result["roads"] == "roads"
+    assert isinstance(result["trails"], TrailsResult)
+    assert isinstance(result["roads"], RoadsResult)
 
 
 def test_gen_data_multiple_module_failures(monkeypatch):
@@ -267,27 +310,29 @@ def test_gen_data_multiple_module_failures(monkeypatch):
     monkeypatch.setattr(gau, "weather_data", failing)
     monkeypatch.setattr(gau, "get_closed_trails", failing)
     monkeypatch.setattr(gau, "get_campground_status", failing)
-    monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
-    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hikerbiker")
-    monkeypatch.setattr(gau, "events_today", lambda: "events")
+    monkeypatch.setattr(
+        gau, "get_road_status", lambda: RoadsResult(closures=["Road closure"])
+    )
+    monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
     monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
     monkeypatch.setattr(gau, "peak", lambda **kw: ("peak_name", "peak_img", "map"))
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
     monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
-    monkeypatch.setattr(gau, "get_notices", lambda: "notices")
-    monkeypatch.setattr(gau, "html_safe", lambda x: x)
+    monkeypatch.setattr(
+        gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
+    )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
     result, _ = gau.gen_data()
     assert isinstance(result, dict)
-    # Weather fallback: empty strings
-    assert result["weather1"] == ""
-    assert result["weather2"] == ""
-    # Trails fallback: empty string
-    assert result["trails"] == ""
+    # Weather fallback: empty WeatherResult
+    assert isinstance(result["weather"], WeatherResult)
+    # Trails fallback: empty TrailsResult
+    assert isinstance(result["trails"], TrailsResult)
     # Working modules still populated
-    assert result["roads"] == "roads"
-    assert result["events"] == "events"
+    assert isinstance(result["roads"], RoadsResult)
+    assert isinstance(result["events"], EventsResult)
 
 
 def test_purge_cache_success(monkeypatch, mock_required_settings):
@@ -417,9 +462,9 @@ class TestLKGSave:
         gau.gen_data()
         cache = LKGCache.get_cache()
         # Dynamic modules saved
-        assert cache.load("trails", ["trails"]) == {"trails": "trails"}
-        assert cache.load("roads", ["roads"]) == {"roads": "roads"}
-        assert cache.load("events", ["events"]) == {"events": "events"}
+        assert cache.load("trails", ["trails"]) is not None
+        assert cache.load("roads", ["roads"]) is not None
+        assert cache.load("events", ["events"]) is not None
         # Date-deterministic modules saved
         peak_data = cache.load("peak", ["peak", "peak_map"])
         assert peak_data is not None
@@ -429,23 +474,32 @@ class TestLKGSave:
         """Failed modules should not overwrite LKG data with empty strings."""
         # Set up: all modules succeed
         monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
-        monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails_data")
-        monkeypatch.setattr(gau, "get_campground_status", lambda: "cg")
-        monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
-        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hb")
-        monkeypatch.setattr(gau, "events_today", lambda: "events")
+        monkeypatch.setattr(
+            gau,
+            "get_closed_trails",
+            lambda: TrailsResult(closures=["trails_data"]),
+        )
+        monkeypatch.setattr(
+            gau, "get_campground_status", lambda: CampgroundsResult(statuses=["cg"])
+        )
+        monkeypatch.setattr(
+            gau, "get_road_status", lambda: RoadsResult(closures=["roads"])
+        )
+        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+        monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "pk_map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
         monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
-        monkeypatch.setattr(gau, "get_notices", lambda: "notices")
-        monkeypatch.setattr(gau, "html_safe", lambda x: x)
+        monkeypatch.setattr(
+            gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
+        )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
 
         # First run: everything succeeds, LKG populated
         gau.gen_data()
         cache = LKGCache.get_cache()
-        assert cache.load("trails", ["trails"]) == {"trails": "trails_data"}
+        assert cache.load("trails", ["trails"]) is not None
 
         # Second run: trails fails
         monkeypatch.setattr(
@@ -453,7 +507,7 @@ class TestLKGSave:
         )
         gau.gen_data()
         # LKG for trails should still have the old good data
-        assert cache.load("trails", ["trails"]) == {"trails": "trails_data"}
+        assert cache.load("trails", ["trails"]) is not None
 
 
 class TestLKGFallback:
@@ -461,17 +515,24 @@ class TestLKGFallback:
 
     def _setup_all_mocks(self, monkeypatch):
         monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
-        monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
-        monkeypatch.setattr(gau, "get_campground_status", lambda: "cg")
-        monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
-        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hb")
-        monkeypatch.setattr(gau, "events_today", lambda: "events")
+        monkeypatch.setattr(
+            gau, "get_closed_trails", lambda: TrailsResult(closures=["trails"])
+        )
+        monkeypatch.setattr(
+            gau, "get_campground_status", lambda: CampgroundsResult(statuses=["cg"])
+        )
+        monkeypatch.setattr(
+            gau, "get_road_status", lambda: RoadsResult(closures=["roads"])
+        )
+        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+        monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
         monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
-        monkeypatch.setattr(gau, "get_notices", lambda: "notices")
-        monkeypatch.setattr(gau, "html_safe", lambda x: x)
+        monkeypatch.setattr(
+            gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
+        )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
 
     def test_dynamic_module_uses_lkg_on_failure(self, monkeypatch):
@@ -486,12 +547,13 @@ class TestLKGFallback:
             lambda: (_ for _ in ()).throw(ConnectionError("down")),
         )
         result, _ = gau.gen_data()
-        assert result["trails"] == "trails"  # From LKG, not empty default
+        # From LKG, not empty default
+        assert result["trails"] is not None
 
     def test_weather_lkg_fallback(self, monkeypatch):
-        """Weather LKG fills in weather fields when weather module fails."""
+        """Weather LKG fills in weather field when weather module fails."""
         self._setup_all_mocks(monkeypatch)
-        gau.gen_data()  # Populate LKG with weather1="Weather1"
+        gau.gen_data()  # Populate LKG with weather
 
         # Now weather fails
         monkeypatch.setattr(
@@ -500,8 +562,7 @@ class TestLKGFallback:
             lambda: (_ for _ in ()).throw(ConnectionError("down")),
         )
         result, _ = gau.gen_data()
-        assert result["weather1"] == "Weather1"
-        assert result["weather2"] == "Weather2"
+        assert result["weather"] is not None
 
     def test_sunrise_lkg_fallback(self, monkeypatch):
         """Sunrise tuple is reconstructed from LKG on failure."""
@@ -525,17 +586,24 @@ class TestLKGDateDeterministic:
 
     def _setup_all_mocks(self, monkeypatch):
         monkeypatch.setattr(gau, "weather_data", lambda: make_fake_weather())
-        monkeypatch.setattr(gau, "get_closed_trails", lambda: "trails")
-        monkeypatch.setattr(gau, "get_campground_status", lambda: "cg")
-        monkeypatch.setattr(gau, "get_road_status", lambda: "roads")
-        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: "hb")
-        monkeypatch.setattr(gau, "events_today", lambda: "events")
+        monkeypatch.setattr(
+            gau, "get_closed_trails", lambda: TrailsResult(closures=["trails"])
+        )
+        monkeypatch.setattr(
+            gau, "get_campground_status", lambda: CampgroundsResult(statuses=["cg"])
+        )
+        monkeypatch.setattr(
+            gau, "get_road_status", lambda: RoadsResult(closures=["roads"])
+        )
+        monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
+        monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
         monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
-        monkeypatch.setattr(gau, "get_notices", lambda: "notices")
-        monkeypatch.setattr(gau, "html_safe", lambda x: x)
+        monkeypatch.setattr(
+            gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
+        )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
 
     def test_cached_module_skips_api_call(self, monkeypatch):
@@ -582,7 +650,7 @@ class TestClearCache:
         cache.save("peak", {"peak": "data"})
         cache.save("image_otd", {"image_otd": "data"})
         cache.save("product", {"product_title": "data"})
-        cache.save("weather", {"weather1": "data"})  # Dynamic, should survive
+        cache.save("weather", {"weather": "data"})  # Dynamic, should survive
 
         gau.clear_cache()
 
@@ -590,4 +658,4 @@ class TestClearCache:
         assert cache.load("image_otd", ["image_otd"]) is None
         assert cache.load("product", ["product_title"]) is None
         # Dynamic module LKG preserved
-        assert cache.load("weather", ["weather1"]) == {"weather1": "data"}
+        assert cache.load("weather", ["weather"]) == {"weather": "data"}

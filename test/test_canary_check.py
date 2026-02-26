@@ -95,9 +95,15 @@ class TestCheckCanaryDelivery:
         assert not result.verified
         assert "skipped" in result.message
 
+    @patch(
+        "drip.canary_check.now_mountain",
+        return_value=datetime(2026, 2, 25, 8, 0, tzinfo=ZoneInfo("America/Denver")),
+    )
     @patch("drip.canary_check.imaplib.IMAP4_SSL")
     @patch("drip.canary_check.time.sleep")
-    def test_verified_on_first_attempt(self, mock_sleep, mock_imap_cls, monkeypatch):
+    def test_verified_on_first_attempt(
+        self, mock_sleep, mock_imap_cls, _mock_now, monkeypatch
+    ):
         monkeypatch.setenv("CANARY_EMAIL", "test@gmail.com")
         monkeypatch.setenv("CANARY_IMAP_PASSWORD", "secret")
 
@@ -111,9 +117,15 @@ class TestCheckCanaryDelivery:
         conn.store.assert_called_once()
         conn.expunge.assert_called_once()
 
+    @patch(
+        "drip.canary_check.now_mountain",
+        return_value=datetime(2026, 2, 25, 8, 0, tzinfo=ZoneInfo("America/Denver")),
+    )
     @patch("drip.canary_check.imaplib.IMAP4_SSL")
     @patch("drip.canary_check.time.sleep")
-    def test_verified_after_retry(self, mock_sleep, mock_imap_cls, monkeypatch):
+    def test_verified_after_retry(
+        self, mock_sleep, mock_imap_cls, _mock_now, monkeypatch
+    ):
         monkeypatch.setenv("CANARY_EMAIL", "test@gmail.com")
         monkeypatch.setenv("CANARY_IMAP_PASSWORD", "secret")
 

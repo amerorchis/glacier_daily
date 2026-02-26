@@ -4,17 +4,16 @@ Generate all of the data with a ThreadPoolExecutor, then upload it to the glacie
 server with FTP.
 """
 
-import base64
 import concurrent.futures
 import json
 import os
+from dataclasses import asdict
 from time import sleep
 
 import requests
 
 from activities.events import events_today
 from activities.gnpc_events import get_gnpc_events
-from drip.html_friendly import html_safe
 from image_otd.image_otd import get_image_otd, prepare_pic_otd
 from notices.notices import get_notices
 from peak.peak import peak
@@ -22,6 +21,15 @@ from peak.sat import prepare_peak_upload
 from product_otd.product import get_product, prepare_potd_upload
 from roads.hiker_biker import get_hiker_biker_status
 from roads.roads import get_road_status
+from shared.data_types import (
+    CampgroundsResult,
+    EventsResult,
+    HikerBikerResult,
+    NoticesResult,
+    RoadsResult,
+    TrailsResult,
+    WeatherResult,
+)
 from shared.datetime_utils import (
     cross_platform_strftime,
     format_date_readable,
@@ -42,15 +50,6 @@ from web_version import web_version
 logger = get_logger(__name__)
 
 
-class _EmptyWeather:
-    """Fallback weather object when the weather module fails."""
-
-    results = None
-    message1 = ""
-    message2 = ""
-    season = None
-
-
 # Date-deterministic: checked BEFORE API call, skip if cached today
 CACHED_MODULE_KEYS = {
     "peak": ["peak", "peak_image", "peak_map"],
@@ -60,7 +59,7 @@ CACHED_MODULE_KEYS = {
 
 # Dynamic: always fetch fresh, LKG used only as fallback on failure
 FALLBACK_MODULE_KEYS = {
-    "weather": ["weather1", "weather2", "season", "weather_image"],
+    "weather": ["weather", "weather_image"],
     "trails": ["trails"],
     "campgrounds": ["campgrounds"],
     "roads": ["roads"],
@@ -82,12 +81,24 @@ _FIELD_TO_MODULE = {
 
 
 def _save_module_lkg(module_name, data):
-    """Save successful module output to LKG cache."""
+    """Save successful module output to LKG cache.
+
+    Dataclass values are serialized to JSON strings for storage.
+    """
     try:
         cache = LKGCache.get_cache()
-        valid = {k: v for k, v in data.items() if v}
-        if valid:
-            cache.save(module_name, valid)
+        serialized = {}
+        for k, v in data.items():
+            if not v:
+                continue
+            if hasattr(v, "__dataclass_fields__"):
+                serialized[k] = json.dumps(_serialize_value(v))
+            elif isinstance(v, str):
+                serialized[k] = v
+            else:
+                serialized[k] = str(v)
+        if serialized:
+            cache.save(module_name, serialized)
     except Exception:
         logger.debug("Failed to save LKG for %s", module_name, exc_info=True)
 
@@ -127,7 +138,7 @@ def _safe_result(future, name, default, lkg_keys=None):
         return default
 
 
-def gen_data():
+def gen_data() -> tuple[dict, list]:
     """
     Use threads to gather the data from every module, then store it in a dictionary.
     Make sure text is all HTML safe, then return it.
@@ -190,7 +201,7 @@ def gen_data():
             ("", "", ""),
             lkg_keys=["sunrise_vid", "sunrise_still", "sunrise_str"],
         )
-        weather = _safe_result(weather_future, "weather", _EmptyWeather())
+        weather = _safe_result(weather_future, "weather", WeatherResult())
 
         # Extract date-deterministic results from cache or futures
         if "image_otd" in cached:
@@ -224,7 +235,7 @@ def gen_data():
                 product_future, "product", ("", None, "", "")
             )
 
-    weather_img = weather_image(weather.results or [], skip_upload=True)
+    weather_img = weather_image(weather.forecasts, skip_upload=True)
 
     # Collect deferred image uploads for the caller to process
     pending_uploads = []
@@ -240,20 +251,27 @@ def gen_data():
     drip_template_fields = {
         "date": now_mountain().strftime("%Y-%m-%d"),
         "today": format_date_readable(now_mountain()),
-        "events": _safe_result(events_future, "events", "", lkg_keys=["events"]),
-        "weather1": weather.message1,
+        "events": _safe_result(
+            events_future, "events", EventsResult(), lkg_keys=["events"]
+        ),
+        "weather": weather,
         "weather_image": weather_img,
-        "weather2": weather.message2,
-        "season": weather.season,
-        "trails": _safe_result(trails_future, "trails", "", lkg_keys=["trails"]),
+        "trails": _safe_result(
+            trails_future, "trails", TrailsResult(), lkg_keys=["trails"]
+        ),
         "campgrounds": _safe_result(
-            cg_future, "campgrounds", "", lkg_keys=["campgrounds"]
+            cg_future, "campgrounds", CampgroundsResult(), lkg_keys=["campgrounds"]
         ),
-        "roads": _safe_result(roads_future, "roads", "", lkg_keys=["roads"]),
+        "roads": _safe_result(roads_future, "roads", RoadsResult(), lkg_keys=["roads"]),
         "hikerbiker": _safe_result(
-            hiker_biker_future, "hiker_biker", "", lkg_keys=["hikerbiker"]
+            hiker_biker_future,
+            "hiker_biker",
+            HikerBikerResult(),
+            lkg_keys=["hikerbiker"],
         ),
-        "notices": _safe_result(notices_future, "notices", "", lkg_keys=["notices"]),
+        "notices": _safe_result(
+            notices_future, "notices", NoticesResult(), lkg_keys=["notices"]
+        ),
         "peak": peak_name,
         "peak_image": peak_img,
         "peak_map": peak_map,
@@ -270,22 +288,18 @@ def gen_data():
     }
 
     # LKG: Apply weather fallback if weather module failed
-    if not drip_template_fields["weather1"]:
-        lkg = _load_module_lkg(
-            "weather", ["weather1", "weather2", "season", "weather_image"]
-        )
+    if not drip_template_fields["weather"].daylight_message:
+        lkg = _load_module_lkg("weather", ["weather", "weather_image"])
         if lkg:
             logger.info("Using LKG fallback for 'weather'")
-            drip_template_fields["weather1"] = lkg.get("weather1", "")
-            drip_template_fields["weather2"] = lkg.get("weather2", "")
-            drip_template_fields["season"] = lkg.get("season", "")
+            drip_template_fields["weather"] = lkg.get("weather", WeatherResult())
             if lkg.get("weather_image"):
                 drip_template_fields["weather_image"] = lkg["weather_image"]
                 pending_uploads[:] = [
                     (k, v) for k, v in pending_uploads if k != "weather_image"
                 ]
 
-    # LKG: Save successful module data (pre-html_safe)
+    # LKG: Save successful module data
     for module_name, keys in _ALL_MODULE_KEYS.items():
         module_data = {
             k: drip_template_fields[k] for k in keys if drip_template_fields.get(k)
@@ -293,29 +307,41 @@ def gen_data():
         if module_data:
             _save_module_lkg(module_name, module_data)
 
+    # Replace None with "" for simple string fields
     for key, value in drip_template_fields.items():
         if value is None:
             drip_template_fields[key] = ""
-        else:
-            drip_template_fields[key] = html_safe(value)
 
     return drip_template_fields, pending_uploads
 
 
+def _serialize_value(value):
+    """Convert dataclass instances to dicts for JSON serialization."""
+    if hasattr(value, "__dataclass_fields__"):
+        d = asdict(value)
+        # Remove Event.sortable (datetime, not JSON-serializable, not needed in API)
+        if "events" in d and isinstance(d["events"], list):
+            for event in d["events"]:
+                event.pop("sortable", None)
+        return d
+    return value
+
+
 def write_data_to_json(data: dict, doctype: str) -> str:
     """
-    Make a JSON file with the data, then return the filepath.
+    Serialize structured data to clean JSON for API.
     """
-    data = {i: base64.b64encode(data[i].encode("utf-8")).decode("utf-8") for i in data}
+    serializable = {key: _serialize_value(value) for key, value in data.items()}
 
-    data["date"] = now_mountain().strftime("%Y-%m-%d")
-    data["time_generated"] = cross_platform_strftime(
+    serializable["date"] = now_mountain().strftime("%Y-%m-%d")
+    serializable["time_generated"] = cross_platform_strftime(
         now_mountain(), "%-I:%M %p"
     ).lower()
-    data["gnpc-events"] = get_gnpc_events()
+    serializable["gnpc-events"] = get_gnpc_events()
+
     filepath = f"server/{doctype}"
     with open(filepath, "w", encoding="utf-8") as f:
-        f.write(json.dumps(data))
+        json.dump(serializable, f)
 
     return filepath
 
@@ -396,7 +422,7 @@ def serve_api(force: bool = False):
     with FTPSession() as ftp:
         for field_key, upload_args in pending_uploads:
             url, _ = ftp.upload(*upload_args)
-            data[field_key] = html_safe(url) if url else ""
+            data[field_key] = url if url else ""
             # Save resolved image URL to LKG for future cache hits
             module = _FIELD_TO_MODULE.get(field_key)
             if module and url:

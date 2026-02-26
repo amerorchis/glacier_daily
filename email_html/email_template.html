@@ -60,19 +60,18 @@
                                                 </td>
                                                 <td colspan="3" rowspan="3" bgcolor="#FFFFFF" style="padding:0 0 30px;">
                                                     <!-- begin content -->
-                                                    <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/title_card.jpg"
+                                                    <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/title_card.jpg"
                                                         width="600" height="400" alt="What you need to know"
                                                         style="display:block; border:0; margin:0 0 44px; background:#eeeeee;">
                                                     <p
                                                         style="margin:0 30px 33px;; text-align:center; text-transform:uppercase; font-size:24px; line-height:30px; font-weight:bold; color:#484a42;">
-                                                        WHAT YOU NEED TO KNOW<br>FOR {{ my.daily_update.today |
-                                                        base64_decode }}
+                                                        WHAT YOU NEED TO KNOW<br>FOR {{ my.daily_update.today }}
                                                     </p>
                                                     <!-- begin articles -->
                                                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                                                         <tbody>
-                                                            {% if my.daily_update.events != "" %}
-                                                                {% if my.daily_update.events | base64_decode != "502 Response" %}
+                                                            {% if my.daily_update.events.events or my.daily_update.events.seasonal_message %}
+                                                                {% if not my.daily_update.events.error_message %}
                                                                     <tr valign="top">
                                                                         <td width="30">
                                                                             <p
@@ -82,7 +81,7 @@
                                                                         <td colspan="3">
                                                                             <a style="display:block; margin:0 0 14px;"
                                                                                 href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
-                                                                                <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/activities.jpg"
+                                                                                <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/activities.jpg"
                                                                                     width="540" height="160" alt="Events"
                                                                                     style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                             <p
@@ -91,8 +90,15 @@
                                                                                     style="color:#6c7e44; text-decoration:none;">Park
                                                                                     Activities Today</a>
                                                                             </p>
-                                                                            <div>{{ my.daily_update.events | base64_decode }}
-                                                                            </div>
+                                                                            {% if my.daily_update.events.events %}
+                                                                            <ul style="margin:0 0 25px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                                {% for event in my.daily_update.events.events %}
+                                                                                <li style="font-size:12px; line-height:18px; color:#333333;">{{ event.start_time }} - {{ event.end_time }}: {{ event.name }}, {{ event.location }} <a href="{{ event.link }}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                            {% elif my.daily_update.events.seasonal_message %}
+                                                                            <p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.events.seasonal_message }}</p>
+                                                                            {% endif %}
                                                                         </td>
                                                                         <td width="30">
                                                                             <p
@@ -111,7 +117,7 @@
                                                                 <td colspan="3">
                                                                     <a style="display:block; margin:0 0 14px;"
                                                                         href="https://www.weather.gov/">
-                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/weather.jpg"
+                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/weather.jpg"
                                                                             width="540" height="160" alt="Weather"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
@@ -121,20 +127,51 @@
                                                                     </p>
                                                                     <p
                                                                         style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.weather1 | base64_decode }}
+                                                                        {{ my.daily_update.weather.daylight_message }}
+                                                                        <br><br>Forecasts Around the Park:
                                                                     </p>
                                                                     <table style="margin: 0 auto; width: 405px;">
                                                                         <td>
-                                                                            <img src="{{ my.daily_update.weather_image | base64_decode }}"
+                                                                            <img src="{{ my.daily_update.weather_image }}"
                                                                                 width="405" height="374"
                                                                                 padding-left="70px"
                                                                                 alt="Today's weather forecast in Glacier">
                                                                         </td>
                                                                     </table>
+                                                                    {% if my.daily_update.weather.aqi_value != None %}
                                                                     <p
-                                                                        style="margin:0 0 2px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.weather2 | base64_decode }}
+                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}. This air quality is considered {{ my.daily_update.weather.aqi_category }}</p>
+                                                                    {% endif %}
+                                                                    <p
+                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        Evening Viewing Forecasts:<br>
+                                                                        Aurora: {{ my.daily_update.weather.aurora_quality }} |
+                                                                        Sunset Color: {{ my.daily_update.weather.sunset_quality }} |
+                                                                        Cloud Cover: {{ my.daily_update.weather.cloud_cover_pct }}%</p>
+                                                                    {% if my.daily_update.weather.aurora_message or my.daily_update.weather.sunset_message %}
+                                                                    <p
+                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.weather.alerts %}
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://weather.gov"
+                                                                            style="color:#6c7e44; text-decoration:none;">Alerts from the National Weather Service</a>
                                                                     </p>
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for alert in my.daily_update.weather.alerts %}
+                                                                        <li>{{ alert.headline }}
+                                                                            {% if alert.bullets %}
+                                                                            <ul style="margin-top:5px; margin-bottom:5px;">
+                                                                                {% for b in alert.bullets %}<li>{{ b }}</li>{% endfor %}
+                                                                            </ul>
+                                                                            {% endif %}
+                                                                        </li>
+                                                                        {% endfor %}
+                                                                    </ul>
+                                                                    {% endif %}
                                                                     <p
                                                                         style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
                                                                         Air quality data from
@@ -158,7 +195,7 @@
                                                                 <td colspan="3">
                                                                     <a style="display:block; margin:0 0 14px;"
                                                                         href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm">
-                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/trails&roads&cgs.jpg"
+                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/trails&roads&cgs.jpg"
                                                                             width="540" height="160" alt="Trails"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
@@ -167,37 +204,67 @@
                                                                             style="color:#6c7e44; text-decoration:none;">Trail
                                                                             Closures</a>
                                                                     </p>
+                                                                    {% if my.daily_update.trails.closures %}
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for c in my.daily_update.trails.closures %}<li>{{ c }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.trails.no_closures_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.trails.no_closures_message }}</p>
+                                                                    {% elif my.daily_update.trails.error_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.trails.error_message }}</p>
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.roads.closures or my.daily_update.roads.no_closures_message or my.daily_update.roads.error_message %}
                                                                     <p
-                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.trails | base64_decode }}</p>
-                                                                    {% if my.daily_update.roads != "" %}<p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                         <a href="https://www.nps.gov/glac/planyourvisit/directions.htm"
                                                                             style="color:#6c7e44; text-decoration:none;">Road
                                                                             Closures</a>
                                                                     </p>
-                                                                    <div>{{ my.daily_update.roads | base64_decode }}
-                                                                    </div>
+                                                                    {% if my.daily_update.roads.closures %}
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for c in my.daily_update.roads.closures %}<li>{{ c }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.roads.no_closures_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.roads.no_closures_message }}</p>
+                                                                    {% elif my.daily_update.roads.error_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.roads.error_message }}</p>
                                                                     {% endif %}
-                                                                    {% if my.daily_update.hikerbiker != "" %}{% if
-                                                                    my.daily_update.hikerbiker %}<p
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.hikerbiker.closures %}
+                                                                    <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                         <a href="https://www.nps.gov/glac/planyourvisit/directions.htm"
                                                                             style="color:#6c7e44; text-decoration:none;">Going-to-the-Sun
                                                                             Road Hiker/Biker Closures</a>
                                                                     </p>
-                                                                    <div>{{ my.daily_update.hikerbiker | base64_decode
-                                                                        }}</div>
+                                                                    <ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for c in my.daily_update.hikerbiker.closures %}<li>{{ c }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% if my.daily_update.hikerbiker.explanatory_note %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.hikerbiker.explanatory_note }}</p>
                                                                     {% endif %}
-                                                                    {% if my.daily_update.campgrounds != "" %}<p
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.campgrounds.statuses or my.daily_update.campgrounds.error_message %}
+                                                                    <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                         <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm"
                                                                             style="color:#6c7e44; text-decoration:none;">Campground
-                                                                            Closures</a>
+                                                                            Status</a>
                                                                     </p>
-                                                                    <div>{{ my.daily_update.campgrounds | base64_decode
-                                                                        }}</div>
-                                                                    {% endif %}{% endif %}
+                                                                    {% if my.daily_update.campgrounds.statuses %}
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for s in my.daily_update.campgrounds.statuses %}<li>{{ s }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.campgrounds.error_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.campgrounds.error_message }}</p>
+                                                                    {% endif %}
+                                                                    {% endif %}
                                                                     <div style="padding: 8px; border-radius: 5px; margin-bottom: 35px;">
                                                                         <p style="margin:0; font-size:12px; font-style: italic;">
                                                                             Trail, road, and campground condition information provided by Glacier National
@@ -224,7 +291,7 @@
                                                                 <td>
                                                                     <a style="display:block; margin:0 0 14px;"
                                                                         href="https://glacier.org">
-                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.season | base64_decode }}/notices.jpg"
+                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/notices.jpg"
                                                                             width="255" height="150" alt="Daily Notices"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
@@ -232,8 +299,14 @@
                                                                         <a href="https://glacier.org"
                                                                             style="color:#6c7e44; text-decoration:none;">Notices</a>
                                                                     </p>
-                                                                    <div>{{ my.daily_update.notices | base64_decode }}
-                                                                    </div>
+                                                                    {% if my.daily_update.notices.notices %}
+                                                                    <ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for n in my.daily_update.notices.notices %}<li>{{ n }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.notices.fallback_message %}
+                                                                    <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.notices.fallback_message }}</p>
+                                                                    {% endif %}
                                                                 </td>
                                                                 <td width="30">
                                                                     <p
@@ -242,24 +315,24 @@
                                                                 </td>
                                                                 <td>
                                                                     <a style="display:block; margin:0 0 14px;"
-                                                                        href="{{ my.daily_update.peak_image | base64_decode }}">
-                                                                        <img src="{{ my.daily_update.peak_image | base64_decode }}"
+                                                                        href="{{ my.daily_update.peak_image }}">
+                                                                        <img src="{{ my.daily_update.peak_image }}"
                                                                             width="255" height="150" alt="Peak"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                        <a href="{{ my.daily_update.peak_image | base64_decode }}"
+                                                                        <a href="{{ my.daily_update.peak_image }}"
                                                                             style="color:#6c7e44; text-decoration:none;">Glacier
                                                                             Peak of the Day</a>
                                                                     </p>
                                                                     <p
                                                                         style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.peak | base64_decode }}
+                                                                        {{ my.daily_update.peak }}
                                                                         <br>(<a
-                                                                            href="{{ my.daily_update.peak_image | base64_decode }}"
+                                                                            href="{{ my.daily_update.peak_image }}"
                                                                             style="color:#333333; font-style: italic;">Full
                                                                             size peak image</a>,
-                                                                        <a href="{{ my.daily_update.peak_map | base64_decode }}"
+                                                                        <a href="{{ my.daily_update.peak_map }}"
                                                                             style="color:#333333; font-style: italic;">
                                                                             peak location on map</a>)
                                                                     </p>
@@ -278,24 +351,22 @@
                                                                 </td>
                                                                 <td>
                                                                     <a style="display:block; margin:0 0 14px;"
-                                                                        href="{{ my.daily_update.product_link | base64_decode }}">
-                                                                        <img src="{{ my.daily_update.product_image | base64_decode }}"
+                                                                        href="{{ my.daily_update.product_link }}">
+                                                                        <img src="{{ my.daily_update.product_image }}"
                                                                             alt="Today's product of the day" width="255"
                                                                             height="150"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                        <a href="{{ my.daily_update.product_link | base64_decode }}"
+                                                                        <a href="{{ my.daily_update.product_link }}"
                                                                             style="color:#6c7e44; text-decoration:none;">Product
                                                                             of the Day:<br>{{
-                                                                            my.daily_update.product_title |
-                                                                            base64_decode }}</a>
+                                                                            my.daily_update.product_title }}</a>
                                                                     </p>
                                                                     <p
                                                                         style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.product_desc | base64_decode
-                                                                        }} <a
-                                                                            href="{{ my.daily_update.product_link | base64_decode }}"
+                                                                        {{ my.daily_update.product_desc }} <a
+                                                                            href="{{ my.daily_update.product_link }}"
                                                                             style="color:#333333; font-style: italic;">
                                                                             (Product Link)</a>.</p>
                                                                 </td>
@@ -305,25 +376,25 @@
                                                                         &nbsp;</p>
                                                                 </td>
                                                                 <td>
-                                                                    {% if my.daily_update.image_otd | base64_decode != "Flickr API Error" %}
+                                                                    {% if my.daily_update.image_otd != "Flickr API Error" %}
                                                                         <a style="display:block; margin:0 0 14px;"
-                                                                            href="{{ my.daily_update.image_otd_link | base64_decode }}"><img
-                                                                                src="{{ my.daily_update.image_otd | base64_decode }}"
+                                                                            href="{{ my.daily_update.image_otd_link }}"><img
+                                                                                src="{{ my.daily_update.image_otd }}"
                                                                                 alt="Today's picture of the day" width="255"
                                                                                 height="150"
                                                                                 style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                         <p
                                                                             style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
-                                                                            <a href="{{ my.daily_update.image_otd_link | base64_decode }}"
+                                                                            <a href="{{ my.daily_update.image_otd_link }}"
                                                                                 style="color:#6c7e44; text-decoration:none;">Glacier
                                                                                 Image of the Day</a>
                                                                         </p>
                                                                         <p
                                                                             style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
                                                                             {% if my.daily_update.image_otd_title != "" %}{{
-                                                                            my.daily_update.image_otd_title | base64_decode
+                                                                            my.daily_update.image_otd_title
                                                                             }}<br>{% endif %}Image courtesy of
-                                                                            <a href="{{ my.daily_update.image_otd_link | base64_decode }}"
+                                                                            <a href="{{ my.daily_update.image_otd_link }}"
                                                                                 style="color:#333333;">Glacier National
                                                                                 Park.</a>
                                                                         </p>
@@ -346,16 +417,16 @@
                                                                 <td colspan="3">
                                                                     <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:20px 0 5px; text-align: center">
-                                                                        <a href="{{ my.daily_update.sunrise_vid | base64_decode }}"
-                                                                            style="color:#6c7e44; text-decoration:none;">{{ my.daily_update.sunrise_str | base64_decode }} Sunrise</a>
+                                                                        <a href="{{ my.daily_update.sunrise_vid }}"
+                                                                            style="color:#6c7e44; text-decoration:none;">{{ my.daily_update.sunrise_str }} Sunrise</a>
                                                                     </p>
                                                                     <table style="margin: 0 auto; width: 410px;">
                                                                         <td>
                                                                             <a
-                                                                                href="{{ my.daily_update.sunrise_vid | base64_decode }}"><img
-                                                                                    src="{{ my.daily_update.sunrise_still | base64_decode }}"
+                                                                                href="{{ my.daily_update.sunrise_vid }}"><img
+                                                                                    src="{{ my.daily_update.sunrise_still }}"
                                                                                     width="410" height="230"
-                                                                                    alt="{{ my.daily_update.sunrise_str | base64_decode }} sunrise"></a>
+                                                                                    alt="{{ my.daily_update.sunrise_str }} sunrise"></a>
                                                                         </td>
                                                                     </table>
                                                                     <p

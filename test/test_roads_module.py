@@ -22,6 +22,7 @@ from roads.roads import (
     format_road_closures,
     get_road_status,
 )
+from shared.data_types import RoadsResult
 
 
 class TestClosedRoads:
@@ -254,7 +255,8 @@ class TestFormatRoadClosures:
     def test_no_closures_returns_no_closures_message(self):
         """Verify appropriate message when no roads are closed."""
         result = format_road_closures({})
-        assert "no closures on major roads" in result.lower()
+        assert isinstance(result, RoadsResult)
+        assert "no closures on major roads" in result.no_closures_message.lower()
 
     def test_single_road_entirely_closed(self):
         """Verify formatting when one road is entirely closed."""
@@ -264,7 +266,8 @@ class TestFormatRoadClosures:
         road.closures_found = True
 
         result = format_road_closures({"Camas Road": road})
-        assert "in its entirety" in result.lower()
+        assert isinstance(result, RoadsResult)
+        assert any("in its entirety" in c.lower() for c in result.closures)
 
     def test_multiple_roads_entirely_closed(self):
         """Verify formatting when multiple roads are entirely closed."""
@@ -279,8 +282,10 @@ class TestFormatRoadClosures:
         road2.closures_found = True
 
         result = format_road_closures({"Camas Road": road1, "Two Medicine Road": road2})
-        assert "and" in result  # Should join multiple with "and"
-        assert "in their entirety" in result.lower()
+        assert isinstance(result, RoadsResult)
+        closure_text = " ".join(result.closures)
+        assert "and" in closure_text  # Should join multiple with "and"
+        assert "in their entirety" in closure_text.lower()
 
     def test_partial_closure_formatted(self):
         """Verify partial closures are formatted correctly."""
@@ -290,8 +295,8 @@ class TestFormatRoadClosures:
         road.closures_found = True
 
         result = format_road_closures({"Going-to-the-Sun Road": road})
-        assert "closed from" in result.lower()
-        assert "<ul" in result  # Should be formatted as list
+        assert isinstance(result, RoadsResult)
+        assert any("closed from" in c.lower() for c in result.closures)
 
     def test_same_location_closure_excluded(self):
         """Verify closures with same start/end location are excluded."""
@@ -301,32 +306,38 @@ class TestFormatRoadClosures:
         road.closures_found = True
 
         result = format_road_closures({"Going-to-the-Sun Road": road})
+        assert isinstance(result, RoadsResult)
         # Should not include this closure since start == end
-        assert "Lake McDonald Lodge" not in result or "no closures" in result.lower()
+        closure_text = " ".join(result.closures) if result.closures else ""
+        assert "Lake McDonald Lodge" not in closure_text or result.no_closures_message
 
 
 class TestGetRoadStatus:
     """Tests for the get_road_status() wrapper function."""
 
-    def test_http_error_returns_empty_string(self):
-        """Verify empty string returned on HTTP error."""
+    def test_http_error_returns_empty_result(self):
+        """Verify empty RoadsResult returned on HTTP error."""
         mock_response = Mock()
         mock_response.raise_for_status.side_effect = requests.HTTPError("404")
         mock_response.text = '{"features": []}'
 
         with patch("roads.roads.requests.get", return_value=mock_response):
             result = get_road_status()
-            assert result == ""
+            assert isinstance(result, RoadsResult)
+            assert result.closures == []
+            assert result.no_closures_message == ""
+            assert result.error_message == ""
 
     def test_nps_website_error_returns_down_message(self):
         """Verify website down message on NPS error."""
         with patch("roads.roads.closed_roads") as mock_closed:
             mock_closed.side_effect = NPSWebsiteError()
             result = get_road_status()
-            assert "currently down" in result
+            assert isinstance(result, RoadsResult)
+            assert "currently down" in result.error_message
 
-    def test_success_returns_formatted_closures(self):
-        """Verify successful path returns formatted road closures."""
+    def test_success_returns_roads_result(self):
+        """Verify successful path returns RoadsResult."""
         mock_response = Mock()
         mock_response.text = json.dumps(
             {
@@ -351,9 +362,7 @@ class TestGetRoadStatus:
 
         with patch("roads.roads.requests.get", return_value=mock_response):
             result = get_road_status()
-            assert isinstance(result, str)
-            # Should return either formatted HTML or no closures message
-            assert "<" in result or "no closures" in result.lower()
+            assert isinstance(result, RoadsResult)
 
 
 class TestSegmentBounds:

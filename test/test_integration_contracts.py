@@ -10,72 +10,79 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from shared.data_types import (
+    EventsResult,
+    HikerBikerResult,
+    RoadsResult,
+    TrailsResult,
+    WeatherResult,
+)
 
-class TestWeatherContentInterface:
-    """Tests that WeatherContent has the attributes expected by gen_data()."""
+
+class TestWeatherResultInterface:
+    """Tests that weather_data returns a WeatherResult with expected attributes."""
 
     @pytest.fixture
     def mock_weather_dependencies(self):
-        """Mock all external dependencies of WeatherContent."""
+        """Mock all external dependencies of weather_data."""
         with patch.multiple(
             "weather.weather",
             get_forecast=Mock(return_value=(None, "")),
-            weather_alerts=Mock(return_value=""),
+            get_air_quality=Mock(return_value=-1),
+            weather_alerts=Mock(return_value=[]),
             get_season=Mock(return_value="summer"),
             get_sunset_hue=Mock(return_value=(0, "unknown", "")),
+            aurora_forecast=Mock(return_value=("", "")),
         ):
             yield
 
-    def test_has_message1_attribute(self, mock_weather_dependencies):
-        """Verify WeatherContent has message1 attribute as used in gen_data()."""
-        from weather.weather import WeatherContent
+    def test_returns_weather_result(self, mock_weather_dependencies):
+        """Verify weather_data returns a WeatherResult."""
+        from weather.weather import weather_data
 
-        weather = WeatherContent()
-        assert hasattr(weather, "message1"), (
-            "WeatherContent must have 'message1' attribute"
-        )
-        assert isinstance(weather.message1, str), "message1 should be a string"
-
-    def test_has_message2_attribute(self, mock_weather_dependencies):
-        """Verify WeatherContent has message2 attribute as used in gen_data()."""
-        from weather.weather import WeatherContent
-
-        weather = WeatherContent()
-        assert hasattr(weather, "message2"), (
-            "WeatherContent must have 'message2' attribute"
-        )
-        assert isinstance(weather.message2, str), "message2 should be a string"
-
-    def test_has_season_attribute(self, mock_weather_dependencies):
-        """Verify WeatherContent has season attribute as used in gen_data()."""
-        from weather.weather import WeatherContent
-
-        weather = WeatherContent()
-        assert hasattr(weather, "season"), "WeatherContent must have 'season' attribute"
-        # season can be None or string
-        assert weather.season is None or isinstance(weather.season, str), (
-            "season should be None or string"
+        result = weather_data()
+        assert isinstance(result, WeatherResult), (
+            "weather_data must return WeatherResult"
         )
 
-    def test_has_results_attribute(self, mock_weather_dependencies):
-        """Verify WeatherContent has results attribute as used by weather_image()."""
-        from weather.weather import WeatherContent
+    def test_has_daylight_message(self, mock_weather_dependencies):
+        """Verify WeatherResult has daylight_message attribute."""
+        from weather.weather import weather_data
 
-        weather = WeatherContent()
-        assert hasattr(weather, "results"), (
-            "WeatherContent must have 'results' attribute"
-        )
-        # results can be None or list
-        assert weather.results is None or isinstance(weather.results, list), (
-            "results should be None or list"
-        )
+        result = weather_data()
+        assert hasattr(result, "daylight_message")
+        assert isinstance(result.daylight_message, str)
+
+    def test_has_forecasts(self, mock_weather_dependencies):
+        """Verify WeatherResult has forecasts attribute."""
+        from weather.weather import weather_data
+
+        result = weather_data()
+        assert hasattr(result, "forecasts")
+        assert isinstance(result.forecasts, list)
+
+    def test_has_season(self, mock_weather_dependencies):
+        """Verify WeatherResult has season attribute."""
+        from weather.weather import weather_data
+
+        result = weather_data()
+        assert hasattr(result, "season")
+        assert result.season is None or isinstance(result.season, str)
+
+    def test_has_alerts(self, mock_weather_dependencies):
+        """Verify WeatherResult has alerts attribute."""
+        from weather.weather import weather_data
+
+        result = weather_data()
+        assert hasattr(result, "alerts")
+        assert isinstance(result.alerts, list)
 
 
 class TestModuleReturnTypes:
     """Tests that module return types match gen_data() expectations."""
 
-    def test_get_closed_trails_returns_string(self):
-        """Verify get_closed_trails returns a string."""
+    def test_get_closed_trails_returns_trails_result(self):
+        """Verify get_closed_trails returns a TrailsResult."""
         with patch("trails_and_cgs.trails.requests.get") as mock_get:
             mock_response = Mock()
             mock_response.text = '{"features": []}'
@@ -85,19 +92,23 @@ class TestModuleReturnTypes:
             from trails_and_cgs.trails import get_closed_trails
 
             result = get_closed_trails()
-            assert isinstance(result, str), "get_closed_trails should return str"
+            assert isinstance(result, TrailsResult), (
+                "get_closed_trails should return TrailsResult"
+            )
 
-    def test_get_road_status_returns_string(self):
-        """Verify get_road_status returns a string."""
+    def test_get_road_status_returns_roads_result(self):
+        """Verify get_road_status returns a RoadsResult."""
         # Mock closed_roads to return empty dict (no closures)
         with patch("roads.roads.closed_roads", return_value={}):
             from roads.roads import get_road_status
 
             result = get_road_status()
-            assert isinstance(result, str), "get_road_status should return str"
+            assert isinstance(result, RoadsResult), (
+                "get_road_status should return RoadsResult"
+            )
 
-    def test_get_hiker_biker_status_returns_string(self):
-        """Verify get_hiker_biker_status returns a string."""
+    def test_get_hiker_biker_status_returns_hiker_biker_result(self):
+        """Verify get_hiker_biker_status returns a HikerBikerResult."""
         with patch("roads.hiker_biker.requests.get") as mock_get:
             mock_response = Mock()
             mock_response.json.return_value = {"features": []}
@@ -106,10 +117,12 @@ class TestModuleReturnTypes:
             from roads.hiker_biker import get_hiker_biker_status
 
             result = get_hiker_biker_status()
-            assert isinstance(result, str), "get_hiker_biker_status should return str"
+            assert isinstance(result, HikerBikerResult), (
+                "get_hiker_biker_status should return HikerBikerResult"
+            )
 
-    def test_events_today_returns_string(self, mock_required_settings):
-        """Verify events_today returns a string."""
+    def test_events_today_returns_events_result(self, mock_required_settings):
+        """Verify events_today returns an EventsResult."""
         # Mock requests.get to return empty data
         mock_response = Mock()
         mock_response.json.return_value = {"data": [], "total": 0}
@@ -119,7 +132,9 @@ class TestModuleReturnTypes:
             from activities.events import events_today
 
             result = events_today()
-            assert isinstance(result, str), "events_today should return str"
+            assert isinstance(result, EventsResult), (
+                "events_today should return EventsResult"
+            )
 
 
 class TestTupleUnpacking:
@@ -183,7 +198,7 @@ class TestTupleUnpacking:
 
 
 class TestHtmlSafeIntegration:
-    """Tests that html_safe is called correctly with strings."""
+    """Tests that html_safe still works (utility function)."""
 
     def test_html_safe_accepts_string(self):
         """Verify html_safe accepts string input."""

@@ -65,8 +65,8 @@
                                                     <!-- begin articles -->
                                                     <table cellpadding="0" cellspacing="0" border="0" width="100%">
                                                         <tbody>
-                                                            {% if my.daily_update.events.events or my.daily_update.events.seasonal_message %}
-                                                            {% if not my.daily_update.events.error_message %}
+                                                            
+                                                            
                                                             <tr valign="top">
                                                                 <td width="30">
                                                                     <p
@@ -76,7 +76,7 @@
                                                                 <td colspan="3">
                                                                     <a style="display:block; margin:0 0 14px;"
                                                                         href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
-                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/activities.jpg"
+                                                                        <img src="https://glacier.org/daily/summer/activities.jpg"
                                                                             width="540" height="160" alt="Events"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
@@ -85,15 +85,13 @@
                                                                             style="color:#6c7e44; text-decoration:none;">Ranger-Led
                                                                             Activities Today</a>
                                                                     </p>
-                                                                    {% if my.daily_update.events.events %}
+                                                                    
                                                                     <ul style="margin:0 0 25px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {% for event in my.daily_update.events.events %}
-                                                                        <li style="font-size:12px; line-height:18px; color:#333333;">{{ event.start_time }} - {{ event.end_time }}: {{ event.name }}, {{ event.location }} <a href="{{ event.link }}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>
-                                                                        {% endfor %}
+                                                                        
+                                                                        <li style="font-size:12px; line-height:18px; color:#333333;">8:30 am - 10 am: Creekside Stroll, Apgar VC <a href="http://www.nps.gov/planyourvisit/event-details.htm?id=1" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>
+                                                                        
                                                                     </ul>
-                                                                    {% elif my.daily_update.events.seasonal_message %}
-                                                                    <p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.events.seasonal_message }}</p>
-                                                                    {% endif %}
+                                                                    
                                                                 </td>
                                                                 <td width="30">
                                                                     <p
@@ -101,8 +99,8 @@
                                                                         &nbsp;</p>
                                                                 </td>
                                                             </tr>
-                                                            {% endif %}
-                                                            {% endif %}
+                                                            
+                                                            
                                                             <tr valign="top">
                                                                 <td width="30">
                                                                     <p
@@ -112,7 +110,7 @@
                                                                 <td colspan="3">
                                                                     <a style="display:block; margin:0 0 14px;"
                                                                         href="https://www.weather.gov/">
-                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/weather.jpg"
+                                                                        <img src="https://glacier.org/daily/summer/weather.jpg"
                                                                             width="540" height="160" alt="Weather"
                                                                             style="display:block; margin:0; border:0; background:#eeeeee;"></a>
                                                                     <p
@@ -122,50 +120,50 @@
                                                                     </p>
                                                                     <p
                                                                         style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.weather.daylight_message }}<br><br>Forecasts Around the Park:
+                                                                        Today, sunrise is at 6:14am and sunset is at 8:51pm. There will be 14 hours and 36 minutes of daylight.<br><br>Forecasts Around the Park:
                                                                     </p>
                                                                     <table style="margin: 0 auto; width: 405px;">
                                                                         <td>
-                                                                            <img src="{{ my.daily_update.weather_image }}"
+                                                                            <img src="https://glacier.org/daily/weather/5_1_2024_today_park_map.png"
                                                                                 width="405" height="374"
                                                                                 padding-left="70px"
                                                                                 alt="Today's weather forecast in Glacier">
                                                                         </td>
                                                                     </table>
-                                                                    {% if my.daily_update.weather.aqi_value != None %}
+                                                                    
                                                                     <p
                                                                         style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}. This air quality is considered {{ my.daily_update.weather.aqi_category }}</p>
-                                                                    {% endif %}
+                                                                        The current AQI in West Glacier is 45. This air quality is considered good.</p>
+                                                                    
                                                                     <p
                                                                         style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
                                                                         Evening Viewing Forecasts:<br>
-                                                                        Aurora: {{ my.daily_update.weather.aurora_quality }} |
-                                                                        Sunset Color: {{ my.daily_update.weather.sunset_quality }} |
-                                                                        Cloud Cover: {{ my.daily_update.weather.cloud_cover_pct }}%</p>
-                                                                    {% if my.daily_update.weather.aurora_message or my.daily_update.weather.sunset_message %}
+                                                                        Aurora: 3.2 Kp (not visible) |
+                                                                        Sunset Color: good |
+                                                                        Cloud Cover: 30%</p>
+                                                                    
                                                                     <p
                                                                         style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
-                                                                    {% endif %}
-                                                                    {% if my.daily_update.weather.alerts %}
+                                                                         Sunset color forecast: good.</p>
+                                                                    
+                                                                    
                                                                     <p
                                                                         style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
                                                                         <a href="https://weather.gov"
                                                                             style="color:#6c7e44; text-decoration:none;">Alerts from the National Weather Service</a>
                                                                     </p>
                                                                     <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
-                                                                        {% for alert in my.daily_update.weather.alerts %}
-                                                                        <li>{{ alert.headline }}
-                                                                            {% if alert.bullets %}
+                                                                        
+                                                                        <li>Winter Storm Warning
+                                                                            
                                                                             <ul style="margin-top:5px; margin-bottom:5px;">
-                                                                                {% for b in alert.bullets %}<li>{{ b }}</li>{% endfor %}
+                                                                                <li>What: Heavy snow</li><li>Where: East Glacier</li>
                                                                             </ul>
-                                                                            {% endif %}
+                                                                            
                                                                         </li>
-                                                                        {% endfor %}
+                                                                        
                                                                     </ul>
-                                                                    {% endif %}
+                                                                    
                                                                     <p
                                                                         style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
                                                                         Air quality data from
@@ -180,41 +178,7 @@
                                                                         &nbsp;</p>
                                                                 </td>
                                                             </tr>
-                                                            {% if my.daily_update.sunrise_vid != "" and
-                                                            my.daily_update.sunrise_still != "" %}
-                                                            <tr valign="top">
-                                                                <td width="30">
-                                                                    <p
-                                                                        style="margin:0; font-size:1px; line-height:1px;">
-                                                                        &nbsp;</p>
-                                                                </td>
-                                                                <td colspan="3">
-                                                                    <p
-                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:20px 0 5px; text-align: center">
-                                                                        <a href="{{ my.daily_update.sunrise_vid }}"
-                                                                            style="color:#6c7e44; text-decoration:none;">{{ my.daily_update.sunrise_str }} Sunrise</a>
-                                                                    </p>
-                                                                    <table style="margin: 0 auto; width: 410px;">
-                                                                        <td>
-                                                                            <a
-                                                                                href="{{ my.daily_update.sunrise_vid }}"><img
-                                                                                    src="{{ my.daily_update.sunrise_still }}"
-                                                                                    width="410" height="230"
-                                                                                    alt="{{ my.daily_update.sunrise_str }} Sunrise"></a>
-                                                                        </td>
-                                                                    </table>
-                                                                    <p
-                                                                        style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333; text-align: center">
-                                                                        Click to see a timelapse video of the sunrise.
-                                                                    </p>
-                                                                </td>
-                                                                <td width="30">
-                                                                    <p
-                                                                        style="margin:0; font-size:1px; line-height:1px;">
-                                                                        &nbsp;</p>
-                                                                </td>
-                                                            </tr>
-                                                            {% endif %}
+                                                            
                                                             <tr valign="top">
                                                                 <td width="30">
                                                                     <p
@@ -273,19 +237,7 @@
                                                                         style="margin:0 0 4px; font-weight:bold; color:#333333; font-size:14px; line-height:22px;">
                                                                         Glacier National Park Conservancy</p>
                                                                     <!-- end json-->
-                                                                    {% if subscriber.email != 'for-web' %}
-                                                                    <p
-                                                                        style="margin:0; color:#333333; font-size:11px; line-height:18px;">
-                                                                        {{ inline_postal_address }}<br>
-                                                                        Website: <a href="http://glacier.org/"
-                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">glacier.org</a>&nbsp;|&nbsp;<a
-                                                                            href="https://glacier.org/glacier-daily-updates-signup/#iFrame1"
-                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">View
-                                                                            in browser</a>
-                                                                        <br><a href="{{ unsubscribe_url }}"
-                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">Unsubscribe</a>
-                                                                    </p>
-                                                                    {% endif %}
+                                                                    
                                                                 </td>
                                                                 <td width="30">
                                                                     <p
