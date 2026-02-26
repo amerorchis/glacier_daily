@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+from datetime import timedelta
 
 from shared.logging_config import get_logger, setup_logging
 from shared.run_context import start_run
@@ -218,13 +219,19 @@ class TestUploadStatusReport:
         status_file = str(tmp_path / "status.json")
         monkeypatch.setattr("shared.run_report.STATUS_FILE", status_file)
 
-        # Seed with an existing run
+        # Seed with an existing run (use recent dates relative to now)
+        from shared.datetime_utils import now_mountain
+
+        recent = now_mountain().replace(hour=12, minute=0, second=0, microsecond=0)
+        yesterday = (recent - timedelta(days=1)).isoformat()
+        today = recent.isoformat()
+
         existing = {
             "runs": [
                 {
                     "run_id": "old1",
                     "run_type": "web_update",
-                    "end_time": "2026-02-19T12:00:00",
+                    "end_time": yesterday,
                 }
             ]
         }
@@ -234,7 +241,7 @@ class TestUploadStatusReport:
         report = RunReport(
             run_id="new1",
             run_type="email",
-            end_time="2026-02-20T08:00:00",
+            end_time=today,
         )
 
         upload_status_report(report)

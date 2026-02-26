@@ -1,0 +1,571 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Glacier Daily Update</title>
+</head>
+
+<body
+    style="font-family:Open Sans, Gotham, 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color:#f0f2ea; margin:0; padding:0; color:#333333;">
+    <div
+        style="font-size:0px;line-height:1px;mso-line-height-rule:exactly;display:none;max-width:0px;max-height:0px;opacity:0;overflow:hidden;mso-hide:all;">
+        Here's what you need to know about Glacier National Park today - courtesy of the Glacier National Park
+        Conservancy
+    </div>
+    <table width="100%" bgcolor="#f0f2ea" cellpadding="0" cellspacing="0" border="0">
+        <tbody>
+            <tr>
+                <td style="padding:40px 0;">
+                    <!-- begin main block -->
+                    <table cellpadding="0" cellspacing="0" width="608" border="0" align="center">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div>
+                                        {% if subscriber.email == 'for-web' %}
+                                        <strong>Last Updated: {{ my.daily_update.timestring }}. Check <a
+                                                href="https://www.nps.gov/glac/index.htm">nps.gov/glac</a> for the
+                                            latest.</strong>
+                                        {% endif %}
+                                        <a href="http://glacier.org/"
+                                            style="display:block; width:407px; height:100px; margin:0 0 0 10px;">
+                                            <img src="https://www.dripuploads.com/uploads/image_upload/image/3049526/embeddable_9e5a933a-16c8-4a46-a560-16a94a8ea61b.png"
+                                                width="407" height="100" alt="GNPC Logo"
+                                                style="display:block; border:0; margin:0;">
+                                        </a>
+                                    </div>
+                                    <!-- begin wrapper -->
+                                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                        <tbody>
+                                            <tr>
+                                                <td width="8" height="4" colspan="2"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049539/embeddable_92737ec7-5576-4898-bbb1-a29e47c3758f.png) no-repeat 100% 100%;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049537/embeddable_d7e484fd-84e6-4dbd-bdf1-dbfb7ff38b4b.png) repeat-x 0 100%;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td width="8" height="4" colspan="2"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049538/embeddable_ef7ff5d8-6d69-4519-a617-899a93a62f5e.png) no-repeat 0 100%;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049539/embeddable_92737ec7-5576-4898-bbb1-a29e47c3758f.png) no-repeat 100% 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td colspan="3" rowspan="3" bgcolor="#FFFFFF" style="padding:0 0 30px;">
+                                                    <!-- begin content -->
+                                                    <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/title_card.jpg"
+                                                        width="600" height="400" alt="What you need to know"
+                                                        style="display:block; border:0; margin:0 0 44px; background:#eeeeee;">
+                                                    <p
+                                                        style="margin:0 30px 33px;; text-align:center; text-transform:uppercase; font-size:24px; line-height:30px; font-weight:bold; color:#484a42;">
+                                                        WHAT YOU NEED TO KNOW<br>FOR {{ my.daily_update.today }}
+                                                    </p>
+                                                    <!-- begin articles -->
+                                                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tbody>
+                                                            {% if my.daily_update.events.events or my.daily_update.events.seasonal_message %}
+                                                                {% if not my.daily_update.events.error_message %}
+                                                                    <tr valign="top">
+                                                                        <td width="30">
+                                                                            <p
+                                                                                style="margin:0; font-size:1px; line-height:1px;">
+                                                                                &nbsp;</p>
+                                                                        </td>
+                                                                        <td colspan="3">
+                                                                            <a style="display:block; margin:0 0 14px;"
+                                                                                href="https://www.nps.gov/glac/planyourvisit/calendar.htm">
+                                                                                <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/activities.jpg"
+                                                                                    width="540" height="160" alt="Events"
+                                                                                    style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                            <p
+                                                                                style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                                <a href="https://www.nps.gov/glac/planyourvisit/calendar.htm"
+                                                                                    style="color:#6c7e44; text-decoration:none;">Park
+                                                                                    Activities Today</a>
+                                                                            </p>
+                                                                            {% if my.daily_update.events.events %}
+                                                                            <ul style="margin:0 0 25px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                                {% for event in my.daily_update.events.events %}
+                                                                                <li style="font-size:12px; line-height:18px; color:#333333;">{{ event.start_time }} - {{ event.end_time }}: {{ event.name }}, {{ event.location }} <a href="{{ event.link }}" style="font-size:10px; color:#333333; font-style:italic; text-decoration:underline;">(link)</a></li>
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                            {% elif my.daily_update.events.seasonal_message %}
+                                                                            <p style="margin:0 0 25px; font-size:12px; line-height:18px; color:#333333;">{{ my.daily_update.events.seasonal_message }}</p>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td width="30">
+                                                                            <p
+                                                                                style="margin:0; font-size:1px; line-height:1px;">
+                                                                                &nbsp;</p>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                            <tr valign="top">
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td colspan="3">
+                                                                    <a style="display:block; margin:0 0 14px;"
+                                                                        href="https://www.weather.gov/">
+                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/weather.jpg"
+                                                                            width="540" height="160" alt="Weather"
+                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://www.weather.gov/"
+                                                                            style="color:#6c7e44; text-decoration:none;">Weather</a>
+                                                                    </p>
+                                                                    <p
+                                                                        style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.weather.daylight_message }}
+                                                                        <br><br>Forecasts Around the Park:
+                                                                    </p>
+                                                                    <table style="margin: 0 auto; width: 405px;">
+                                                                        <td>
+                                                                            <img src="{{ my.daily_update.weather_image }}"
+                                                                                width="405" height="374"
+                                                                                padding-left="70px"
+                                                                                alt="Today's weather forecast in Glacier">
+                                                                        </td>
+                                                                    </table>
+                                                                    {% if my.daily_update.weather.aqi_value != None %}
+                                                                    <p
+                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}. This air quality is considered {{ my.daily_update.weather.aqi_category }}</p>
+                                                                    {% endif %}
+                                                                    <p
+                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        Evening Viewing Forecasts:<br>
+                                                                        Aurora: {{ my.daily_update.weather.aurora_quality }} |
+                                                                        Sunset Color: {{ my.daily_update.weather.sunset_quality }} |
+                                                                        Cloud Cover: {{ my.daily_update.weather.cloud_cover_pct }}%</p>
+                                                                    {% if my.daily_update.weather.aurora_message or my.daily_update.weather.sunset_message %}
+                                                                    <p
+                                                                        style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.weather.alerts %}
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://weather.gov"
+                                                                            style="color:#6c7e44; text-decoration:none;">Alerts from the National Weather Service</a>
+                                                                    </p>
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for alert in my.daily_update.weather.alerts %}
+                                                                        <li>{{ alert.headline }}
+                                                                            {% if alert.bullets %}
+                                                                            <ul style="margin-top:5px; margin-bottom:5px;">
+                                                                                {% for b in alert.bullets %}<li>{{ b }}</li>{% endfor %}
+                                                                            </ul>
+                                                                            {% endif %}
+                                                                        </li>
+                                                                        {% endfor %}
+                                                                    </ul>
+                                                                    {% endif %}
+                                                                    <p
+                                                                        style="margin:0 0 35px; font-size:10px; color:#333333; font-style: italic;">
+                                                                        Air quality data from
+                                                                        <a href="https://www.nps.gov/subjects/air/current-data.htm?site=glac&location=west-glacier-horse-stables&"
+                                                                            style="color:#333333;">the National Park
+                                                                            Service.</a>
+                                                                    </p>
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                            </tr>
+                                                            <tr valign="top">
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td colspan="3">
+                                                                    <a style="display:block; margin:0 0 14px;"
+                                                                        href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm">
+                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/trails&roads&cgs.jpg"
+                                                                            width="540" height="160" alt="Trails"
+                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm"
+                                                                            style="color:#6c7e44; text-decoration:none;">Trail
+                                                                            Closures</a>
+                                                                    </p>
+                                                                    {% if my.daily_update.trails.closures %}
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for c in my.daily_update.trails.closures %}<li>{{ c }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.trails.no_closures_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.trails.no_closures_message }}</p>
+                                                                    {% elif my.daily_update.trails.error_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.trails.error_message }}</p>
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.roads.closures or my.daily_update.roads.no_closures_message or my.daily_update.roads.error_message %}
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://www.nps.gov/glac/planyourvisit/directions.htm"
+                                                                            style="color:#6c7e44; text-decoration:none;">Road
+                                                                            Closures</a>
+                                                                    </p>
+                                                                    {% if my.daily_update.roads.closures %}
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for c in my.daily_update.roads.closures %}<li>{{ c }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.roads.no_closures_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.roads.no_closures_message }}</p>
+                                                                    {% elif my.daily_update.roads.error_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.roads.error_message }}</p>
+                                                                    {% endif %}
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.hikerbiker.closures %}
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://www.nps.gov/glac/planyourvisit/directions.htm"
+                                                                            style="color:#6c7e44; text-decoration:none;">Going-to-the-Sun
+                                                                            Road Hiker/Biker Closures</a>
+                                                                    </p>
+                                                                    <ul style="margin:0 0 6px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for c in my.daily_update.hikerbiker.closures %}<li>{{ c }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% if my.daily_update.hikerbiker.explanatory_note %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.hikerbiker.explanatory_note }}</p>
+                                                                    {% endif %}
+                                                                    {% endif %}
+                                                                    {% if my.daily_update.campgrounds.statuses or my.daily_update.campgrounds.error_message %}
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://www.nps.gov/glac/planyourvisit/road-trail-campground-status.htm"
+                                                                            style="color:#6c7e44; text-decoration:none;">Campground
+                                                                            Status</a>
+                                                                    </p>
+                                                                    {% if my.daily_update.campgrounds.statuses %}
+                                                                    <ul style="margin:0 0 12px; padding-left:20px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for s in my.daily_update.campgrounds.statuses %}<li>{{ s }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.campgrounds.error_message %}
+                                                                    <p style="margin:0 0 12px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.campgrounds.error_message }}</p>
+                                                                    {% endif %}
+                                                                    {% endif %}
+                                                                    <div style="padding: 8px; border-radius: 5px; margin-bottom: 35px;">
+                                                                        <p style="margin:0; font-size:12px; font-style: italic;">
+                                                                            Trail, road, and campground condition information provided by Glacier National
+                                                                            Park's official website. Please note that
+                                                                            conditions can change throughout the day.
+                                                                            Check the <a style="color:#333333; font-style: italic;" href="https://www.nps.gov/glac/planyourvisit/index.htm">
+                                                                            park's website</a>
+                                                                            for the latest information and other details to plan your trip.
+                                                                        </p>
+                                                                    </div>
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                            </tr>
+                                                            <tr valign="top">
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td>
+                                                                    <a style="display:block; margin:0 0 14px;"
+                                                                        href="https://glacier.org">
+                                                                        <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/notices.jpg"
+                                                                            width="255" height="150" alt="Daily Notices"
+                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="https://glacier.org"
+                                                                            style="color:#6c7e44; text-decoration:none;">Notices</a>
+                                                                    </p>
+                                                                    {% if my.daily_update.notices.notices %}
+                                                                    <ul style="margin:0 0 35px; padding-left:10px; padding-top:0px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {% for n in my.daily_update.notices.notices %}<li>{{ n }}</li>{% endfor %}
+                                                                    </ul>
+                                                                    {% elif my.daily_update.notices.fallback_message %}
+                                                                    <p style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.notices.fallback_message }}</p>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td>
+                                                                    <a style="display:block; margin:0 0 14px;"
+                                                                        href="{{ my.daily_update.peak_image }}">
+                                                                        <img src="{{ my.daily_update.peak_image }}"
+                                                                            width="255" height="150" alt="Peak"
+                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="{{ my.daily_update.peak_image }}"
+                                                                            style="color:#6c7e44; text-decoration:none;">Glacier
+                                                                            Peak of the Day</a>
+                                                                    </p>
+                                                                    <p
+                                                                        style="margin:0 0 35px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.peak }}
+                                                                        <br>(<a
+                                                                            href="{{ my.daily_update.peak_image }}"
+                                                                            style="color:#333333; font-style: italic;">Full
+                                                                            size peak image</a>,
+                                                                        <a href="{{ my.daily_update.peak_map }}"
+                                                                            style="color:#333333; font-style: italic;">
+                                                                            peak location on map</a>)
+                                                                    </p>
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                            </tr>
+                                                            <tr valign="top">
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td>
+                                                                    <a style="display:block; margin:0 0 14px;"
+                                                                        href="{{ my.daily_update.product_link }}">
+                                                                        <img src="{{ my.daily_update.product_image }}"
+                                                                            alt="Today's product of the day" width="255"
+                                                                            height="150"
+                                                                            style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                        <a href="{{ my.daily_update.product_link }}"
+                                                                            style="color:#6c7e44; text-decoration:none;">Product
+                                                                            of the Day:<br>{{
+                                                                            my.daily_update.product_title }}</a>
+                                                                    </p>
+                                                                    <p
+                                                                        style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
+                                                                        {{ my.daily_update.product_desc }} <a
+                                                                            href="{{ my.daily_update.product_link }}"
+                                                                            style="color:#333333; font-style: italic;">
+                                                                            (Product Link)</a>.</p>
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td>
+                                                                    {% if my.daily_update.image_otd != "Flickr API Error" %}
+                                                                        <a style="display:block; margin:0 0 14px;"
+                                                                            href="{{ my.daily_update.image_otd_link }}"><img
+                                                                                src="{{ my.daily_update.image_otd }}"
+                                                                                alt="Today's picture of the day" width="255"
+                                                                                height="150"
+                                                                                style="display:block; margin:0; border:0; background:#eeeeee;"></a>
+                                                                        <p
+                                                                            style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:0 0 5px;">
+                                                                            <a href="{{ my.daily_update.image_otd_link }}"
+                                                                                style="color:#6c7e44; text-decoration:none;">Glacier
+                                                                                Image of the Day</a>
+                                                                        </p>
+                                                                        <p
+                                                                            style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333;">
+                                                                            {% if my.daily_update.image_otd_title != "" %}{{
+                                                                            my.daily_update.image_otd_title
+                                                                            }}<br>{% endif %}Image courtesy of
+                                                                            <a href="{{ my.daily_update.image_otd_link }}"
+                                                                                style="color:#333333;">Glacier National
+                                                                                Park.</a>
+                                                                        </p>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                            </tr>
+                                                            {% if my.daily_update.sunrise_vid != "" and
+                                                            my.daily_update.sunrise_still != "" %}
+                                                            <tr valign="top">
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td colspan="3">
+                                                                    <p
+                                                                        style="font-size:14px; line-height:22px; font-weight:bold; color:#333333; margin:20px 0 5px; text-align: center">
+                                                                        <a href="{{ my.daily_update.sunrise_vid }}"
+                                                                            style="color:#6c7e44; text-decoration:none;">{{ my.daily_update.sunrise_str }} Sunrise</a>
+                                                                    </p>
+                                                                    <table style="margin: 0 auto; width: 410px;">
+                                                                        <td>
+                                                                            <a
+                                                                                href="{{ my.daily_update.sunrise_vid }}"><img
+                                                                                    src="{{ my.daily_update.sunrise_still }}"
+                                                                                    width="410" height="230"
+                                                                                    alt="{{ my.daily_update.sunrise_str }} sunrise"></a>
+                                                                        </td>
+                                                                    </table>
+                                                                    <p
+                                                                        style="margin:0 0 5px; font-size:12px; line-height:18px; color:#333333; text-align: center">
+                                                                        Click to see a timelapse video of the sunrise.
+                                                                    </p>
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                            </tr>
+                                                            {% endif %}
+                                                        </tbody>
+                                                    </table>
+                                                    <!-- /end articles -->
+                                                    <p
+                                                        style="margin:0; border-top:2px solid #e5e5e5; font-size:5px; line-height:5px; margin:0 30px 29px;">
+                                                        &nbsp;</p>
+                                                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tbody>
+                                                            <tr valign="top">
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td>
+                                                                    <p
+                                                                        style="margin:0 0 4px; font-weight:bold; color:#333333; font-size:14px; line-height:22px;">
+                                                                        Glacier National Park Conservancy</p>
+                                                                    <!-- end json-->
+                                                                    {% if subscriber.email != 'for-web' %}
+                                                                    <p
+                                                                        style="margin:0; color:#333333; font-size:11px; line-height:18px;">
+                                                                        {{ inline_postal_address }}<br>
+                                                                        Website: <a href="http://glacier.org/"
+                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">glacier.org</a>&nbsp;|&nbsp;<a
+                                                                            href="https://glacier.org/glacier-daily-updates-signup/#iFrame1"
+                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">View
+                                                                            in browser</a>&nbsp;|&nbsp;<a
+                                                                            href="https://glacier.org/daily/print"
+                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">Printer
+                                                                            Friendly</a><br>
+                                                                        <a href="http://api.glacier.org/dripactions?action=stopdaily&email={{ subscriber.email }}"
+                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">Stop
+                                                                            Glacier Daily Updates&nbsp;</a>
+                                                                        |
+                                                                        <a href="http://api.glacier.org/dripactions?action=untilspring&email={{ subscriber.email }}"
+                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">Opt
+                                                                            Out Until Next Spring&nbsp;</a>
+                                                                        <br><a href="{{ unsubscribe_url }}"
+                                                                            style="color:#6d7e44; text-decoration:none; font-weight:bold;">Unsubscribe
+                                                                            from all GNPC mailings</a> | Generated at:
+                                                                        {{ my.daily_update.time_generated }}
+                                                                    </p>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                                <td width="120">
+                                                                </td>
+                                                                <td width="30">
+                                                                    <p
+                                                                        style="margin:0; font-size:1px; line-height:1px;">
+                                                                        &nbsp;</p>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <!-- end content -->
+                                                </td>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049621/embeddable_a18c0ddb-4180-4078-b506-70f299e40669.png) no-repeat 0 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                            </tr>
+
+
+                                            <tr>
+                                                <td width="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049617/embeddable_9424b134-1f8b-4f64-8325-f5e8b2b49253.png) repeat-y 100% 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td width="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049620/embeddable_f9cc0e47-3d67-40bc-9b0d-06282ffffdca.png) repeat-y 0 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049612/embeddable_8a92b790-5cd8-4da0-950b-b630a284d395.png) repeat-y 100% 100%;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049619/embeddable_9ef6b8a9-1384-4246-8e80-6c2116f1bfd8.png) repeat-y 0 100%;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049614/embeddable_a3e02479-4b34-474c-b378-85f1f33af527.png) no-repeat 100% 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049613/embeddable_e2587887-b545-4d12-a7fd-c7c98e0d3d53.png) no-repeat 100% 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049610/embeddable_d33080e8-9494-408c-aa54-e8873787c2fb.png) repeat-x 0 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049611/embeddable_3b7f8851-b1d1-4912-b3d2-5780678f2181.png) no-repeat 0 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                                <td width="4" height="4"
+                                                    style="background:url(https://www.dripuploads.com/uploads/image_upload/image/3049615/embeddable_8743c3b2-ecd3-46a1-b46a-a41326687f6b.png) no-repeat 0 0;">
+                                                    <p style="margin:0; font-size:1px; line-height:1px;">&nbsp;</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <!-- end wrapper-->
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- end main block -->
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>
