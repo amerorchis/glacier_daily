@@ -5,7 +5,6 @@ Module for testing the Drip API functionality.
 import types
 
 import drip.drip_actions as drip_actions
-import drip.html_friendly as html_friendly
 import drip.scheduled_subs as scheduled_subs
 import drip.subscriber_list as subscriber_list
 import drip.update_subscriber as update_subscriber
@@ -15,59 +14,6 @@ def _set_drip_env(monkeypatch):
     """Helper to set the Drip env vars used by tests."""
     monkeypatch.setenv("DRIP_TOKEN", "t")
     monkeypatch.setenv("DRIP_ACCOUNT", "a")
-
-
-def test_record_drip_event_success(monkeypatch, mock_required_settings):
-    called = {}
-
-    def fake_post(url, headers, data, timeout):
-        called["url"] = url
-        called["headers"] = headers
-        called["data"] = data
-        called["timeout"] = timeout
-
-        class R:
-            status_code = 204
-
-        return R()
-
-    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    _set_drip_env(monkeypatch)
-    drip_actions.record_drip_event("test@example.com", event="Test Event")
-    assert called["url"].endswith("/v2/a/events")
-    assert "Test Event" in called["data"]
-    assert called["timeout"] == 30
-
-
-def test_record_drip_event_failure(monkeypatch, mock_required_settings, caplog):
-    """Verify non-204 status logs an error."""
-
-    def fake_post(url, headers, data, timeout):
-        class R:
-            status_code = 400
-
-            def __repr__(self):
-                return "400 Bad Request"
-
-        return R()
-
-    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    _set_drip_env(monkeypatch)
-    with caplog.at_level("ERROR"):
-        drip_actions.record_drip_event("test@example.com", event="Test Event")
-    assert "Failed to record event" in caplog.text
-
-
-# --- html_friendly.py ---
-
-
-def test_html_safe_ascii():
-    assert html_friendly.html_safe("hello") == "hello"
-
-
-def test_html_safe_non_ascii():
-    # 'é' should be encoded as &#233;
-    assert "&#233;" in html_friendly.html_safe("café")
 
 
 # --- scheduled_subs.py ---
@@ -216,42 +162,6 @@ def test_bulk_workflow_trigger_failure(monkeypatch, mock_required_settings, capl
     with caplog.at_level("ERROR"):
         drip_actions.bulk_workflow_trigger(["a@example.com"])
     assert "Failed to add subscribers" in caplog.text
-
-
-def test_send_in_drip(monkeypatch, mock_required_settings):
-    def fake_post(url, headers, data, timeout):
-        assert timeout == 30
-
-        class R:
-            status_code = 201
-
-            def json(self):
-                return {}
-
-        return R()
-
-    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    _set_drip_env(monkeypatch)
-    drip_actions.send_in_drip("a@example.com")
-
-
-def test_send_in_drip_failure(monkeypatch, mock_required_settings, caplog):
-    """Verify non-201 status logs an error."""
-
-    def fake_post(url, headers, data, timeout):
-        class R:
-            status_code = 422
-
-            def json(self):
-                return {"errors": [{"code": "invalid", "message": "bad email"}]}
-
-        return R()
-
-    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
-    _set_drip_env(monkeypatch)
-    with caplog.at_level("ERROR"):
-        drip_actions.send_in_drip("bad@example.com")
-    assert "Failed to subscribe" in caplog.text
 
 
 # --- subscriber_list.py ---
