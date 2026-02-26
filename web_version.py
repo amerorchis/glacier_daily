@@ -3,9 +3,33 @@ This module generates a daily update for Glacier National Park and saves it as a
 The multiple class encapsulations are necessary for the template to work here and in Drip.
 """
 
+import re
+
 from jinja2 import Environment, FileSystemLoader
 
 from shared.datetime_utils import format_short_date, format_time_12hr, now_mountain
+
+
+def _liquid_to_jinja2(source: str) -> str:
+    """Convert Liquid template syntax to Jinja2 equivalents.
+
+    Handles the subset of Liquid used in Drip email templates so the same
+    template file can be rendered by both Drip (Liquid) and the web version
+    (Jinja2).
+    """
+    source = re.sub(r"\{%[-\s]*unless\s+(.+?)\s*[-]?%\}", r"{% if not \1 %}", source)
+    source = re.sub(r"\{%[-\s]*endunless\s*[-]?%\}", "{% endif %}", source)
+    source = re.sub(r"\{%[-\s]*elsif\s+", "{% elif ", source)
+    source = source.replace("!= nil", "is not none")
+    return source
+
+
+class LiquidCompatLoader(FileSystemLoader):
+    """FileSystemLoader that converts Liquid syntax to Jinja2 at load time."""
+
+    def get_source(self, environment, template):
+        source, filename, uptodate = super().get_source(environment, template)
+        return _liquid_to_jinja2(source), filename, uptodate
 
 
 class DailyUpdate:
@@ -56,7 +80,7 @@ def web_version(
     :param template_path: The path to the HTML template.
     :return: The name of the file where the HTML content is saved.
     """
-    env = Environment(loader=FileSystemLoader("email_html/"))  # noqa: S701
+    env = Environment(loader=LiquidCompatLoader("email_html/"))  # noqa: S701
     template = env.get_template(template_path)
 
     # Wrap 'my' in the double object so it uses the template the same way as Drip.
