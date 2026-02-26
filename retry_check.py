@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 from shared.datetime_utils import now_mountain
+from shared.lock import _HAS_FCNTL
 from shared.logging_config import get_logger, setup_logging
 from shared.run_context import start_run
 from shared.settings import get_settings
@@ -55,6 +56,8 @@ def has_successful_email_today() -> bool:
 
 def is_locked() -> bool:
     """Check if the lock file exists and its PID is still alive."""
+    if not _HAS_FCNTL:
+        return False
     if not LOCK_FILE.exists():
         return False
     try:
