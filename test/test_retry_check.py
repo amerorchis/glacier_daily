@@ -1,9 +1,14 @@
 import json
 import os
+import sys
 
 import pytest
 
 import retry_check
+
+_unix_only = pytest.mark.skipif(
+    sys.platform == "win32", reason="Lock checks require Unix"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -114,6 +119,7 @@ def test_no_lock_file_returns_false():
     assert retry_check.is_locked() is False
 
 
+@_unix_only
 def test_lock_with_alive_pid_returns_true(tmp_path, monkeypatch):
     lock_file = tmp_path / "test.lock"
     monkeypatch.setattr(retry_check, "LOCK_FILE", lock_file)
@@ -121,6 +127,7 @@ def test_lock_with_alive_pid_returns_true(tmp_path, monkeypatch):
     assert retry_check.is_locked() is True
 
 
+@_unix_only
 def test_lock_with_dead_pid_returns_false(tmp_path, monkeypatch):
     lock_file = tmp_path / "test.lock"
     monkeypatch.setattr(retry_check, "LOCK_FILE", lock_file)
@@ -128,6 +135,7 @@ def test_lock_with_dead_pid_returns_false(tmp_path, monkeypatch):
     assert retry_check.is_locked() is False
 
 
+@_unix_only
 def test_lock_with_invalid_content_returns_false(tmp_path, monkeypatch):
     lock_file = tmp_path / "test.lock"
     monkeypatch.setattr(retry_check, "LOCK_FILE", lock_file)
@@ -155,6 +163,7 @@ def test_retry_no_action_when_successful(tmp_path, monkeypatch):
     assert retry_check.retry() == 0
 
 
+@_unix_only
 def test_retry_exits_3_when_locked(tmp_path, monkeypatch):
     lock_file = tmp_path / "test.lock"
     monkeypatch.setattr(retry_check, "LOCK_FILE", lock_file)
