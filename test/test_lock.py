@@ -1,8 +1,13 @@
 import os
+import sys
 
 import pytest
 
 from shared.lock import acquire_lock, release_lock
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="fcntl-based locking is Unix-only"
+)
 
 
 @pytest.fixture(autouse=True)
