@@ -55,15 +55,10 @@ jobs:
             echo "==> Updating dependencies with uv"
             /home/pi/.local/bin/uv sync
 
-            # Health check - run generate_and_upload.py to verify deployment
-            echo "==> Performing health check by running generate_and_upload.py"
-            if /home/pi/.local/bin/uv run python generate_and_upload.py; then
-              echo "Deployment successful"
-              echo "generate_and_upload.py completed successfully"
-              echo "Deployed commit: $NEW_COMMIT"
-              exit 0
-            else
-              echo "Health check failed - generate_and_upload.py failed"
+            # Health check: validate data generation + FTP connectivity without writing
+            echo "==> Running health check (no data written to server)"
+            if ! /home/pi/.local/bin/uv run python generate_and_upload.py --check; then
+              echo "Health check failed"
               echo "==> Rolling back to commit $CURRENT_COMMIT"
               git reset --hard $CURRENT_COMMIT
               sops decrypt --input-type dotenv --output-type dotenv email.enc.env > email.env
@@ -72,6 +67,12 @@ jobs:
               echo "Rolled back to previous version"
               exit 1
             fi
+
+            # Health check passed — now do the real production run with fresh data
+            echo "==> Health check passed, running generate_and_upload.py --force"
+            /home/pi/.local/bin/uv run python generate_and_upload.py --force
+            echo "Deployment successful"
+            echo "Deployed commit: $NEW_COMMIT"
 
       - name: Deployment Status
         if: always()
