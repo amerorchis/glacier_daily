@@ -133,7 +133,7 @@ def weather_image(
 
     # Save and resize
     try:
-        image = image.resize((405, 374))
+        image = image.resize((810, 748), Image.LANCZOS)
         image.save("email_images/today/today_park_map.png")
     except OSError as e:
         raise OSError(f"Failed to save image: {e}") from e

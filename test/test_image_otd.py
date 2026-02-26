@@ -122,9 +122,8 @@ def sample_image(tmp_path):
 
 
 def test_process_image_success(sample_image, tmp_path):
-    dimensions = (255, 150, 4)
     with patch("image_otd.image_otd.Path.mkdir"):  # Mock directory creation
-        result = process_image(sample_image, dimensions)
+        result = process_image(sample_image)
 
         assert isinstance(result, Path)
         processed_img = Image.open(sample_image)  # Verify original image still exists
@@ -133,30 +132,21 @@ def test_process_image_success(sample_image, tmp_path):
 
 def test_process_image_file_not_found():
     invalid_path = Path("nonexistent.jpg")
-    dimensions = (255, 150, 4)
 
     with pytest.raises(
         ImageProcessingError,
         match="Image processing failed: .*No such file or directory",
     ):
-        process_image(invalid_path, dimensions)
+        process_image(invalid_path)
 
 
 def test_process_image_invalid_format(tmp_path):
     # Create an invalid image file
     invalid_image = tmp_path / "invalid.jpg"
     invalid_image.write_text("This is not an image")
-    dimensions = (255, 150, 4)
 
     with pytest.raises(ImageProcessingError, match="Invalid or corrupt image file"):
-        process_image(invalid_image, dimensions)
-
-
-def test_process_image_processing_error(sample_image):
-    dimensions = (-1, -1, -1)  # Invalid dimensions
-
-    with pytest.raises(ImageProcessingError, match="Image processing failed"):
-        process_image(sample_image, dimensions)
+        process_image(invalid_image)
 
 
 def test_upload_pic_otd_success():

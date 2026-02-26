@@ -10,6 +10,7 @@ from PIL import Image, UnidentifiedImageError
 from image_otd.flickr import FlickrAPIError, get_flickr
 from shared.datetime_utils import now_mountain
 from shared.ftp import upload_file
+from shared.image_utils import process_image_for_email
 
 
 class ImageProcessingError(Exception):
@@ -45,13 +46,15 @@ def upload_pic_otd() -> str:
     return address
 
 
-def process_image(image_path: Path, dimensions: tuple[int, int, int]) -> Path:
+def process_image(image_path: Path) -> Path:
     """
-    Process and resize an image while maintaining aspect ratio.
+    Process and resize an image for the email template.
+
+    Resizes to fill the email content width (2x for Retina), with a 1:1 height cap.
+    Images that don't fill the frame get a white matte with rounded corners.
 
     Args:
         image_path: Path to the input image
-        dimensions: tuple of (width, height, scale_multiplier)
 
     Returns:
         Path: Path to the processed image
@@ -60,31 +63,12 @@ def process_image(image_path: Path, dimensions: tuple[int, int, int]) -> Path:
         ImageProcessingError: If image processing fails
     """
     try:
-        desired_width, desired_height, scale_multiplier = dimensions
-        desired_width *= scale_multiplier
-        desired_height *= scale_multiplier
-
         image = Image.open(image_path)
-        width, height = image.size
-
-        aspect_ratio = width / height
-        if width / desired_width > height / desired_height:
-            new_width = desired_width
-            new_height = int(new_width / aspect_ratio)
-        else:
-            new_height = desired_height
-            new_width = int(new_height * aspect_ratio)
-
-        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
-        canvas = Image.new("RGB", (desired_width, desired_height), (255, 255, 255))
-
-        x = (canvas.width - resized_image.width) // 2
-        y = (canvas.height - resized_image.height) // 2
-        canvas.paste(resized_image, (x, y))
+        result = process_image_for_email(image)
 
         output_path = Path("email_images/today/resized_image_otd.jpg")
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        canvas.save(output_path)
+        result.save(output_path)
 
         return output_path
 
@@ -106,8 +90,7 @@ def resize_full(skip_upload: bool = False) -> tuple[str | None, str, str]:
         ImageProcessingError: If image processing fails
     """
     image_data = get_flickr()
-    dimensions = (255, 150, 4)  # width, height, scale_multiplier
-    process_image(image_data.path, dimensions)
+    process_image(image_data.path)
 
     if skip_upload:
         return None, image_data.title, image_data.link

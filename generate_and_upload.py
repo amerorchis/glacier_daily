@@ -442,6 +442,7 @@ def serve_api(force: bool = False):
 
 if __name__ == "__main__":  # pragma: no cover
     import argparse as _argparse
+    import sys as _sys
 
     from shared.logging_config import setup_logging
     from shared.run_context import start_run
@@ -458,7 +459,24 @@ if __name__ == "__main__":  # pragma: no cover
         action="store_true",
         help="Clear cached data and re-fetch everything fresh",
     )
+    _parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Health check only: validate data generation and FTP connectivity without writing",
+    )
     _args = _parser.parse_args()
+
+    if _args.check:
+        # Health check: validate data generation (dev mode) + FTP connectivity
+        logger.info("Running health check (no data will be written)")
+        gen_data()
+        logger.info("Data generation OK, testing FTP connectivity")
+        from shared.ftp import FTPSession
+
+        with FTPSession():
+            pass  # Login + quit validates credentials and connectivity
+        logger.info("Health check passed")
+        _sys.exit(0)
 
     if _args.force:
         clear_cache()

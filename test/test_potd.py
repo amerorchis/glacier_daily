@@ -129,25 +129,21 @@ class TestResizeImage:
         """Test successful image resizing"""
         with (
             patch("requests.get") as mock_get,
-            patch("PIL.Image.open") as mock_open,
-            patch("PIL.Image.new") as mock_new,
+            patch("product_otd.product.process_image_for_email") as mock_process,
         ):
-            # Mock request response
             mock_response = Mock()
             mock_response.content = mock_image
             mock_get.return_value = mock_response
 
-            # Mock PIL Image operations
-            mock_img = MagicMock()
-            mock_img.size = (300, 200)
-            mock_open.return_value = mock_img
-            mock_new.return_value = mock_img
+            mock_result = MagicMock()
+            mock_process.return_value = mock_result
 
             resize_image("https://example.com/test.jpg")
 
-            # Verify image was processed
-            mock_img.resize.assert_called_once()
-            mock_img.save.assert_called_once()
+            mock_process.assert_called_once()
+            mock_result.save.assert_called_once_with(
+                "email_images/today/product_otd.jpg"
+            )
 
     def test_resize_image_request_error(self):
         """Test handling of request error"""
