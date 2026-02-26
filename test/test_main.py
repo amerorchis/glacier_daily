@@ -5,6 +5,8 @@ def _patch_main(monkeypatch, calls):
     """Apply standard monkeypatches for main module tests."""
     monkeypatch.setattr(main, "setup_logging", lambda: None)
     monkeypatch.setattr(main, "validate_config", lambda: None)
+    monkeypatch.setattr(main, "acquire_lock", lambda: 999)
+    monkeypatch.setattr(main, "release_lock", lambda fd: None)
     monkeypatch.setattr(
         main, "sleep_to_sunrise", lambda: calls.append("sleep_to_sunrise")
     )
@@ -92,3 +94,12 @@ def test_main_skips_canary_when_no_emails_sent(monkeypatch):
 
     main.main(test=True)
     assert "canary_should_not_run" not in calls
+
+
+def test_main_exits_when_locked(monkeypatch):
+    calls = []
+    _patch_main(monkeypatch, calls)
+    monkeypatch.setattr(main, "acquire_lock", lambda: None)
+
+    main.main(test=True)
+    assert "sleep_to_sunrise" not in calls

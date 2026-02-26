@@ -201,8 +201,14 @@
                 page-break-after: avoid;
             }
 
-            .section {
+            .section-title, .subsection-title {
+                page-break-after: avoid;
+            }
+
+            .weather-img {
                 page-break-inside: avoid;
+                page-break-before: avoid;
+                page-break-after: avoid;
             }
         }
     </style>
@@ -347,30 +353,29 @@
         {% endif %}
     </div>
 
-    <div class="section two-column">
-        <div class="column">
-            <p class="category-label category-featured">FEATURED</p>
-            <p class="section-title">
-                <a href="{{ my.daily_update.peak_image }}">Glacier Peak of the Day</a>
-            </p>
-            <img src="{{ my.daily_update.peak_image }}" alt="Glacier Peak of the Day">
-            <p>{{ my.daily_update.peak }}</p>
-            <p class="meta-link">
-                <a href="{{ my.daily_update.peak_image }}">Full size image</a> &middot;
-                <a href="{{ my.daily_update.peak_map }}">View on map</a>
-            </p>
-        </div>
-        <div class="column">
-            <p class="category-label category-shop">FROM THE SHOP</p>
-            <p class="section-title">
-                <a href="{{ my.daily_update.product_link }}">{{ my.daily_update.product_title }}</a>
-            </p>
-            <img src="{{ my.daily_update.product_image }}" alt="Today's product of the day">
-            <p>{{ my.daily_update.product_desc }}</p>
-            <p class="meta-link">
-                <a href="{{ my.daily_update.product_link }}" style="color: #a85900; font-weight: 600;">Shop now &rarr;</a>
-            </p>
-        </div>
+    <div class="section">
+        <p class="category-label category-featured">FEATURED</p>
+        <p class="section-title">
+            <a href="{{ my.daily_update.peak_image }}">Glacier Peak of the Day</a>
+        </p>
+        <img src="{{ my.daily_update.peak_image }}" alt="Glacier Peak of the Day" style="max-width: 65%; display: block; margin: 0 auto 15px;">
+        <p>{{ my.daily_update.peak }}</p>
+        <p class="meta-link">
+            <a href="{{ my.daily_update.peak_image }}">Full size image</a> &middot;
+            <a href="{{ my.daily_update.peak_map }}">View on map</a>
+        </p>
+    </div>
+
+    <div class="section">
+        <p class="category-label category-shop">FROM THE SHOP</p>
+        <p class="section-title">
+            <a href="{{ my.daily_update.product_link }}">{{ my.daily_update.product_title }}</a>
+        </p>
+        <img src="{{ my.daily_update.product_image }}" alt="Today's product of the day" style="max-width: 65%; display: block; margin: 0 auto 15px;">
+        <p>{{ my.daily_update.product_desc }}</p>
+        <p class="meta-link">
+            <a href="{{ my.daily_update.product_link }}" style="color: #a85900; font-weight: 600;">Shop now &rarr;</a>
+        </p>
     </div>
 
     {% if my.daily_update.image_otd != "Flickr API Error" %}

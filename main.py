@@ -12,6 +12,7 @@ from drip.canary_check import CanaryResult, check_canary_delivery
 from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
+from shared.lock import acquire_lock, release_lock
 from shared.logging_config import get_logger, setup_logging
 from shared.run_context import start_run
 from shared.run_report import build_report, upload_status_report
@@ -37,49 +38,57 @@ def main(
     logger.info("Starting run %s (type=%s)", run.run_id, run.run_type)
     validate_config()
 
-    sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
+    lock_fd = acquire_lock()
+    if lock_fd is None:
+        logger.error("Another instance is already running. Exiting.")
+        return
 
-    # Retrieve subscribers from Drip.
-    subscribers: list[str] = get_subs(tag)
-    logger.info("Subscribers found: %d", len(subscribers))
-
-    batch_result = None
-    canary_result: CanaryResult | None = None
     try:
-        # Generate data and upload to website.
-        serve_api(force=force)
+        sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
 
-        # See if this fixes the issue with timelapse not showing.
-        sleep(10 if not test else 0)
+        # Retrieve subscribers from Drip.
+        subscribers: list[str] = get_subs(tag)
+        logger.info("Subscribers found: %d", len(subscribers))
 
-        # Send the email to each subscriber using Drip API.
-        batch_result = bulk_workflow_trigger(subscribers)
+        batch_result = None
+        canary_result: CanaryResult | None = None
+        try:
+            # Generate data and upload to website.
+            serve_api(force=force)
 
-        # Canary verification: check actual delivery if Drip accepted
-        if batch_result and batch_result.sent > 0:
-            canary_result = check_canary_delivery()
+            # See if this fixes the issue with timelapse not showing.
+            sleep(10 if not test else 0)
+
+            # Send the email to each subscriber using Drip API.
+            batch_result = bulk_workflow_trigger(subscribers)
+
+            # Canary verification: check actual delivery if Drip accepted
+            if batch_result and batch_result.sent > 0:
+                canary_result = check_canary_delivery()
+        finally:
+            report = build_report(environment=settings.ENVIRONMENT)
+            report.subscriber_count = len(subscribers)
+            if batch_result:
+                report.email_delivery = {
+                    "sent": batch_result.sent,
+                    "failed": batch_result.failed,
+                }
+            if canary_result is not None:
+                report.email_delivery["canary_verified"] = canary_result.verified
+                report.email_delivery["canary_message"] = canary_result.message
+                report.email_delivery["canary_elapsed_seconds"] = (
+                    canary_result.elapsed_seconds
+                )
+            report.finalize_status()
+            logger.info("Run complete: %s", report.overall_status)
+            logger.info("Run report: %s", report.to_json())
+            if settings.ENVIRONMENT == "production":
+                try:
+                    upload_status_report(report)
+                except Exception:
+                    logger.error("Failed to upload status report", exc_info=True)
     finally:
-        report = build_report(environment=settings.ENVIRONMENT)
-        report.subscriber_count = len(subscribers)
-        if batch_result:
-            report.email_delivery = {
-                "sent": batch_result.sent,
-                "failed": batch_result.failed,
-            }
-        if canary_result is not None:
-            report.email_delivery["canary_verified"] = canary_result.verified
-            report.email_delivery["canary_message"] = canary_result.message
-            report.email_delivery["canary_elapsed_seconds"] = (
-                canary_result.elapsed_seconds
-            )
-        report.finalize_status()
-        logger.info("Run complete: %s", report.overall_status)
-        logger.info("Run report: %s", report.to_json())
-        if settings.ENVIRONMENT == "production":
-            try:
-                upload_status_report(report)
-            except Exception:
-                logger.error("Failed to upload status report", exc_info=True)
+        release_lock(lock_fd)
 
 
 if __name__ == "__main__":  # pragma: no cover
