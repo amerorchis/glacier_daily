@@ -3,10 +3,13 @@
 Uses a PID-based lock file with OS-level advisory locking (fcntl.flock)
 for safe cleanup even on crashes. The lock file contains the PID of the
 owning process for diagnostic purposes.
+
+On platforms without fcntl (Windows), locking is a no-op — the production
+target is a Raspberry Pi (Linux).
 """
 
-import fcntl
 import os
+import sys
 from pathlib import Path
 
 from shared.logging_config import get_logger
@@ -15,13 +18,21 @@ logger = get_logger(__name__)
 
 LOCK_FILE = Path(".glacier_daily.lock")
 
+_HAS_FCNTL = sys.platform != "win32"
+if _HAS_FCNTL:
+    import fcntl
+
 
 def acquire_lock() -> int | None:
     """Acquire an exclusive lock, writing our PID to the lock file.
 
     Returns the file descriptor on success, or None if the lock is
-    already held by another process.
+    already held by another process. On Windows, always succeeds (no-op).
     """
+    if not _HAS_FCNTL:
+        logger.info("Lock not supported on this platform, skipping")
+        return -1
+
     try:
         fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_WRONLY | os.O_TRUNC)
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -40,7 +51,7 @@ def acquire_lock() -> int | None:
 
 def release_lock(fd: int | None) -> None:
     """Release the lock and remove the lock file."""
-    if fd is None:
+    if fd is None or not _HAS_FCNTL:
         return
     try:
         fcntl.flock(fd, fcntl.LOCK_UN)
