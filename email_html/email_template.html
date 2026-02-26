@@ -69,7 +69,7 @@
                                 </td>
                             </tr>
 
-                            {% if my.daily_update.events.events.size > 0 or my.daily_update.events.seasonal_message %}
+                            {% if my.daily_update.events.events.size > 0 or my.daily_update.events.seasonal_message != blank %}
                                 {% unless my.daily_update.events.error_message %}
                             <!-- Park Activities -->
                             <tr>
@@ -196,7 +196,7 @@
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.trails.error_message }}</p>
                                     {% endif %}
 
-                                    {% if my.daily_update.roads.closures.size > 0 or my.daily_update.roads.no_closures_message or my.daily_update.roads.error_message %}
+                                    {% if my.daily_update.roads.closures.size > 0 or my.daily_update.roads.no_closures_message != blank or my.daily_update.roads.error_message != blank %}
                                     <!-- Road Closures -->
                                     <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                         Road Closures
@@ -225,7 +225,7 @@
                                     {% endif %}
                                     {% endif %}
 
-                                    {% if my.daily_update.campgrounds.statuses.size > 0 or my.daily_update.campgrounds.error_message %}
+                                    {% if my.daily_update.campgrounds.statuses.size > 0 or my.daily_update.campgrounds.error_message != blank %}
                                     <!-- Campground Status -->
                                     <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                         Campground Status

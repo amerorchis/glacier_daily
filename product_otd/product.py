@@ -114,7 +114,7 @@ def get_product(skip_upload: bool = False):
             f"{item['id']}/images"
         )
         r = requests.get(url=get_image_url, headers=header, timeout=12)
-        image_url = json.loads(r.text)["data"][0]["url_standard"]
+        image_url = json.loads(r.text)["data"][0]["url_zoom"]
 
         return {
             "image_url": image_url,

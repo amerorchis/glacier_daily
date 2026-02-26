@@ -35,6 +35,28 @@ class FlickrImage:
     link: str
 
 
+_MIN_WIDTH = 1040  # 2x of 520px email column
+
+
+def _best_image_url(flickr: FlickrAPI, photo_id: str) -> str:
+    """Pick the smallest Flickr size that is at least ``_MIN_WIDTH`` wide.
+
+    Falls back to the largest available size if nothing meets the threshold.
+    """
+    sizes = flickr.photos.getSizes(photo_id=photo_id)["sizes"]["size"]
+
+    # Sort by width ascending
+    sizes.sort(key=lambda s: int(s["width"]))
+
+    # First size >= _MIN_WIDTH (smallest sufficient)
+    for size in sizes:
+        if int(size["width"]) >= _MIN_WIDTH:
+            return size["source"]
+
+    # Nothing large enough — use the biggest available
+    return sizes[-1]["source"]
+
+
 def get_flickr() -> FlickrImage:
     """
     Retrieve a random image from the Glacier National Park's Flickr account.
@@ -68,12 +90,10 @@ def get_flickr() -> FlickrImage:
             )
 
         selected = photos["photos"]["photo"][0]
-        server = selected["server"]
         photo_id = selected["id"]
-        secret = selected["secret"]
         title = selected["title"]
 
-        pic_url = f"https://live.staticflickr.com/{server}/{photo_id}_{secret}_c.jpg"
+        pic_url = _best_image_url(flickr, photo_id)
         save_loc = Path("email_images/today/raw_image_otd.jpg")
         save_loc.parent.mkdir(parents=True, exist_ok=True)
 
