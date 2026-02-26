@@ -69,7 +69,7 @@
                                 </td>
                             </tr>
 
-                            {% if my.daily_update.events.events or my.daily_update.events.seasonal_message %}
+                            {% if my.daily_update.events.events.size > 0 or my.daily_update.events.seasonal_message %}
                                 {% unless my.daily_update.events.error_message %}
                             <!-- Park Activities -->
                             <tr>
@@ -83,7 +83,7 @@
                                     <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/activities.jpg"
                                         width="520" alt="Events"
                                         style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
-                                    {% if my.daily_update.events.events %}
+                                    {% if my.daily_update.events.events.size > 0 %}
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for event in my.daily_update.events.events %}
                                         <li style="font-size: 14px; line-height: 1.7; color: #444444;">{{ event.start_time }} - {{ event.end_time }}: {{ event.name }}, {{ event.location }} <a href="{{ event.link }}" style="font-size: 12px; color: #028CA9; font-style: italic; text-decoration: underline;">(link)</a></li>
@@ -140,7 +140,7 @@
                                         <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 12px;">
                                             {{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
                                         {% endif %}
-                                        {% if my.daily_update.weather.alerts %}
+                                        {% if my.daily_update.weather.alerts.size > 0 %}
                                         <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                             <a href="https://weather.gov" style="color: #028CA9; text-decoration: none;">Alerts from the National Weather Service</a></p>
                                         <ul style="margin: 0 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
@@ -186,7 +186,7 @@
                                     <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                         Trail Closures
                                     </p>
-                                    {% if my.daily_update.trails.closures %}
+                                    {% if my.daily_update.trails.closures.size > 0 %}
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for c in my.daily_update.trails.closures %}<li>{{ c }}</li>{% endfor %}
                                     </ul>
@@ -196,12 +196,12 @@
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.trails.error_message }}</p>
                                     {% endif %}
 
-                                    {% if my.daily_update.roads.closures or my.daily_update.roads.no_closures_message or my.daily_update.roads.error_message %}
+                                    {% if my.daily_update.roads.closures.size > 0 or my.daily_update.roads.no_closures_message or my.daily_update.roads.error_message %}
                                     <!-- Road Closures -->
                                     <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                         Road Closures
                                     </p>
-                                    {% if my.daily_update.roads.closures %}
+                                    {% if my.daily_update.roads.closures.size > 0 %}
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for c in my.daily_update.roads.closures %}<li>{{ c }}</li>{% endfor %}
                                     </ul>
@@ -212,7 +212,7 @@
                                     {% endif %}
                                     {% endif %}
 
-                                    {% if my.daily_update.hikerbiker.closures %}
+                                    {% if my.daily_update.hikerbiker.closures.size > 0 %}
                                     <!-- Hiker/Biker -->
                                     <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                         Going-to-the-Sun Road Hiker/Biker Closures
@@ -225,12 +225,12 @@
                                     {% endif %}
                                     {% endif %}
 
-                                    {% if my.daily_update.campgrounds.statuses or my.daily_update.campgrounds.error_message %}
+                                    {% if my.daily_update.campgrounds.statuses.size > 0 or my.daily_update.campgrounds.error_message %}
                                     <!-- Campground Status -->
                                     <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
                                         Campground Status
                                     </p>
-                                    {% if my.daily_update.campgrounds.statuses %}
+                                    {% if my.daily_update.campgrounds.statuses.size > 0 %}
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for s in my.daily_update.campgrounds.statuses %}<li>{{ s }}</li>{% endfor %}
                                     </ul>
@@ -264,7 +264,7 @@
                                     <img src="https://glacier.org/daily/{{ my.daily_update.weather.season }}/notices.jpg"
                                         width="520" alt="Daily Notices"
                                         style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
-                                    {% if my.daily_update.notices.notices %}
+                                    {% if my.daily_update.notices.notices.size > 0 %}
                                     <ul style="margin: 0 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for n in my.daily_update.notices.notices %}<li>{{ n }}</li>{% endfor %}
                                     </ul>

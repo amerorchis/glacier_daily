@@ -1,5 +1,8 @@
 """Tests for shared.timing module."""
 
+import concurrent.futures
+import logging
+
 import pytest
 
 from shared.timing import ModuleResult, RunTiming, get_timing, reset_timing, timed
@@ -46,6 +49,89 @@ class TestTimed:
             return a + b + extra
 
         assert add(1, 2, extra=3) == 6
+
+    def test_timed_records_warning_on_internal_error_log(self):
+        """Function returns normally but logs an ERROR -> status is 'warning'."""
+        test_logger = logging.getLogger("test.inner_module")
+
+        @timed("warning_module")
+        def internally_failing():
+            test_logger.error("Something broke inside")
+            return "default_value"
+
+        result = internally_failing()
+        assert result == "default_value"
+        timing = get_timing()
+        assert timing.modules["warning_module"].status == "warning"
+        assert "Something broke inside" in timing.modules["warning_module"].error
+
+    def test_timed_success_with_info_log_not_warning(self):
+        """Function logs INFO (not ERROR) -> status stays 'success'."""
+        test_logger = logging.getLogger("test.info_module")
+
+        @timed("info_module")
+        def noisy_but_ok():
+            test_logger.info("Just some info")
+            return 42
+
+        result = noisy_but_ok()
+        assert result == 42
+        timing = get_timing()
+        assert timing.modules["info_module"].status == "success"
+
+    def test_timed_warning_thread_isolation(self):
+        """ERROR logged on thread A should not affect module running on thread B."""
+        error_logger = logging.getLogger("test.thread_iso")
+
+        @timed("module_a")
+        def module_a():
+            error_logger.error("Module A had an error")
+            return "a"
+
+        @timed("module_b")
+        def module_b():
+            return "b"
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            fa = executor.submit(module_a)
+            fb = executor.submit(module_b)
+            fa.result()
+            fb.result()
+
+        timing = get_timing()
+        assert timing.modules["module_a"].status == "warning"
+        assert timing.modules["module_b"].status == "success"
+
+    def test_timed_handler_cleanup_on_exception(self):
+        """Handler is removed even when the function raises."""
+        root = logging.getLogger()
+        handler_count_before = len(root.handlers)
+
+        @timed("cleanup_test")
+        def raiser():
+            raise RuntimeError("boom")
+
+        with pytest.raises(RuntimeError):
+            raiser()
+
+        assert len(root.handlers) == handler_count_before
+
+    def test_timed_multiple_error_logs_joined(self):
+        """Multiple ERROR logs are joined with semicolons in the error field."""
+        test_logger = logging.getLogger("test.multi_error")
+
+        @timed("multi_error")
+        def multi_fail():
+            test_logger.error("First problem")
+            test_logger.error("Second problem")
+            return "degraded"
+
+        multi_fail()
+        timing = get_timing()
+        mod = timing.modules["multi_error"]
+        assert mod.status == "warning"
+        assert "First problem" in mod.error
+        assert "Second problem" in mod.error
 
 
 class TestRunTiming:

@@ -137,66 +137,6 @@ class TestModuleReturnTypes:
             )
 
 
-class TestTupleUnpacking:
-    """Tests that tuple-returning functions return correct length tuples."""
-
-    def test_get_image_otd_returns_3_tuple(self):
-        """Verify get_image_otd returns a 3-tuple."""
-        with patch.multiple(
-            "image_otd.image_otd",
-            retrieve_from_json=Mock(return_value=(True, ("url", "title", "link"))),
-        ):
-            from image_otd.image_otd import get_image_otd
-
-            result = get_image_otd()
-            assert isinstance(result, tuple), "get_image_otd should return tuple"
-            assert len(result) == 3, (
-                "get_image_otd should return 3-tuple (url, title, link)"
-            )
-
-    def test_peak_returns_3_tuple(self):
-        """Verify peak returns a 3-tuple."""
-        with patch.multiple(
-            "peak.peak",
-            retrieve_from_json=Mock(return_value=(True, ["name", "image", "map"])),
-        ):
-            from peak.peak import peak
-
-            result = peak()
-            assert isinstance(result, tuple | list), "peak should return tuple or list"
-            assert len(result) == 3, "peak should return 3 elements (name, image, map)"
-
-    def test_get_product_returns_4_tuple(self):
-        """Verify get_product returns a 4-tuple."""
-        with patch.multiple(
-            "product_otd.product",
-            retrieve_from_json=Mock(
-                return_value=(True, ("title", "img", "link", "desc"))
-            ),
-        ):
-            from product_otd.product import get_product
-
-            result = get_product()
-            assert isinstance(result, tuple), "get_product should return tuple"
-            assert len(result) == 4, (
-                "get_product should return 4-tuple (title, img, link, desc)"
-            )
-
-    def test_process_video_returns_3_tuple(self):
-        """Verify process_video returns a 3-tuple."""
-        with patch.multiple(
-            "sunrise_timelapse.get_timelapse",
-            retrieve_from_json=Mock(return_value=(True, ("vid", "still", "desc"))),
-        ):
-            from sunrise_timelapse.get_timelapse import process_video
-
-            result = process_video()
-            assert isinstance(result, tuple), "process_video should return tuple"
-            assert len(result) == 3, (
-                "process_video should return 3-tuple (vid, still, desc)"
-            )
-
-
 class TestHtmlSafeIntegration:
     """Tests that html_safe still works (utility function)."""
 

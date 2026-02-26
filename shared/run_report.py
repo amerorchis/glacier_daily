@@ -80,12 +80,14 @@ def build_report(environment: str = "") -> RunReport:
 
     # Determine overall status from module results
     failed = [m for m in timing.modules.values() if m.status == "error"]
+    warned = [m for m in timing.modules.values() if m.status == "warning"]
     if timing.modules and len(failed) == len(timing.modules):
         report.overall_status = "failure"
-    elif failed:
+    elif failed or warned:
         report.overall_status = "partial"
 
     report.errors = [f"{m.name}: {m.error}" for m in failed]
+    report.errors += [f"{m.name} (warning): {m.error}" for m in warned]
 
     # Attach captured log lines
     capture = get_log_capture()

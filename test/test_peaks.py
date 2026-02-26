@@ -62,21 +62,6 @@ def test_peak_selection(mock_env_vars):
         assert peak_img is None  # Should be None in test mode
 
 
-def test_peak_selection_with_cached_data():
-    """Test peak selection when data is already cached"""
-    mock_cache = {
-        "peak": "Cached Peak - 8000 ft.",
-        "peak_image": "cached_image.jpg",
-        "peak_map": "cached_map_url",
-    }
-
-    with patch(
-        "peak.peak.retrieve_from_json", return_value=(True, list(mock_cache.values()))
-    ):
-        result = peak(test=False)
-        assert result == list(mock_cache.values())
-
-
 def test_peak_sat_image_generation(mock_env_vars, sample_peak_data):
     """Test satellite image generation for a peak"""
     mock_response = Mock()
@@ -176,10 +161,7 @@ def test_peak_with_invalid_coordinates(mock_env_vars):
 
 def test_peak_csv_read():
     """Test reading of peaks from CSV"""
-    with (
-        patch("random.seed"),
-        patch("peak.peak.retrieve_from_json", return_value=(False, None)),
-    ):
+    with patch("random.seed"):
         result = peak(test=True)
 
         # Verify basic peak data format

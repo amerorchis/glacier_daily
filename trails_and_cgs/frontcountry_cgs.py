@@ -16,6 +16,12 @@ logger = get_logger(__name__)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+YEAR_ROUND_CAMPGROUNDS = {"Apgar", "St Mary"}
+# Jan-Apr: all non-year-round CGs guaranteed closed (per NPS operatingHours data)
+_SEASONAL_HARD_FLOOR_MONTHS = {1, 2, 3, 4}
+# Apr-Nov: show the grouped seasonal closure line in the email
+_SEASONAL_DISPLAY_MONTHS = {4, 5, 6, 7, 8, 9, 10, 11}
+
 
 def campground_alerts() -> CampgroundsResult:
     """
@@ -48,6 +54,7 @@ def campground_alerts() -> CampgroundsResult:
             error_message="The campgrounds page on the park website is currently down."
         )
 
+    month = now_mountain().month
     closures = []
     season_closures = []
     statuses = []
@@ -56,13 +63,18 @@ def campground_alerts() -> CampgroundsResult:
         name = i["name"].replace("  ", " ")
 
         if i["status"] == "closed":
-            if "season" in i["service_status"]:
+            if name in YEAR_ROUND_CAMPGROUNDS:
+                closures.append(f"{name} CG: currently closed.")
+            elif (
+                month in _SEASONAL_HARD_FLOOR_MONTHS
+                or "season" in (i.get("service_status") or "").lower()
+            ):
                 season_closures.append(name)
             else:
                 closures.append(f"{name} CG: currently closed.")
 
         notice = (
-            f"{i['description']}"
+            i["description"]
             if i["description"]
             and (
                 "camping only" in i["description"].lower()
@@ -76,26 +88,19 @@ def campground_alerts() -> CampgroundsResult:
                 "",
             )
             notice = notice.replace("<b>", "").replace("</b>", "")
-            notice = ". ".join(i.capitalize() for i in notice.split(". "))
+            notice = ". ".join(s.capitalize() for s in notice.split(". "))
             notice = f"{name} CG: {notice}"
             statuses.append(notice)
 
-    statuses, closures, season_closures = (
-        set(statuses),
-        set(closures),
-        set(season_closures),
-    )  # remove duplicates
-    statuses, closures, season_closures = (
-        sorted(list(statuses)),
-        sorted(list(closures)),
-        sorted(list(season_closures)),
-    )  # turn back into a list and sort
+    statuses = sorted(set(statuses))
+    closures = sorted(set(closures))
+    season_closures = sorted(set(season_closures))
     statuses.extend(closures)
 
-    if season_closures:
+    if season_closures and month in _SEASONAL_DISPLAY_MONTHS:
         seasonal = (
             [f"Closed for the season: {', '.join(season_closures)}"]
-            if now_mountain().month >= 8
+            if month >= 8
             else [f"Not yet open for the season: {', '.join(season_closures)}"]
         )
         statuses.extend(seasonal)

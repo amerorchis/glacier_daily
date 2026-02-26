@@ -6,7 +6,6 @@ import requests
 
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
-from shared.retrieve_from_json import retrieve_from_json
 
 logger = get_logger(__name__)
 
@@ -161,13 +160,6 @@ def process_video() -> tuple[str, str, str]:
         Returns ("", "", "") if any error occurs.
     """
     try:
-        # Check if we already have today's data cached
-        already_retrieved, keys = retrieve_from_json(
-            ["sunrise_vid", "sunrise_still", "sunrise_descriptor"]
-        )
-        if already_retrieved and len(keys) == 3:
-            return keys[0], keys[1], keys[2]
-
         # Fetch remote data
         timelapse_data = fetch_glacier_data("timelapse")
         thumbnail_data = fetch_glacier_data("thumbnails")

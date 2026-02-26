@@ -65,7 +65,6 @@ class TestGetProduct:
             patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image"),
             patch("product_otd.product.upload_potd") as mock_upload,
-            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
             patch("random.randrange", return_value=1),
         ):
             # Mock API responses
@@ -84,31 +83,9 @@ class TestGetProduct:
             assert product_link == "https://shop.glacier.org/test-product"
             assert desc == "Test product description"
 
-    def test_get_product_cached(self):
-        """Test product retrieval from cache"""
-        cached_data = (
-            "Test Product",
-            "https://example.com/img.jpg",
-            "https://shop.glacier.org/test",
-            "Cached description",
-        )
-
-        with patch(
-            "product_otd.product.retrieve_from_json", return_value=(True, cached_data)
-        ):
-            title, image_url, product_link, desc = get_product()
-
-            assert title == cached_data[0]
-            assert image_url == cached_data[1]
-            assert product_link == cached_data[2]
-            assert desc == cached_data[3]
-
     def test_get_product_api_error(self, mock_env_vars):
         """Test handling of API error"""
-        with (
-            patch("requests.get") as mock_get,
-            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
-        ):
+        with patch("requests.get") as mock_get:
             mock_get.return_value = Mock(status_code=500)
 
             with pytest.raises(requests.exceptions.RequestException):
@@ -121,7 +98,6 @@ class TestGetProduct:
         with (
             patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image"),
-            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
             patch("random.randrange", return_value=1),
         ):
             mock_get.side_effect = [

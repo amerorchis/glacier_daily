@@ -132,10 +132,7 @@ class TestProductMaxIterations:
         monkeypatch.setenv("BC_TOKEN", "test")
         monkeypatch.setenv("BC_STORE_HASH", "test")
 
-        with (
-            patch("requests.get") as mock_get,
-            patch("product_otd.product.retrieve_from_json", return_value=(False, None)),
-        ):
+        with patch("requests.get") as mock_get:
             # First call returns total products count
             first_response = Mock(
                 status_code=200,

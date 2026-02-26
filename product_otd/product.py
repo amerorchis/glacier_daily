@@ -13,7 +13,6 @@ from PIL import Image
 
 from shared.datetime_utils import now_mountain
 from shared.ftp import upload_file
-from shared.retrieve_from_json import retrieve_from_json
 from shared.settings import get_settings
 
 
@@ -82,12 +81,6 @@ def get_product(skip_upload: bool = False):
     """
     Grab a random product from the BigCommerce API.
     """
-    already_retrieved, keys = retrieve_from_json(
-        ["product_title", "product_image", "product_link", "product_desc"]
-    )
-    if already_retrieved:
-        return keys
-
     # Connect to API
     settings = get_settings()
     url = (

@@ -10,7 +10,6 @@ from PIL import Image, UnidentifiedImageError
 from image_otd.flickr import FlickrAPIError, get_flickr
 from shared.datetime_utils import now_mountain
 from shared.ftp import upload_file
-from shared.retrieve_from_json import retrieve_from_json
 
 
 class ImageProcessingError(Exception):
@@ -106,12 +105,6 @@ def resize_full(skip_upload: bool = False) -> tuple[str | None, str, str]:
         FlickrAPIError: If Flickr operations fail
         ImageProcessingError: If image processing fails
     """
-    already_retrieved, keys = retrieve_from_json(
-        ["image_otd", "image_otd_title", "image_otd_link"]
-    )
-    if already_retrieved:
-        return keys
-
     image_data = get_flickr()
     dimensions = (255, 150, 4)  # width, height, scale_multiplier
     process_image(image_data.path, dimensions)
