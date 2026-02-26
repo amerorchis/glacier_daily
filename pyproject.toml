@@ -131,7 +131,7 @@ no-matching-overload = "ignore"
 
 # Pillow stubs don't expose Image.LANCZOS
 [[tool.ty.overrides]]
-include = ["image_otd/**/*.py"]
+include = ["image_otd/**/*.py", "shared/image_utils.py", "weather/weather_img.py"]
 [tool.ty.overrides.rules]
 unresolved-attribute = "ignore"
 

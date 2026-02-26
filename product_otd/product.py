@@ -13,6 +13,7 @@ from PIL import Image
 
 from shared.datetime_utils import now_mountain
 from shared.ftp import upload_file
+from shared.image_utils import process_image_for_email
 from shared.settings import get_settings
 
 
@@ -34,47 +35,12 @@ def upload_potd():
 
 def resize_image(url):
     """
-    Put the image on a white matte, resized to fit email.
+    Fetch a product image and process it for the email template.
     """
-    # Fetch the image from the URL
     response = requests.get(url, timeout=5)
     image = Image.open(BytesIO(response.content))
-
-    # Calculate the new size while maintaining the aspect ratio
-    width, height = image.size
-    aspect_ratio = width / height
-
-    # Calculate the new width and height to fit within the canvas
-    CANVAS_WIDTH = 255
-    CANVAS_HEIGHT = 150
-    scale_multiplier = 2
-    new_width = min(width, CANVAS_WIDTH * scale_multiplier)
-    new_height = int(new_width / aspect_ratio)
-
-    # Check if the new height exceeds the canvas height
-    if new_height > (CANVAS_HEIGHT * scale_multiplier):
-        new_height = CANVAS_HEIGHT * scale_multiplier
-        new_width = int(new_height * aspect_ratio)
-
-    # Resize the image
-    resized_image = image.resize((new_width, new_height))
-
-    # Create a new blank canvas with white background
-    canvas = Image.new(
-        "RGB",
-        (CANVAS_WIDTH * scale_multiplier, CANVAS_HEIGHT * scale_multiplier),
-        "white",
-    )
-
-    # Calculate the position to paste the resized image
-    x = (canvas.width - resized_image.width) // 2
-    y = (canvas.height - resized_image.height) // 2
-
-    # Paste the resized image onto the canvas
-    canvas.paste(resized_image, (x, y))
-
-    # Save or display the resulting image
-    canvas.save("email_images/today/product_otd.jpg")
+    result = process_image_for_email(image)
+    result.save("email_images/today/product_otd.jpg")
 
 
 def get_product(skip_upload: bool = False):

@@ -44,7 +44,7 @@ def peak_sat(peak: dict, skip_upload: bool = False) -> str | None:
     # These settings tend to get best peak image
     zoom = 14
     bearing = 0
-    dimensions = "1020x600@2x"
+    dimensions = "1020x600"
 
     # Construct url and get image.
     base_url = f"https://api.mapbox.com/styles/v1/{settings.MAPBOX_ACCOUNT}/{settings.MAPBOX_STYLE}/static/"

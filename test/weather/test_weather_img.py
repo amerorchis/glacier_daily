@@ -76,7 +76,7 @@ def test_weather_image_success(
     result = weather_image(sample_weather_data)
 
     assert result == "http://example.com/image.png"
-    mock_image.resize.assert_called_once_with((405, 374))
+    mock_image.resize.assert_called_once_with((810, 748), Image.LANCZOS)
     mock_image.save.assert_called_once()
 
 
