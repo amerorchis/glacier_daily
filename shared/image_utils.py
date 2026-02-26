@@ -21,8 +21,8 @@ def process_image_for_email(
 
     Resizes the image to fill target_width (default 1040px = 2x of 520px display).
     If the result fits within max_height, returns the resized image directly (full-bleed).
-    If the image is smaller than target_width or taller than max_height, places it on
-    a white canvas with rounded corners.
+    If the image is taller than max_height, places it on a white canvas with rounded
+    corners on the photo.
 
     Args:
         image: Source PIL Image.
@@ -37,24 +37,20 @@ def process_image_for_email(
     width, height = image.size
     aspect_ratio = width / height
 
-    # Scale to fill target width
-    new_width = min(width, target_width)
+    # Always scale to fill target width
+    new_width = target_width
     new_height = int(new_width / aspect_ratio)
 
-    # If the image fills the target width and fits within height cap, full-bleed
-    if new_width == target_width and new_height <= max_height:
+    # If it fits within the height cap, return full-bleed (no matte)
+    if new_height <= max_height:
         return image.resize((new_width, new_height), Image.LANCZOS)
 
-    # Otherwise, fit within target_width x max_height and place on matte
-    if new_height > max_height:
-        new_height = max_height
-        new_width = int(new_height * aspect_ratio)
-
+    # Height exceeds cap — fit within target_width x max_height, place on matte
+    new_height = max_height
+    new_width = int(new_height * aspect_ratio)
     resized = image.resize((new_width, new_height), Image.LANCZOS)
 
-    canvas_w = max(target_width, new_width)
-    canvas_h = max(max_height, new_height)
-    canvas = Image.new("RGB", (canvas_w, canvas_h), (255, 255, 255))
+    canvas = Image.new("RGB", (target_width, max_height), (255, 255, 255))
 
     # Apply rounded corners to the resized photo via a mask
     mask = Image.new("L", resized.size, 0)
@@ -65,8 +61,8 @@ def process_image_for_email(
         fill=255,
     )
 
-    x = (canvas_w - resized.width) // 2
-    y = (canvas_h - resized.height) // 2
+    x = (target_width - resized.width) // 2
+    y = (max_height - resized.height) // 2
     canvas.paste(resized, (x, y), mask)
 
     return canvas

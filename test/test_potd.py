@@ -34,7 +34,7 @@ def mock_product_response():
 @pytest.fixture
 def mock_image_response():
     """Fixture for mocking BigCommerce API image response"""
-    return {"data": [{"url_standard": "https://example.com/test.jpg"}]}
+    return {"data": [{"url_zoom": "https://example.com/test.jpg"}]}
 
 
 @pytest.fixture

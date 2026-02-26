@@ -31,13 +31,13 @@ class TestProcessImageForEmail:
 
         assert result.size == (1040, 1040)
 
-    def test_small_image_not_upscaled(self):
-        """An image smaller than target_width should not be upscaled."""
+    def test_small_image_upscaled_to_fill(self):
+        """An image smaller than target_width should be upscaled to fill."""
         img = Image.new("RGB", (400, 300))
         result = process_image_for_email(img, target_width=1040, max_height=1040)
 
-        # Image is 400px wide < 1040 target, so it gets the matte
-        assert result.size == (1040, 1040)
+        # 400x300 (4:3) → upscaled to 1040x780, fits within cap
+        assert result.size == (1040, 780)
         assert result.mode == "RGB"
 
     def test_exact_width_match(self):
@@ -69,10 +69,10 @@ class TestProcessImageForEmail:
         assert result.size == (800, 400)
 
     def test_matte_is_white(self):
-        """The matte canvas should be white."""
-        # Small red image on large canvas — check corner pixel is white
-        img = Image.new("RGB", (100, 100), (255, 0, 0))
+        """The matte canvas should be white for tall portrait images."""
+        # Very tall portrait — will hit the matte path
+        img = Image.new("RGB", (500, 2000), (255, 0, 0))
         result = process_image_for_email(img, target_width=1040, max_height=1040)
 
-        # Top-left corner should be white (part of the matte)
+        # Top-left corner should be white (part of the matte, outside the photo)
         assert result.getpixel((0, 0)) == (255, 255, 255)

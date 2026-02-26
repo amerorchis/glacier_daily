@@ -6,7 +6,7 @@ from urllib.error import URLError
 import pytest
 from PIL import Image
 
-from image_otd.flickr import FlickrAPIError, FlickrImage, get_flickr
+from image_otd.flickr import FlickrAPIError, FlickrImage, _best_image_url, get_flickr
 from image_otd.image_otd import (
     ImageProcessingError,
     get_image_otd,
@@ -35,9 +35,7 @@ def mock_flickr_response():
             "total": "100",
             "photo": [
                 {
-                    "server": "test_server",
                     "id": "test_id",
-                    "secret": "test_secret",
                     "title": "test_title",
                 }
             ],
@@ -45,7 +43,77 @@ def mock_flickr_response():
     }
 
 
-def test_get_flickr_success(mock_env_vars, mock_flickr_response):
+@pytest.fixture
+def mock_sizes_response():
+    return {
+        "sizes": {
+            "size": [
+                {
+                    "label": "Large",
+                    "width": "1024",
+                    "height": "768",
+                    "source": "https://live.staticflickr.com/test/test_id_abc_b.jpg",
+                },
+                {
+                    "label": "Large 1600",
+                    "width": "1600",
+                    "height": "1200",
+                    "source": "https://live.staticflickr.com/test/test_id_abc_h.jpg",
+                },
+            ]
+        }
+    }
+
+
+class TestBestImageUrl:
+    """Tests for _best_image_url size selection logic."""
+
+    def test_picks_smallest_above_threshold(self):
+        """Should pick the smallest size >= 1040px, not the largest."""
+        mock_api = Mock()
+        mock_api.photos.getSizes.return_value = {
+            "sizes": {
+                "size": [
+                    {"width": "800", "source": "https://flickr.com/800.jpg"},
+                    {"width": "1024", "source": "https://flickr.com/1024.jpg"},
+                    {"width": "1600", "source": "https://flickr.com/1600.jpg"},
+                    {"width": "1040", "source": "https://flickr.com/1040.jpg"},
+                ]
+            }
+        }
+        result = _best_image_url(mock_api, "123")
+        assert result == "https://flickr.com/1040.jpg"
+
+    def test_falls_back_to_largest_when_none_meet_threshold(self):
+        """When no size >= 1040px, should pick the largest available."""
+        mock_api = Mock()
+        mock_api.photos.getSizes.return_value = {
+            "sizes": {
+                "size": [
+                    {"width": "500", "source": "https://flickr.com/500.jpg"},
+                    {"width": "800", "source": "https://flickr.com/800.jpg"},
+                ]
+            }
+        }
+        result = _best_image_url(mock_api, "123")
+        assert result == "https://flickr.com/800.jpg"
+
+    def test_exact_threshold_match(self):
+        """A size exactly at 1040px should be picked."""
+        mock_api = Mock()
+        mock_api.photos.getSizes.return_value = {
+            "sizes": {
+                "size": [
+                    {"width": "800", "source": "https://flickr.com/800.jpg"},
+                    {"width": "1040", "source": "https://flickr.com/1040.jpg"},
+                ]
+            }
+        }
+        result = _best_image_url(mock_api, "123")
+        assert result == "https://flickr.com/1040.jpg"
+
+
+def test_get_flickr_success(mock_env_vars, mock_flickr_response, mock_sizes_response):
     with (
         patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
         patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
@@ -54,6 +122,7 @@ def test_get_flickr_success(mock_env_vars, mock_flickr_response):
         # Setup mock FlickrAPI
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
+        mock_api.photos.getSizes.return_value = mock_sizes_response
         MockFlickrAPI.return_value = mock_api
 
         # Setup mock urlopen
@@ -96,7 +165,9 @@ def test_get_flickr_api_error(mock_env_vars):
             get_flickr()
 
 
-def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
+def test_get_flickr_download_error(
+    mock_env_vars, mock_flickr_response, mock_sizes_response
+):
     with (
         patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
         patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
@@ -104,6 +175,7 @@ def test_get_flickr_download_error(mock_env_vars, mock_flickr_response):
     ):
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
+        mock_api.photos.getSizes.return_value = mock_sizes_response
         MockFlickrAPI.return_value = mock_api
 
         mock_urlopen.side_effect = URLError("Download failed")
@@ -254,7 +326,9 @@ def test_get_image_otd_flickr_error_fallback():
         assert result == ("Flickr API Error", "", "")
 
 
-def test_get_flickr_url_error_429_retry(mock_env_vars, mock_flickr_response):
+def test_get_flickr_url_error_429_retry(
+    mock_env_vars, mock_flickr_response, mock_sizes_response
+):
     """Test that 429 URLError triggers backoff and raises after retries exhausted."""
     with (
         patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
@@ -263,6 +337,7 @@ def test_get_flickr_url_error_429_retry(mock_env_vars, mock_flickr_response):
     ):
         mock_api = Mock()
         mock_api.photos.search.return_value = mock_flickr_response
+        mock_api.photos.getSizes.return_value = mock_sizes_response
         MockFlickrAPI.return_value = mock_api
 
         # Both attempts raise 429 URLError - exhausts retries
@@ -278,7 +353,7 @@ def test_get_flickr_url_error_429_retry(mock_env_vars, mock_flickr_response):
         assert mock_sleep.call_count == 1
 
 
-def test_get_flickr_no_photos_found(mock_env_vars):
+def test_get_flickr_no_photos_found(mock_env_vars, mock_sizes_response):
     """Test retry loop when initial search returns no photos."""
     with (
         patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
@@ -293,9 +368,7 @@ def test_get_flickr_no_photos_found(mock_env_vars):
                 "total": "100",
                 "photo": [
                     {
-                        "server": "s",
                         "id": "123",
-                        "secret": "sec",
                         "title": "Found",
                     }
                 ],
@@ -306,6 +379,7 @@ def test_get_flickr_no_photos_found(mock_env_vars):
             empty_response,  # first random page - empty
             valid_response,  # retry - found
         ]
+        mock_api.photos.getSizes.return_value = mock_sizes_response
         MockFlickrAPI.return_value = mock_api
 
         mock_response = Mock()
