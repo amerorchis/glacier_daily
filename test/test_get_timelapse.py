@@ -227,7 +227,6 @@ class TestFindMatchingThumbnail:
 
 
 class TestProcessVideo:
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
     @patch("sunrise_timelapse.get_timelapse.fetch_glacier_data")
     @patch("sunrise_timelapse.get_timelapse.select_video")
     @patch("sunrise_timelapse.get_timelapse.find_matching_thumbnail")
@@ -236,11 +235,8 @@ class TestProcessVideo:
         mock_find_thumbnail,
         mock_select_video,
         mock_fetch_data,
-        mock_retrieve,
     ):
         """Test successful video processing."""
-        # Setup mocks
-        mock_retrieve.return_value = (False, None)
 
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
@@ -267,19 +263,6 @@ class TestProcessVideo:
             "This Morning's",
         )
 
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
-    def test_process_video_cached_data(self, mock_retrieve):
-        """Test returning cached data when available."""
-        mock_retrieve.return_value = (
-            True,
-            ["cached_video_url", "cached_thumb_url", "Cached"],
-        )
-
-        result = process_video()
-
-        assert result == ("cached_video_url", "cached_thumb_url", "Cached")
-
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
     @patch("sunrise_timelapse.get_timelapse.fetch_glacier_data")
     @patch("sunrise_timelapse.get_timelapse.select_video")
     @patch("sunrise_timelapse.get_timelapse.find_matching_thumbnail")
@@ -288,10 +271,8 @@ class TestProcessVideo:
         mock_find_thumbnail,
         mock_select_video,
         mock_fetch_data,
-        mock_retrieve,
     ):
         """Test that video processing now gets latest sunrise regardless of timing."""
-        mock_retrieve.return_value = (False, None)
 
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
@@ -318,11 +299,9 @@ class TestProcessVideo:
             "Latest",
         )
 
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
     @patch("sunrise_timelapse.get_timelapse.fetch_glacier_data")
-    def test_process_video_fetch_failure(self, mock_fetch_data, mock_retrieve):
+    def test_process_video_fetch_failure(self, mock_fetch_data):
         """Test handling when data fetching fails."""
-        mock_retrieve.return_value = (False, None)
 
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
@@ -337,14 +316,10 @@ class TestProcessVideo:
 
         assert result == ("", "", "")
 
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
     @patch("sunrise_timelapse.get_timelapse.fetch_glacier_data")
     @patch("sunrise_timelapse.get_timelapse.select_video")
-    def test_process_video_no_suitable_video(
-        self, mock_select_video, mock_fetch_data, mock_retrieve
-    ):
+    def test_process_video_no_suitable_video(self, mock_select_video, mock_fetch_data):
         """Test handling when no suitable video is found."""
-        mock_retrieve.return_value = (False, None)
 
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
@@ -360,7 +335,6 @@ class TestProcessVideo:
 
         assert result == ("", "", "")
 
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
     @patch("sunrise_timelapse.get_timelapse.fetch_glacier_data")
     @patch("sunrise_timelapse.get_timelapse.select_video")
     @patch("sunrise_timelapse.get_timelapse.find_matching_thumbnail")
@@ -369,10 +343,8 @@ class TestProcessVideo:
         mock_find_thumbnail,
         mock_select_video,
         mock_fetch_data,
-        mock_retrieve,
     ):
         """Test handling when no matching thumbnail is found."""
-        mock_retrieve.return_value = (False, None)
 
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
@@ -393,10 +365,10 @@ class TestProcessVideo:
 
         assert result == ("", "", "")
 
-    @patch("sunrise_timelapse.get_timelapse.retrieve_from_json")
-    def test_process_video_exception_handling(self, mock_retrieve):
+    @patch("sunrise_timelapse.get_timelapse.fetch_glacier_data")
+    def test_process_video_exception_handling(self, mock_fetch_data):
         """Test handling unexpected exceptions."""
-        mock_retrieve.side_effect = Exception("Unexpected error")
+        mock_fetch_data.side_effect = Exception("Unexpected error")
 
         result = process_video()
 

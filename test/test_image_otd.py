@@ -191,7 +191,6 @@ def test_prepare_pic_otd():
 def test_resize_full_skip_upload(sample_image):
     """Test resize_full with skip_upload=True returns None for URL."""
     with (
-        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
         patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
         patch("image_otd.image_otd.process_image"),
     ):
@@ -202,17 +201,8 @@ def test_resize_full_skip_upload(sample_image):
         assert result == (None, "test_title", "test_link")
 
 
-def test_resize_full_cached():
-    with patch("image_otd.image_otd.retrieve_from_json") as mock_retrieve:
-        mock_retrieve.return_value = (True, ("url", "title", "link"))
-
-        result = resize_full()
-        assert result == ("url", "title", "link")
-
-
 def test_resize_full_new_image(sample_image):
     with (
-        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
         patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
         patch("image_otd.image_otd.process_image") as mock_process,
         patch("image_otd.image_otd.upload_pic_otd") as mock_upload,
@@ -233,10 +223,7 @@ def test_resize_full_new_image(sample_image):
 
 
 def test_resize_full_flickr_error():
-    with (
-        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
-        patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
-    ):
+    with patch("image_otd.image_otd.get_flickr") as mock_get_flickr:
         mock_get_flickr.side_effect = FlickrAPIError("API Error")
 
         with pytest.raises(FlickrAPIError):
@@ -245,7 +232,6 @@ def test_resize_full_flickr_error():
 
 def test_resize_full_processing_error(sample_image):
     with (
-        patch("image_otd.image_otd.retrieve_from_json", return_value=(False, None)),
         patch("image_otd.image_otd.get_flickr") as mock_get_flickr,
         patch("image_otd.image_otd.process_image") as mock_process,
     ):

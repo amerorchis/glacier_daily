@@ -10,7 +10,6 @@ from pathlib import Path
 
 from peak.sat import peak_sat
 from shared.logging_config import get_logger
-from shared.retrieve_from_json import retrieve_from_json
 
 logger = get_logger(__name__)
 
@@ -40,12 +39,6 @@ def peak(test=False, skip_upload: bool = False):
     """
     if test:
         logger.debug("Test mode.")
-
-    # Check if we already have today's peak
-    else:
-        already_retrieved, keys = retrieve_from_json(["peak", "peak_image", "peak_map"])
-        if already_retrieved:
-            return keys
 
     with open("peak/PeaksCSV.csv", encoding="utf-8") as p:
         peaks = list(csv.DictReader(p))

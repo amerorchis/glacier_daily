@@ -81,6 +81,75 @@ class TestBuildReport:
         assert report.overall_status == "failure"
         assert len(report.errors) == 2
 
+    def test_build_status_partial_on_warnings(self):
+        """Warnings (no errors) -> overall_status is 'partial'."""
+        start_run("email")
+        timing = get_timing()
+        timing.record(
+            ModuleResult(name="weather", status="success", duration_seconds=1.0)
+        )
+        timing.record(
+            ModuleResult(
+                name="sunrise",
+                status="warning",
+                duration_seconds=0.5,
+                error="Unexpected error in process_video: codec error",
+            )
+        )
+        report = build_report()
+        assert report.overall_status == "partial"
+        assert any("sunrise (warning)" in e for e in report.errors)
+
+    def test_build_status_errors_and_warnings(self):
+        """Mix of errors and warnings -> 'partial', both in errors list."""
+        start_run("email")
+        timing = get_timing()
+        timing.record(
+            ModuleResult(
+                name="weather",
+                status="error",
+                duration_seconds=1.0,
+                error="timeout",
+            )
+        )
+        timing.record(
+            ModuleResult(
+                name="sunrise",
+                status="warning",
+                duration_seconds=0.5,
+                error="no video",
+            )
+        )
+        timing.record(
+            ModuleResult(name="roads", status="success", duration_seconds=0.3)
+        )
+        report = build_report()
+        assert report.overall_status == "partial"
+        assert len(report.errors) == 2
+
+    def test_build_status_all_warnings_not_failure(self):
+        """All modules warned but none errored -> 'partial', not 'failure'."""
+        start_run("email")
+        timing = get_timing()
+        timing.record(
+            ModuleResult(
+                name="weather",
+                status="warning",
+                duration_seconds=1.0,
+                error="aqi failed",
+            )
+        )
+        timing.record(
+            ModuleResult(
+                name="sunrise",
+                status="warning",
+                duration_seconds=0.5,
+                error="no video",
+            )
+        )
+        report = build_report()
+        assert report.overall_status == "partial"
+
     def test_build_includes_timing_summary(self):
         start_run("email")
         timing = get_timing()

@@ -104,6 +104,7 @@
   .mod-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee; }
   .mod-table .mod-error { color: #c62828; font-family: monospace; font-size: 0.75rem; }
   .mod-table .mod-ok { color: #2e7d32; }
+  .mod-table .mod-warn { color: #e65100; font-weight: 600; }
   .mod-table .mod-fail { color: #c62828; font-weight: 600; }
   .delivery { font-size: 0.8rem; margin-top: 0.5rem; color: #555; }
   .delivery strong { color: #333; }
@@ -210,6 +211,7 @@
   function statusPill(status) {
     var cls = status === "success" ? "pill-success"
             : status === "partial" ? "pill-partial"
+            : status === "warning" ? "pill-partial"
             : "pill-failure";
     return '<span class="pill ' + cls + '">' + status + "</span>";
   }
@@ -223,6 +225,8 @@
     if (!modules) return "—";
     var names = Object.keys(modules);
     var ok = names.filter(function (n) { return modules[n].status === "success"; }).length;
+    var warn = names.filter(function (n) { return modules[n].status === "warning"; }).length;
+    if (warn > 0) return ok + "/" + names.length + " ok, " + warn + " warn";
     return ok + "/" + names.length + " ok";
   }
 
@@ -263,7 +267,9 @@
     var html = '<table class="mod-table"><tr><th>Module</th><th>Status</th><th>Duration</th><th>Error</th></tr>';
     names.forEach(function (name) {
       var m = modules[name];
-      var cls = m.status === "success" ? "mod-ok" : "mod-fail";
+      var cls = m.status === "success" ? "mod-ok"
+              : m.status === "warning" ? "mod-warn"
+              : "mod-fail";
       html += "<tr>"
         + "<td>" + name + "</td>"
         + '<td class="' + cls + '">' + m.status + "</td>"

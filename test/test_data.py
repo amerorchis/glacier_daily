@@ -47,10 +47,6 @@ def generated_data():
         patch("generate_and_upload.get_closed_trails", return_value=""),
         patch("generate_and_upload.weather_data", return_value=mock_weather),
         patch("generate_and_upload.weather_image", return_value="weather_img_url"),
-        # Mock retrieve_from_json to avoid file access issues
-        patch(
-            "shared.retrieve_from_json.retrieve_from_json", return_value=(False, None)
-        ),
         # Mock file operations that might fail
         patch("shared.ftp.upload_file", return_value=("mocked_url", [])),
     ):
