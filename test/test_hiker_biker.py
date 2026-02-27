@@ -5,8 +5,8 @@ import pytest
 import requests
 
 from roads.hiker_biker import get_hiker_biker_status
-from roads.HikerBiker import HikerBiker
-from roads.Road import Road
+from roads.hiker_biker_closure import HikerBiker
+from roads.road import Road
 from shared.data_types import HikerBikerResult
 
 

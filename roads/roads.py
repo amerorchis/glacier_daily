@@ -7,7 +7,7 @@ import json
 import requests
 import urllib3
 
-from roads.Road import Road
+from roads.road import Road
 from shared.data_types import RoadsResult
 from shared.logging_config import get_logger
 

@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from roads.Road import Road
+from roads.road import Road
 from roads.roads import (
     NPSWebsiteError,
     _fetch_open_segments,
