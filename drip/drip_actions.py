@@ -96,8 +96,10 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
             r = response.json()
         except json.JSONDecodeError:
             logger.error(
-                f"Failed to parse JSON response from Drip bulk workflow. "
-                f"Status: {response.status_code}, Body: {response.text[:200]}"
+                "Failed to parse JSON response from Drip bulk workflow. "
+                "Status: %s, Body: %s",
+                response.status_code,
+                response.text[:200],
             )
             result.failed += len(subs)
             continue
@@ -107,8 +109,9 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
             result.sent += len(subs)
         else:
             logger.error(
-                f"Failed to add subscribers to the campaign. Error message: "
-                f"{r['errors'][0]['code']} - {r['errors'][0]['message']}"
+                "Failed to add subscribers to the campaign. Error message: %s - %s",
+                r["errors"][0]["code"],
+                r["errors"][0]["message"],
             )
             result.failed += len(subs)
 

@@ -373,14 +373,14 @@ def purge_cache() -> bool:
     try:
         response = requests.post(url, headers=headers, json=data, timeout=30)
     except requests.RequestException as e:
-        logger.error(f"Error purging cache: {e}")
+        logger.error("Error purging cache: %s", e)
         return False
 
     if response.status_code == 200:
         logger.info("Cache purged successfully.")
         return True
 
-    logger.error(f"Failed to purge cache: {response.status_code} - {response.text}")
+    logger.error("Failed to purge cache: %s - %s", response.status_code, response.text)
     return False
 
 
@@ -395,10 +395,12 @@ def refresh_cache():
             logger.info("Cache refreshed successfully.")
         else:
             logger.error(
-                f"Failed to refresh cache: {response.status_code} - {response.text}"
+                "Failed to refresh cache: %s - %s",
+                response.status_code,
+                response.text,
             )
     except requests.RequestException as e:
-        logger.error(f"Error refreshing cache: {e}")
+        logger.error("Error refreshing cache: %s", e)
 
 
 def clear_cache():

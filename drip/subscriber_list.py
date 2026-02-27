@@ -58,5 +58,5 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
 
     except requests.exceptions.RequestException as e:
         # Handle errors
-        logger.error(f"Failed to retrieve subscribers with tag(s) {tag}. {e}")
+        logger.error("Failed to retrieve subscribers with tag(s) %s. %s", tag, e)
         return []

@@ -47,11 +47,12 @@ def validate_config() -> None:
 
     for var in OPTIONAL_VARS:
         if not getattr(settings, var):
-            logger.warning(f"Optional environment variable {var} is not set.")
+            logger.warning("Optional environment variable %s is not set.", var)
 
     if missing_required:
         logger.error(
-            f"Missing required environment variables: {', '.join(missing_required)}"
+            "Missing required environment variables: %s",
+            ", ".join(missing_required),
         )
         sys.exit(1)
 
