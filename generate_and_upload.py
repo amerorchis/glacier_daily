@@ -72,6 +72,8 @@ FALLBACK_MODULE_KEYS = {
 
 _ALL_MODULE_KEYS = {**CACHED_MODULE_KEYS, **FALLBACK_MODULE_KEYS}
 
+_CACHE_PURGE_PROPAGATION_SECS = 3
+
 # Maps pending_upload field keys to their LKG module name
 _FIELD_TO_MODULE = {
     "image_otd": "image_otd",
@@ -358,16 +360,18 @@ def send_to_server(file: str, directory: str) -> None:
     upload_file(directory, filename, file)
 
 
-def purge_cache():
+def purge_cache() -> bool:
     """
     Purge the Cloudflare cache for the site.
+
+    Returns True on success, False otherwise.
     """
     settings = get_settings()
     purge_key = settings.CACHE_PURGE
     zone_id = settings.ZONE_ID
     if not purge_key or not zone_id:
         logger.warning("No CACHE_PURGE key or ZONE_ID set, skipping cache purge.")
-        return
+        return False
 
     url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"
     headers = {
@@ -376,11 +380,18 @@ def purge_cache():
     }
     data = {"purge_everything": True}
 
-    response = requests.post(url, headers=headers, json=data, timeout=30)
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+    except requests.RequestException as e:
+        logger.error(f"Error purging cache: {e}")
+        return False
+
     if response.status_code == 200:
         logger.info("Cache purged successfully.")
-    else:
-        logger.error(f"Failed to purge cache: {response.status_code} - {response.text}")
+        return True
+
+    logger.error(f"Failed to purge cache: {response.status_code} - {response.text}")
+    return False
 
 
 def refresh_cache():
@@ -437,9 +448,10 @@ def serve_api(force: bool = False):
         ftp.upload("email", web.split("/")[-1], web)
         ftp.upload("printable", printable.split("/")[-1], printable)
 
-    purge_cache()
-    sleep(3)  # Wait for cache to purge
-    refresh_cache()
+    if purge_cache():
+        # Allow Cloudflare edge nodes time to propagate the purge
+        sleep(_CACHE_PURGE_PROPAGATION_SECS)
+        refresh_cache()
 
 
 if __name__ == "__main__":  # pragma: no cover

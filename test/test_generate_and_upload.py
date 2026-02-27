@@ -245,7 +245,7 @@ def test_serve_api(monkeypatch, tmp_path):
         gau, "write_data_to_json", lambda data, doctype: str(tmp_path / "email.json")
     )
     monkeypatch.setattr(gau, "FTPSession", MockFTPSession)
-    monkeypatch.setattr(gau, "purge_cache", lambda: None)
+    monkeypatch.setattr(gau, "purge_cache", lambda: True)
     monkeypatch.setattr(gau, "refresh_cache", lambda: None)
     monkeypatch.setattr(gau, "sleep", lambda _: None)
     # Should not raise
@@ -347,7 +347,7 @@ def test_purge_cache_success(monkeypatch, mock_required_settings):
     with patch(
         "generate_and_upload.requests.post", return_value=mock_response
     ) as mock_post:
-        gau.purge_cache()
+        assert gau.purge_cache() is True
 
         # Verify the API was called correctly
         mock_post.assert_called_once_with(
@@ -372,13 +372,13 @@ def test_purge_cache_failure(monkeypatch, mock_required_settings):
     mock_response.text = "Bad Request"
 
     with patch("generate_and_upload.requests.post", return_value=mock_response):
-        gau.purge_cache()  # Should not raise, just print error
+        assert gau.purge_cache() is False
 
 
 def test_purge_cache_missing_env_vars(monkeypatch, mock_required_settings):
     # CACHE_PURGE and ZONE_ID are "" from conftest seeding — should return early
     with patch("generate_and_upload.requests.post") as mock_post:
-        gau.purge_cache()
+        assert gau.purge_cache() is False
         mock_post.assert_not_called()
 
 
@@ -388,7 +388,7 @@ def test_purge_cache_partial_env_vars(monkeypatch, mock_required_settings):
 
     # Should return early without making any requests
     with patch("generate_and_upload.requests.post") as mock_post:
-        gau.purge_cache()
+        assert gau.purge_cache() is False
         mock_post.assert_not_called()
 
 
@@ -428,18 +428,15 @@ def test_refresh_cache_request_exception():
 
 
 def test_purge_cache_request_exception(monkeypatch, mock_required_settings):
-    """Verify purge_cache propagates RequestException (no try/except)."""
+    """Verify purge_cache catches RequestException and returns False."""
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.setenv("ZONE_ID", "test_zone")
 
-    with (
-        patch(
-            "generate_and_upload.requests.post",
-            side_effect=gau.requests.RequestException("Connection timeout"),
-        ),
-        pytest.raises(gau.requests.RequestException, match="Connection timeout"),
+    with patch(
+        "generate_and_upload.requests.post",
+        side_effect=gau.requests.RequestException("Connection timeout"),
     ):
-        gau.purge_cache()
+        assert gau.purge_cache() is False
 
 
 def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
