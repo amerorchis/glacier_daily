@@ -55,7 +55,6 @@ def test_peak_selection(mock_env_vars):
 
         # Verify result format
         peak_name, peak_img, peak_map = result
-        print(peak_name, peak_img, peak_map, sep="\n")
         assert isinstance(peak_name, str)
         assert "ft." in peak_name
         assert peak_map.startswith("https://www.google.com/maps/place/")
@@ -89,7 +88,6 @@ def test_peak_sat_api_error(mock_env_vars, sample_peak_data):
     """Test handling of Mapbox API errors"""
     with patch("requests.get", side_effect=requests.RequestException("API Error")):
         result = peak_sat(sample_peak_data)
-        print(result)
         assert result == "https://glacier.org/daily/summer/peak.jpg"
 
 

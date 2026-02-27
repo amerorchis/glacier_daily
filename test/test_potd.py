@@ -76,7 +76,6 @@ class TestGetProduct:
             mock_upload.return_value = "https://example.com/uploaded.jpg"
 
             title, image_url, product_link, desc = get_product()
-            print(title, image_url, product_link, desc)
 
             assert title == "Test Product"
             assert image_url == "https://example.com/uploaded.jpg"
@@ -194,7 +193,3 @@ class TestUploadPotd:
             pytest.raises(Exception, match="Upload failed"),
         ):
             upload_potd()
-
-
-if __name__ == "__main__":  # pragma: no cover
-    pytest.main([__file__])
