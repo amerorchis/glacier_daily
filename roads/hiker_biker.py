@@ -15,6 +15,8 @@ from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+# The NPS carto.nps.gov GeoJSON API uses a certificate chain that fails
+# validation. SSL verification is disabled for these endpoints.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 

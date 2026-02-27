@@ -84,7 +84,7 @@ class Settings:
 
             if f.default is not dataclasses.MISSING:
                 # Optional field — use env value if non-empty, else default.
-                # Empty strings (e.g. from TEMPLATE.env) are treated as unset
+                # Empty strings (e.g. from email.template.env) are treated as unset
                 # so that the dataclass default is applied.
                 if env_val:
                     kwargs[f.name] = env_val

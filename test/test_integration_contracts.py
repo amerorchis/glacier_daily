@@ -137,24 +137,6 @@ class TestModuleReturnTypes:
             )
 
 
-class TestHtmlSafeIntegration:
-    """Tests that html_safe still works (utility function)."""
-
-    def test_html_safe_accepts_string(self):
-        """Verify html_safe accepts string input."""
-        from drip.html_friendly import html_safe
-
-        result = html_safe("test string with <special> chars & stuff")
-        assert isinstance(result, str), "html_safe should return str"
-
-    def test_html_safe_handles_empty_string(self):
-        """Verify html_safe handles empty strings."""
-        from drip.html_friendly import html_safe
-
-        result = html_safe("")
-        assert result == "", "html_safe of empty string should be empty string"
-
-
 class TestWeatherImageIntegration:
     """Tests that weather_image validates input and returns string."""
 

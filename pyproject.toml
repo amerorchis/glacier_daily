@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "glacier-daily"
-version = "1.1.0"
+version = "2.1.0"
 description = "Daily email updates about conditions at Glacier National Park"
 authors = [
     {name = "Andrew Smith", email = "andrew@glacier.org"},
 ]
-readme = "readme.MD"
+readme = "readme.md"
 requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
