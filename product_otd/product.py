@@ -14,7 +14,10 @@ from PIL import Image
 from shared.datetime_utils import now_mountain
 from shared.ftp import FTPSession
 from shared.image_utils import process_image_for_email
+from shared.logging_config import get_logger
 from shared.settings import get_settings
+
+logger = get_logger(__name__)
 
 
 def prepare_potd_upload() -> tuple[str, str, str]:
@@ -59,12 +62,15 @@ def get_product(skip_upload: bool = False):
     }
 
     # Figure out total number of products
-    r = requests.get(url=url, headers=header, timeout=12)
-    if r.status_code == 500:
-        raise requests.exceptions.RequestException
-
-    products = json.loads(r.text)
-    total_products = products["meta"]["pagination"]["total"]
+    try:
+        r = requests.get(url=url, headers=header, timeout=12)
+        if r.status_code == 500:
+            raise requests.exceptions.RequestException
+        products = json.loads(r.text)
+        total_products = products["meta"]["pagination"]["total"]
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as e:
+        logger.error("Unexpected BigCommerce product list response: %s", e)
+        return ("", "", "", "")
 
     # Select one of these products
     random.seed(now_mountain().strftime("%Y:%m:%d"))

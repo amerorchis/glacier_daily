@@ -119,7 +119,7 @@ def get_campground_status() -> CampgroundsResult:
     """
     try:
         return campground_alerts()
-    except requests.exceptions.HTTPError:
+    except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
         logger.error("Campground status HTTP error", exc_info=True)
         return CampgroundsResult()
 
