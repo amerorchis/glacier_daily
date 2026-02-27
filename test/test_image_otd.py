@@ -19,9 +19,9 @@ from image_otd.image_otd import (
 @pytest.fixture
 def mock_env_vars(mock_required_settings):
     env_vars = {
-        "flickr_key": "test_key",
-        "flickr_secret": "test_secret",
-        "glaciernps_uid": "test_uid",
+        "FLICKR_KEY": "test_key",
+        "FLICKR_SECRET": "test_secret",
+        "GLACIERNPS_UID": "test_uid",
     }
     with patch.dict("os.environ", env_vars):
         yield env_vars

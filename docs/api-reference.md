@@ -194,9 +194,9 @@ MAPBOX_TOKEN=your_mapbox_token
 ### Service Keys (default to empty string; modules degrade gracefully if missing)
 
 ```bash
-flickr_key=your_flickr_key
-flickr_secret=your_flickr_secret
-glaciernps_uid=your_glaciernps_user_id
+FLICKR_KEY=your_flickr_key
+FLICKR_SECRET=your_flickr_secret
+GLACIERNPS_UID=your_glaciernps_user_id
 BC_TOKEN=your_bigcommerce_token
 BC_STORE_HASH=your_store_hash
 SUNSETHUE_KEY=your_sunsethue_key
