@@ -71,22 +71,22 @@ def get_flickr() -> FlickrImage:
     try:
         settings = get_settings()
         flickr = FlickrAPI(
-            settings.flickr_key, settings.flickr_secret, format="parsed-json"
+            settings.FLICKR_KEY, settings.FLICKR_SECRET, format="parsed-json"
         )
-        photos = flickr.photos.search(user_id=settings.glaciernps_uid, per_page="1")
+        photos = flickr.photos.search(user_id=settings.GLACIERNPS_UID, per_page="1")
         total = int(photos["photos"]["total"])
 
         random.seed(datetime.today().strftime("%Y:%m:%d"))
         potd_num = random.randint(1, total)  # noqa: S311
         photos = flickr.photos.search(
-            user_id=settings.glaciernps_uid, per_page="1", page=potd_num
+            user_id=settings.GLACIERNPS_UID, per_page="1", page=potd_num
         )
 
         # Retry if no photos found
         while len(photos["photos"]["photo"]) == 0:
             potd_num = random.randint(1, total)  # noqa: S311
             photos = flickr.photos.search(
-                user_id=settings.glaciernps_uid, per_page="1", page=potd_num
+                user_id=settings.GLACIERNPS_UID, per_page="1", page=potd_num
             )
 
         selected = photos["photos"]["photo"][0]

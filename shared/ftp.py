@@ -68,7 +68,8 @@ class FTPSession:
         self, directory: str, filename: str, file: str | None = None
     ) -> tuple[str, list[str]]:
         """Upload a file reusing the existing connection. Runs delete_on_first once per directory."""
-        assert self._ftp is not None, "FTPSession must be used as a context manager"
+        if self._ftp is None:
+            raise RuntimeError("FTPSession must be used as a context manager")
 
         self._ftp.cwd("/")
         self._ftp.cwd(directory)
@@ -92,53 +93,3 @@ class FTPSession:
             url = ""
 
         return url, files
-
-
-def upload_file(
-    directory: str, filename: str, file: str | None = None
-) -> tuple[str, list[str]]:
-    """
-    Uploads a file to the specified directory on the FTP server and deletes old files if necessary.
-    Uses atomic upload (temp file then rename) to prevent partial file reads.
-
-    Args:
-        directory (str): The directory on the FTP server where the file will be uploaded.
-        filename (str): The name of the file to be uploaded.
-        file (Optional[str]): The local path to the file to be uploaded.
-
-    Returns:
-        tuple: A tuple containing the URL of the uploaded file and a list of files in the directory.
-    """
-    settings = get_settings()
-
-    # Connect to the FTP server
-    ftp = FTP(settings.FTP_SERVER)  # noqa: S321
-    ftp.login(settings.FTP_USERNAME, settings.FTP_PASSWORD)
-
-    ftp.cwd(directory)
-    delete_on_first(ftp)
-
-    try:
-        if file:
-            # Use temporary filename for atomic upload
-            temp_filename = f"{filename}.tmp"
-
-            # Open the local file in binary mode
-            with open(file, "rb") as f:
-                # Upload to temporary filename first
-                ftp.storbinary("STOR " + temp_filename, f)
-
-            # Atomically rename from temp to final filename
-            ftp.rename(temp_filename, filename)
-
-        files = ftp.nlst()
-
-        url = f"https://glacier.org/daily/{directory}/{filename}" if file else ""
-    except Exception as e:
-        logger.error("Failed upload %s: %s", filename, e)
-        files = []
-        url = ""
-    finally:
-        ftp.quit()
-
-    return url, files

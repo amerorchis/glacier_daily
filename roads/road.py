@@ -2,7 +2,7 @@
 Custom class to define a road in the park.
 """
 
-from roads.Place import Place
+from roads.place import Place
 
 
 class Road(Place):

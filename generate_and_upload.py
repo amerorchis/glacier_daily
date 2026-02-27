@@ -35,7 +35,7 @@ from shared.datetime_utils import (
     format_date_readable,
     now_mountain,
 )
-from shared.ftp import FTPSession, upload_file
+from shared.ftp import FTPSession
 from shared.lkg_cache import LKGCache
 from shared.logging_config import get_logger
 from shared.settings import get_settings
@@ -67,9 +67,12 @@ FALLBACK_MODULE_KEYS = {
     "events": ["events"],
     "notices": ["notices"],
     "sunrise": ["sunrise_vid", "sunrise_still", "sunrise_str"],
+    "gnpc_events": ["gnpc-events"],
 }
 
 _ALL_MODULE_KEYS = {**CACHED_MODULE_KEYS, **FALLBACK_MODULE_KEYS}
+
+_CACHE_PURGE_PROPAGATION_SECS = 3
 
 # Maps pending_upload field keys to their LKG module name
 _FIELD_TO_MODULE = {
@@ -178,6 +181,7 @@ def gen_data() -> tuple[dict, list]:
         events_future = _submit_timed(executor, "events", events_today)
         sunrise_future = _submit_timed(executor, "sunrise", process_video)
         notices_future = _submit_timed(executor, "notices", get_notices)
+        gnpc_future = _submit_timed(executor, "gnpc_events", get_gnpc_events)
 
         # Date-deterministic modules: skip if cached today
         image_future = None
@@ -285,6 +289,7 @@ def gen_data() -> tuple[dict, list]:
         "sunrise_vid": sunrise_vid,
         "sunrise_still": sunrise_still,
         "sunrise_str": sunrise_str,
+        "gnpc-events": _safe_result(gnpc_future, "gnpc_events", []),
     }
 
     # LKG: Apply weather fallback if weather module failed
@@ -337,7 +342,6 @@ def write_data_to_json(data: dict, doctype: str) -> str:
     serializable["time_generated"] = cross_platform_strftime(
         now_mountain(), "%-I:%M %p"
     ).lower()
-    serializable["gnpc-events"] = get_gnpc_events()
 
     filepath = f"server/{doctype}"
     with open(filepath, "w", encoding="utf-8") as f:
@@ -346,26 +350,18 @@ def write_data_to_json(data: dict, doctype: str) -> str:
     return filepath
 
 
-def send_to_server(file: str, directory: str) -> None:
-    """
-    Upload file to glacier.org using FTP.
-    :return None.
-    """
-
-    filename = file.split("/")[-1]
-    upload_file(directory, filename, file)
-
-
-def purge_cache():
+def purge_cache() -> bool:
     """
     Purge the Cloudflare cache for the site.
+
+    Returns True on success, False otherwise.
     """
     settings = get_settings()
     purge_key = settings.CACHE_PURGE
     zone_id = settings.ZONE_ID
     if not purge_key or not zone_id:
         logger.warning("No CACHE_PURGE key or ZONE_ID set, skipping cache purge.")
-        return
+        return False
 
     url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"
     headers = {
@@ -374,11 +370,18 @@ def purge_cache():
     }
     data = {"purge_everything": True}
 
-    response = requests.post(url, headers=headers, json=data, timeout=30)
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+    except requests.RequestException as e:
+        logger.error("Error purging cache: %s", e)
+        return False
+
     if response.status_code == 200:
         logger.info("Cache purged successfully.")
-    else:
-        logger.error(f"Failed to purge cache: {response.status_code} - {response.text}")
+        return True
+
+    logger.error("Failed to purge cache: %s - %s", response.status_code, response.text)
+    return False
 
 
 def refresh_cache():
@@ -392,10 +395,12 @@ def refresh_cache():
             logger.info("Cache refreshed successfully.")
         else:
             logger.error(
-                f"Failed to refresh cache: {response.status_code} - {response.text}"
+                "Failed to refresh cache: %s - %s",
+                response.status_code,
+                response.text,
             )
     except requests.RequestException as e:
-        logger.error(f"Error refreshing cache: {e}")
+        logger.error("Error refreshing cache: %s", e)
 
 
 def clear_cache():
@@ -435,9 +440,10 @@ def serve_api(force: bool = False):
         ftp.upload("email", web.split("/")[-1], web)
         ftp.upload("printable", printable.split("/")[-1], printable)
 
-    purge_cache()
-    sleep(3)  # Wait for cache to purge
-    refresh_cache()
+    if purge_cache():
+        # Allow Cloudflare edge nodes time to propagate the purge
+        sleep(_CACHE_PURGE_PROPAGATION_SECS)
+        refresh_cache()
 
 
 if __name__ == "__main__":  # pragma: no cover

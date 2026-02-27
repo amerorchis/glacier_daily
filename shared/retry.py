@@ -2,6 +2,7 @@
 A decorator to retry an operation.
 """
 
+import functools
 from collections.abc import Callable
 from time import sleep
 
@@ -32,6 +33,7 @@ def retry(
         Decorator
         """
 
+        @functools.wraps(func)
         def newfn(*args, **kwargs):
             """
             The new function
@@ -44,14 +46,19 @@ def retry(
                 except exceptions as e:
                     last_exception = e
                     logger.warning(
-                        f"Exception thrown when attempting to run {func.__name__}, attempt "
-                        f"{attempt + 1} of {times}"
+                        "Exception thrown when attempting to run %s, attempt %d of %d",
+                        func.__name__,
+                        attempt + 1,
+                        times,
                     )
                     attempt += 1
                     sleep(backoff)
 
             logger.error(
-                f"All {times} attempts failed for {func.__name__}: {last_exception}"
+                "All %d attempts failed for %s: %s",
+                times,
+                func.__name__,
+                last_exception,
             )
             return default
 

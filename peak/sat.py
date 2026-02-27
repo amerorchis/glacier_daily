@@ -9,7 +9,7 @@ import requests
 from PIL import Image
 
 from shared.datetime_utils import now_mountain
-from shared.ftp import upload_file
+from shared.ftp import FTPSession
 from shared.logging_config import get_logger
 from shared.settings import get_settings
 
@@ -29,7 +29,8 @@ def upload_peak() -> str:
     then return the URL.
     """
     directory, filename, local_path = prepare_peak_upload()
-    address, _ = upload_file(directory, filename, local_path)
+    with FTPSession() as ftp:
+        address, _ = ftp.upload(directory, filename, local_path)
     return address
 
 

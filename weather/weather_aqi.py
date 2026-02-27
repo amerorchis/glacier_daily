@@ -85,6 +85,10 @@ def get_air_quality() -> int | str:
         logger.error("AQI request error: %s", e)
         return ""
 
+    except (KeyError, IndexError, TypeError) as e:
+        logger.error("Unexpected AQI response structure: %s", e)
+        return ""
+
 
 if __name__ == "__main__":  # pragma: no cover
     print(get_air_quality())

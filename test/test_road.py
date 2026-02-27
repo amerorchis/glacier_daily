@@ -1,6 +1,6 @@
 import pytest
 
-from roads.Road import Road
+from roads.road import Road
 
 
 @pytest.fixture

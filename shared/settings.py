@@ -36,9 +36,9 @@ class Settings:
     # --- Service keys (default "" — modules degrade gracefully) ---
     BC_TOKEN: str = ""
     BC_STORE_HASH: str = ""
-    flickr_key: str = ""
-    flickr_secret: str = ""
-    glaciernps_uid: str = ""
+    FLICKR_KEY: str = ""
+    FLICKR_SECRET: str = ""
+    GLACIERNPS_UID: str = ""
     SUNSETHUE_KEY: str = ""
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
     NOTICES_SPREADSHEET_ID: str = ""

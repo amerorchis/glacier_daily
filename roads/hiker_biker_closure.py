@@ -2,8 +2,8 @@
 Define an object that represents a hiker/biker closure.
 """
 
-from roads.Place import Place
-from roads.Road import Road
+from roads.place import Place
+from roads.road import Road
 
 
 class HikerBiker(Place):

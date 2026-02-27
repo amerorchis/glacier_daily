@@ -1,6 +1,5 @@
-# test_flickr.py
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from urllib.error import URLError
 
 import pytest
@@ -20,9 +19,9 @@ from image_otd.image_otd import (
 @pytest.fixture
 def mock_env_vars(mock_required_settings):
     env_vars = {
-        "flickr_key": "test_key",
-        "flickr_secret": "test_secret",
-        "glaciernps_uid": "test_uid",
+        "FLICKR_KEY": "test_key",
+        "FLICKR_SECRET": "test_secret",
+        "GLACIERNPS_UID": "test_uid",
     }
     with patch.dict("os.environ", env_vars):
         yield env_vars
@@ -222,15 +221,19 @@ def test_process_image_invalid_format(tmp_path):
 
 
 def test_upload_pic_otd_success():
+    mock_ftp = MagicMock()
+    mock_ftp.__enter__ = MagicMock(return_value=mock_ftp)
+    mock_ftp.__exit__ = MagicMock(return_value=False)
+    mock_ftp.upload.return_value = ("http://example.com/image.jpg", None)
+
     with (
-        patch("image_otd.image_otd.upload_file") as mock_upload,
+        patch("image_otd.image_otd.FTPSession", return_value=mock_ftp),
         patch("image_otd.image_otd.Path.exists", return_value=True),
     ):
-        mock_upload.return_value = ("http://example.com/image.jpg", None)
         result = upload_pic_otd()
 
         assert result == "http://example.com/image.jpg"
-        mock_upload.assert_called_once()
+        mock_ftp.upload.assert_called_once()
 
 
 def test_upload_pic_otd_file_not_found():
@@ -323,7 +326,7 @@ def test_get_image_otd_flickr_error_fallback():
     with patch("image_otd.image_otd.resize_full") as mock_resize:
         mock_resize.side_effect = FlickrAPIError("API down")
         result = get_image_otd()
-        assert result == ("Flickr API Error", "", "")
+        assert result == ("", "", "")
 
 
 def test_get_flickr_url_error_429_retry(

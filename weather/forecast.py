@@ -197,6 +197,8 @@ def get_forecast() -> tuple[list[tuple[str, int, int, str]], str]:
         raise json.JSONDecodeError(
             f"Failed to parse API response: {str(e)}", e.doc, e.pos
         ) from e
+    except (KeyError, IndexError, TypeError) as e:
+        raise type(e)(f"Unexpected forecast response structure: {e}") from e
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -257,7 +257,3 @@ class TestRealWorldUseCases:
         time_part = format_time_12hr(dt)
         result = f"{date_part} at {time_part} MT"
         assert result == "1/5/25 at 2:30 pm MT"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])

@@ -276,21 +276,26 @@ def test_subscriber_list_returns_full_objects(monkeypatch, mock_required_setting
 
 
 def test_subscriber_list_failure(monkeypatch, mock_required_settings):
-    class FakeRequestException(Exception):
-        pass
+    import requests as real_requests
+
+    import shared.retry as retry_mod
 
     class FakeResponse:
         def raise_for_status(self):
-            raise FakeRequestException("fail")
+            raise real_requests.exceptions.ConnectionError("fail")
 
         def json(self):
             return {"subscribers": [], "meta": {"total_pages": 1}}
 
-    fake_requests = types.SimpleNamespace(
-        get=lambda *a, **k: FakeResponse(),
-        exceptions=types.SimpleNamespace(RequestException=FakeRequestException),
+    monkeypatch.setattr(
+        subscriber_list,
+        "requests",
+        types.SimpleNamespace(
+            get=lambda *a, **k: FakeResponse(),
+            exceptions=real_requests.exceptions,
+        ),
     )
-    monkeypatch.setattr(subscriber_list, "requests", fake_requests)
+    monkeypatch.setattr(retry_mod, "sleep", lambda _: None)
     _set_drip_env(monkeypatch)
     result = subscriber_list.subscriber_list()
     assert result == []

@@ -131,7 +131,7 @@ def events_today(now=None) -> EventsResult:
         msg = seasonal_message(now_dt)
         return EventsResult(seasonal_message=msg)
 
-    except (JSONDecodeError, ReadTimeout) as e:
+    except (JSONDecodeError, ReadTimeout, KeyError, IndexError, TypeError) as e:
         logger.error("Failed to retrieve events: %s", e)
         year, month, day = (int(i) for i in now.split("-"))
         now_dt = datetime(year, month, day)

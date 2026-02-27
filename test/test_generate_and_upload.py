@@ -73,6 +73,7 @@ def mock_all_data_sources(monkeypatch):
         gau, "get_notices", lambda: NoticesResult(notices=["Test notice"])
     )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
 
 def test_gen_data_keys_present(mock_all_data_sources):
@@ -103,6 +104,7 @@ def test_gen_data_keys_present(mock_all_data_sources):
         "sunrise_vid",
         "sunrise_still",
         "sunrise_str",
+        "gnpc-events",
     ]
 
     for key in expected_keys:
@@ -189,6 +191,7 @@ def test_gen_data_with_empty_returns(monkeypatch):
     monkeypatch.setattr(gau, "get_product", lambda **kw: ("", None, "", ""))
     monkeypatch.setattr(gau, "get_notices", lambda: NoticesResult())
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     # Should not raise even with empty values
     data, _ = gau.gen_data()
@@ -197,9 +200,7 @@ def test_gen_data_with_empty_returns(monkeypatch):
 
 
 def test_write_data_to_json(tmp_path, monkeypatch):
-    # Patch get_gnpc_events to avoid network
-    monkeypatch.setattr(gau, "get_gnpc_events", lambda: "gnpc_events")
-    fake_data = {"foo": "bar", "baz": "qux"}
+    fake_data = {"foo": "bar", "baz": "qux", "gnpc-events": []}
     out = gau.write_data_to_json(fake_data, "test.json")
     assert out.endswith("test.json")
     # Check file contents
@@ -212,29 +213,16 @@ def test_write_data_to_json_with_dataclasses(tmp_path, monkeypatch):
     """Verify dataclass values are serialized correctly."""
     import json
 
-    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
     fake_data = {
         "trails": TrailsResult(closures=["Trail A closed"]),
         "roads": RoadsResult(no_closures_message="No closures"),
+        "gnpc-events": [],
     }
     out = gau.write_data_to_json(fake_data, "test.json")
     with open(out, encoding="utf-8") as f:
         parsed = json.load(f)
     assert parsed["trails"]["closures"] == ["Trail A closed"]
     assert parsed["roads"]["no_closures_message"] == "No closures"
-
-
-def test_send_to_server(monkeypatch):
-    called = {}
-    monkeypatch.setattr(
-        gau,
-        "upload_file",
-        lambda d, f, p: called.update({"dir": d, "file": f, "path": p}),
-    )
-    gau.send_to_server("/tmp/test.json", "api")
-    assert called["dir"] == "api"
-    assert called["file"] == "test.json"
-    assert called["path"] == "/tmp/test.json"
 
 
 def test_serve_api(monkeypatch, tmp_path):
@@ -245,7 +233,7 @@ def test_serve_api(monkeypatch, tmp_path):
         gau, "write_data_to_json", lambda data, doctype: str(tmp_path / "email.json")
     )
     monkeypatch.setattr(gau, "FTPSession", MockFTPSession)
-    monkeypatch.setattr(gau, "purge_cache", lambda: None)
+    monkeypatch.setattr(gau, "purge_cache", lambda: True)
     monkeypatch.setattr(gau, "refresh_cache", lambda: None)
     monkeypatch.setattr(gau, "sleep", lambda _: None)
     # Should not raise
@@ -290,6 +278,7 @@ def test_gen_data_module_exception_handling(monkeypatch):
         gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
     )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     # gen_data should not raise — it should use fallback values
     result, _ = gau.gen_data()
@@ -323,6 +312,7 @@ def test_gen_data_multiple_module_failures(monkeypatch):
         gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
     )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     result, _ = gau.gen_data()
     assert isinstance(result, dict)
@@ -347,7 +337,7 @@ def test_purge_cache_success(monkeypatch, mock_required_settings):
     with patch(
         "generate_and_upload.requests.post", return_value=mock_response
     ) as mock_post:
-        gau.purge_cache()
+        assert gau.purge_cache() is True
 
         # Verify the API was called correctly
         mock_post.assert_called_once_with(
@@ -372,13 +362,13 @@ def test_purge_cache_failure(monkeypatch, mock_required_settings):
     mock_response.text = "Bad Request"
 
     with patch("generate_and_upload.requests.post", return_value=mock_response):
-        gau.purge_cache()  # Should not raise, just print error
+        assert gau.purge_cache() is False
 
 
 def test_purge_cache_missing_env_vars(monkeypatch, mock_required_settings):
     # CACHE_PURGE and ZONE_ID are "" from conftest seeding — should return early
     with patch("generate_and_upload.requests.post") as mock_post:
-        gau.purge_cache()
+        assert gau.purge_cache() is False
         mock_post.assert_not_called()
 
 
@@ -388,7 +378,7 @@ def test_purge_cache_partial_env_vars(monkeypatch, mock_required_settings):
 
     # Should return early without making any requests
     with patch("generate_and_upload.requests.post") as mock_post:
-        gau.purge_cache()
+        assert gau.purge_cache() is False
         mock_post.assert_not_called()
 
 
@@ -428,18 +418,15 @@ def test_refresh_cache_request_exception():
 
 
 def test_purge_cache_request_exception(monkeypatch, mock_required_settings):
-    """Verify purge_cache propagates RequestException (no try/except)."""
+    """Verify purge_cache catches RequestException and returns False."""
     monkeypatch.setenv("CACHE_PURGE", "test_key")
     monkeypatch.setenv("ZONE_ID", "test_zone")
 
-    with (
-        patch(
-            "generate_and_upload.requests.post",
-            side_effect=gau.requests.RequestException("Connection timeout"),
-        ),
-        pytest.raises(gau.requests.RequestException, match="Connection timeout"),
+    with patch(
+        "generate_and_upload.requests.post",
+        side_effect=gau.requests.RequestException("Connection timeout"),
     ):
-        gau.purge_cache()
+        assert gau.purge_cache() is False
 
 
 def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
@@ -495,6 +482,7 @@ class TestLKGSave:
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
         )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+        monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
         # First run: everything succeeds, LKG populated
         gau.gen_data()
@@ -534,6 +522,7 @@ class TestLKGFallback:
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
         )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
+        monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     def test_dynamic_module_uses_lkg_on_failure(self, monkeypatch):
         """When a dynamic module fails, its LKG data is returned."""
@@ -605,6 +594,7 @@ class TestLKGDateDeterministic:
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
         )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
+        monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     def test_cached_module_skips_api_call(self, monkeypatch):
         """Date-deterministic modules skip API calls when LKG has today's data."""

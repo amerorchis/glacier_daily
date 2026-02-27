@@ -7,7 +7,7 @@ import json
 import requests
 import urllib3
 
-from roads.Road import Road
+from roads.road import Road
 from shared.data_types import RoadsResult
 from shared.logging_config import get_logger
 
@@ -238,7 +238,7 @@ def get_road_status() -> RoadsResult:
     """
     try:
         return format_road_closures(closed_roads())
-    except requests.exceptions.HTTPError:
+    except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
         logger.error("Road status HTTP error", exc_info=True)
         return RoadsResult()
     except NPSWebsiteError:

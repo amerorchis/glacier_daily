@@ -103,9 +103,10 @@ class TestWeatherAlertService:
         assert len(result) == 2
         assert "High Wind Watch" in result[0]["properties"]["headline"]
 
+    @patch("weather.weather_alerts.sleep")
     @patch("requests.get")
     def test_fetch_alerts_retry_then_success(
-        self, mock_get, weather_service, sample_api_response
+        self, mock_get, _mock_sleep, weather_service, sample_api_response
     ):
         fail_response = Mock()
         fail_response.status_code = 500

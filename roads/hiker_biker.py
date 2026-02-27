@@ -8,7 +8,7 @@ import json
 import requests
 import urllib3
 
-from roads.HikerBiker import HikerBiker
+from roads.hiker_biker_closure import HikerBiker
 from roads.roads import NPSWebsiteError, closed_roads
 from shared.data_types import HikerBikerResult
 from shared.logging_config import get_logger
