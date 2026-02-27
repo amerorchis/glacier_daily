@@ -15,19 +15,13 @@ logger = get_logger(__name__)
 class GNPCError(Exception):
     """Base exception for GNPC-related errors"""
 
-    pass
-
 
 class GNPCRequestError(GNPCError):
     """Raised when there's an error making requests to GNPC website"""
 
-    pass
-
 
 class GNPCParsingError(GNPCError):
     """Raised when there's an error parsing GNPC website content"""
-
-    pass
 
 
 def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
@@ -50,11 +44,11 @@ def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
         r = requests.get(url, headers=headers, timeout=12)
         r.raise_for_status()
     except RequestException as e:
-        raise GNPCRequestError(f"Failed to access {url}: {str(e)}") from e
+        raise GNPCRequestError(f"Failed to access {url}: {e!s}") from e
 
     try:
         soup = BeautifulSoup(r.content, "html.parser")
-        rows = soup.find_all("div", "et_pb_row")
+        rows = soup.find_all("div", attrs={"class": "et_pb_row"})
         rows = [row for row in rows if row.find("h4")]
 
         events = []
@@ -67,7 +61,7 @@ def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
                 title = f"{event_type} {h4.text}"
 
                 # Get picture URL
-                thumb = row.find("div", "thumbs")
+                thumb = row.find("div", attrs={"class": "thumbs"})
                 img = row.find("img")
                 if thumb:
                     pic = thumb.get_text()
@@ -105,7 +99,7 @@ def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
 
         return events
     except Exception as e:
-        raise GNPCParsingError(f"Failed to parse content from {url}: {str(e)}") from e
+        raise GNPCParsingError(f"Failed to parse content from {url}: {e!s}") from e
 
 
 def get_gnpc_events() -> list[dict[str, str]]:
@@ -150,4 +144,4 @@ def get_gnpc_events() -> list[dict[str, str]]:
 
         return events
     except Exception as e:
-        raise GNPCError(f"Error processing event dates: {str(e)}") from e
+        raise GNPCError(f"Error processing event dates: {e!s}") from e

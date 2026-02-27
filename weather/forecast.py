@@ -39,9 +39,7 @@ class WeatherAPI:
     """Handles interactions with the Open-Meteo API."""
 
     def __init__(self) -> None:
-        """
-        Constructor
-        """
+        """Set up a cached HTTP session and load park locations."""
         self.session = self._setup_session()
         self.locations = self._load_locations()
 
@@ -192,10 +190,10 @@ def get_forecast() -> tuple[list[tuple[str, int, int, str]], str]:
 
         return results, length_str
     except RequestException as e:
-        raise RequestException(f"Failed to fetch weather data: {str(e)}") from e
+        raise RequestException(f"Failed to fetch weather data: {e!s}") from e
     except json.JSONDecodeError as e:
         raise json.JSONDecodeError(
-            f"Failed to parse API response: {str(e)}", e.doc, e.pos
+            f"Failed to parse API response: {e!s}", e.doc, e.pos
         ) from e
     except (KeyError, IndexError, TypeError) as e:
         raise type(e)(f"Unexpected forecast response structure: {e}") from e

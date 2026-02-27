@@ -206,7 +206,7 @@ def test_process_image_file_not_found():
 
     with pytest.raises(
         ImageProcessingError,
-        match="Image processing failed: .*No such file or directory",
+        match=r"Image processing failed: .*No such file or directory",
     ):
         process_image(invalid_path)
 

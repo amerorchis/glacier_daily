@@ -23,8 +23,6 @@ class NPSWebsiteError(Exception):
     Custom exception for NPS website errors.
     """
 
-    pass
-
 
 def _get_segment_bounds(coordinates: list) -> tuple[float, float]:
     """
@@ -206,7 +204,7 @@ def format_road_closures(roads: dict[str, Road]) -> RoadsResult:
     """
     entirely_closed = []
     statuses = []
-    for _, road in roads.items():
+    for road in roads.values():
         road.closure_string()
 
         if road.entirely_closed:

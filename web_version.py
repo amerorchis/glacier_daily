@@ -1,6 +1,6 @@
 """
 This module generates a daily update for Glacier National Park and saves it as an HTML file.
-The multiple class encapsulations are necessary for the template to work here and in Drip.
+Drip accesses template data via {{ my.daily_update.field }}, so we wrap data in matching nested objects.
 """
 
 import re
@@ -35,7 +35,7 @@ class LiquidCompatLoader(FileSystemLoader):
 
 
 class DailyUpdate:
-    """An object to encapsulate the information"""
+    """Exposes data fields as attributes for Jinja2/Liquid template access."""
 
     def __init__(self, data: dict[str, object]):
         """
@@ -52,7 +52,7 @@ class DailyUpdate:
 
 
 class myClass:
-    """Encapsulates the DailyUpdate with arbitrary class"""
+    """Wraps DailyUpdate as 'my.daily_update' to match Drip's template variable path."""
 
     def __init__(self, glacier: DailyUpdate):
         """

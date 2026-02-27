@@ -43,12 +43,12 @@ def process_image_for_email(
 
     # If it fits within the height cap, return full-bleed (no matte)
     if new_height <= max_height:
-        return image.resize((new_width, new_height), Image.LANCZOS)
+        return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     # Height exceeds cap — fit within target_width x max_height, place on matte
     new_height = max_height
     new_width = int(new_height * aspect_ratio)
-    resized = image.resize((new_width, new_height), Image.LANCZOS)
+    resized = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     canvas = Image.new("RGB", (target_width, max_height), (255, 255, 255))
 

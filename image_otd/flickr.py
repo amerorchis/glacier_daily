@@ -21,8 +21,6 @@ logger = get_logger(__name__)
 class FlickrAPIError(Exception):
     """Raised when Flickr API operations fail"""
 
-    pass
-
 
 @dataclass
 class FlickrImage:
@@ -151,12 +149,12 @@ def get_flickr() -> FlickrImage:
                         raise FlickrAPIError(
                             "Too many requests (HTTP 429) after retries."
                         ) from e
-                raise FlickrAPIError(f"Failed to download image: {str(e)}") from e
+                raise FlickrAPIError(f"Failed to download image: {e!s}") from e
 
         link = f"https://flickr.com/photos/glaciernps/{photo_id}"
         return FlickrImage(save_loc, title, link)
 
     except KeyError as e:
-        raise FlickrAPIError(f"Missing environment variable: {str(e)}") from e
+        raise FlickrAPIError(f"Missing environment variable: {e!s}") from e
     except Exception as e:
-        raise FlickrAPIError(f"Flickr API error: {str(e)}") from e
+        raise FlickrAPIError(f"Flickr API error: {e!s}") from e

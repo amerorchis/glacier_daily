@@ -1,8 +1,7 @@
 """
 Structured data types for module outputs.
 
-These frozen dataclasses replace the HTML strings that modules previously returned.
-Templates (Jinja2) handle all HTML rendering using these structured types.
+Each module returns one of these frozen dataclasses. Templates handle all HTML rendering.
 """
 
 from __future__ import annotations
@@ -88,7 +87,7 @@ class AlertBullet:
 class WeatherResult:
     """Result from the weather module.
 
-    Note: weather_image_url is NOT included here — it's generated separately
+    Note: weather_image is NOT included here — it's generated separately
     by weather_image() in gen_data() and stored as a top-level field.
     """
 

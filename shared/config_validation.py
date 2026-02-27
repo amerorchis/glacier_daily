@@ -33,17 +33,18 @@ def validate_config() -> None:
         sys.exit(1)
 
     # Check that required fields are not empty strings
-    missing_required = []
-    for name in (
-        "NPS",
-        "DRIP_TOKEN",
-        "DRIP_ACCOUNT",
-        "FTP_USERNAME",
-        "FTP_PASSWORD",
-        "MAPBOX_TOKEN",
-    ):
-        if not getattr(settings, name):
-            missing_required.append(name)
+    missing_required = [
+        name
+        for name in (
+            "NPS",
+            "DRIP_TOKEN",
+            "DRIP_ACCOUNT",
+            "FTP_USERNAME",
+            "FTP_PASSWORD",
+            "MAPBOX_TOKEN",
+        )
+        if not getattr(settings, name)
+    ]
 
     for var in OPTIONAL_VARS:
         if not getattr(settings, var):

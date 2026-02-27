@@ -13,19 +13,13 @@ logger = get_logger(__name__)
 class TimelapseError(Exception):
     """Base exception for timelapse processing errors."""
 
-    pass
-
 
 class VideoProcessingError(TimelapseError):
     """Exception raised for errors during video processing."""
 
-    pass
-
 
 class FileOperationError(TimelapseError):
     """Exception raised for file operation errors."""
-
-    pass
 
 
 def fetch_glacier_data(endpoint_type: str) -> list:
@@ -152,8 +146,6 @@ def find_matching_thumbnail(video_id: str, thumbnail_data: list) -> str | None:
 def process_video() -> tuple[str, str, str]:
     """
     Process the sunrise timelapse by fetching remote data and selecting appropriate video and thumbnail.
-    Args:
-        test (bool): Whether to use test mode (kept for backward compatibility, not used).
 
     Returns:
         tuple[str, str, str]: (video_url, thumbnail_url, descriptor_string)

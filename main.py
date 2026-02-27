@@ -30,6 +30,7 @@ def main(
 
     Args:
         tag (str): Tag to filter subscribers. Defaults to 'Glacier Daily Update'.
+        test (bool): Whether running in test mode (skips sleep delays).
         force (bool): Clear cached data and re-fetch everything fresh.
     """
     settings = get_settings()  # Load email.env so ENVIRONMENT is available
@@ -56,7 +57,7 @@ def main(
             # Generate data and upload to website.
             serve_api(force=force)
 
-            # See if this fixes the issue with timelapse not showing.
+            # Allow time for FTP-uploaded timelapse assets to propagate.
             sleep(10 if not test else 0)
 
             # Send the email to each subscriber using Drip API.

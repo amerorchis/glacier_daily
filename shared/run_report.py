@@ -126,6 +126,5 @@ def upload_status_report(report: RunReport) -> None:
     with open(STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(status_data, f, indent=2, default=str)
 
-    # status.json is served directly via Cloudflare Tunnel
-    # (api.glacierconservancy.org → localhost:8000 → server/)
+    # status.json is served from the server/ directory via the public API endpoint
     logger.info("Status report written (%d runs in history)", len(runs))

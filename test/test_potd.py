@@ -104,7 +104,7 @@ class TestGetProduct:
                 Mock(status_code=200, text=json.dumps(mock_product_response)),
                 Mock(status_code=200, text=json.dumps(mock_image_response)),
             ]
-            title, image_url, product_link, desc = get_product(skip_upload=True)
+            title, image_url, product_link, _desc = get_product(skip_upload=True)
             assert title == "Test Product"
             assert image_url is None
             assert product_link == "https://shop.glacier.org/test-product"

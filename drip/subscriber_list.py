@@ -20,7 +20,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
         tag (str): The tag to filter subscribers by. Defaults to 'Glacier Daily Update'.
 
     Returns:
-        list: A list of subscriber emails or subscriber data.
+        list: A list of subscriber email strings (when using standard tags) or raw subscriber dicts.
     """
     settings = get_settings()
     url = f"https://api.getdrip.com/v2/{settings.DRIP_ACCOUNT}/subscribers"

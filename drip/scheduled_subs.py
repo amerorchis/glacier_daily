@@ -3,14 +3,10 @@ This module handles the scheduling of subscriber updates for the Glacier Daily s
 It includes functions to start and end subscriptions based on predefined tags and custom fields.
 """
 
-try:
-    from drip.subscriber_list import subscriber_list
-    from drip.update_subscriber import update_subscriber
-except ModuleNotFoundError:
-    from subscriber_list import subscriber_list
-    from update_subscriber import update_subscriber
 from datetime import datetime, timedelta
 
+from drip.subscriber_list import subscriber_list
+from drip.update_subscriber import update_subscriber
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
 
@@ -64,8 +60,8 @@ def update_scheduled_subs():
     if not scheduled:
         return {"start": [], "end": []}
 
-    start_today = list()
-    end_today = list()
+    start_today = []
+    end_today = []
     date_format = "%Y-%m-%d"
     yesterday = (now_mountain() - timedelta(days=1)).replace(tzinfo=None)
     tomorrow = (now_mountain() + timedelta(days=1)).replace(tzinfo=None)

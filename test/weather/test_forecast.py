@@ -83,7 +83,7 @@ class TestWeatherAPI:
         assert isinstance(results, list)
         assert all(isinstance(item, tuple) for item in results)
         assert len(results) == 1
-        location, high, low, condition = results[0]
+        _location, high, low, condition = results[0]
         assert isinstance(high, int)
         assert isinstance(low, int)
         assert condition.lower() == "sunny"

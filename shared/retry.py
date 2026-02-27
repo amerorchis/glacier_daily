@@ -20,10 +20,10 @@ def retry(
     in ``exceptions`` are thrown
     :param times: The number of times to repeat the wrapped function/method
     :type times: Int
-    :param Exceptions: Lists of exceptions that trigger a retry attempt
-    :type Exceptions: Tuple of Exceptions
-    :param Default: Value to return is exception is not resolved in given # of attempts.
-    :type Default: Str
+    :param exceptions: Lists of exceptions that trigger a retry attempt
+    :type exceptions: tuple
+    :param default: Value to return if exception is not resolved in given # of attempts.
+    :type default: object
     :param backoff: How long to wait between attempts
     :type backoff: Int = 15
     """
