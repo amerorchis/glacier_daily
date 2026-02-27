@@ -73,6 +73,7 @@ def mock_all_data_sources(monkeypatch):
         gau, "get_notices", lambda: NoticesResult(notices=["Test notice"])
     )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
 
 def test_gen_data_keys_present(mock_all_data_sources):
@@ -103,6 +104,7 @@ def test_gen_data_keys_present(mock_all_data_sources):
         "sunrise_vid",
         "sunrise_still",
         "sunrise_str",
+        "gnpc-events",
     ]
 
     for key in expected_keys:
@@ -197,9 +199,7 @@ def test_gen_data_with_empty_returns(monkeypatch):
 
 
 def test_write_data_to_json(tmp_path, monkeypatch):
-    # Patch get_gnpc_events to avoid network
-    monkeypatch.setattr(gau, "get_gnpc_events", lambda: "gnpc_events")
-    fake_data = {"foo": "bar", "baz": "qux"}
+    fake_data = {"foo": "bar", "baz": "qux", "gnpc-events": []}
     out = gau.write_data_to_json(fake_data, "test.json")
     assert out.endswith("test.json")
     # Check file contents
@@ -212,10 +212,10 @@ def test_write_data_to_json_with_dataclasses(tmp_path, monkeypatch):
     """Verify dataclass values are serialized correctly."""
     import json
 
-    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
     fake_data = {
         "trails": TrailsResult(closures=["Trail A closed"]),
         "roads": RoadsResult(no_closures_message="No closures"),
+        "gnpc-events": [],
     }
     out = gau.write_data_to_json(fake_data, "test.json")
     with open(out, encoding="utf-8") as f:

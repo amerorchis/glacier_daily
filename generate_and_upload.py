@@ -67,6 +67,7 @@ FALLBACK_MODULE_KEYS = {
     "events": ["events"],
     "notices": ["notices"],
     "sunrise": ["sunrise_vid", "sunrise_still", "sunrise_str"],
+    "gnpc_events": ["gnpc-events"],
 }
 
 _ALL_MODULE_KEYS = {**CACHED_MODULE_KEYS, **FALLBACK_MODULE_KEYS}
@@ -178,6 +179,7 @@ def gen_data() -> tuple[dict, list]:
         events_future = _submit_timed(executor, "events", events_today)
         sunrise_future = _submit_timed(executor, "sunrise", process_video)
         notices_future = _submit_timed(executor, "notices", get_notices)
+        gnpc_future = _submit_timed(executor, "gnpc_events", get_gnpc_events)
 
         # Date-deterministic modules: skip if cached today
         image_future = None
@@ -285,6 +287,7 @@ def gen_data() -> tuple[dict, list]:
         "sunrise_vid": sunrise_vid,
         "sunrise_still": sunrise_still,
         "sunrise_str": sunrise_str,
+        "gnpc-events": _safe_result(gnpc_future, "gnpc_events", []),
     }
 
     # LKG: Apply weather fallback if weather module failed
@@ -337,7 +340,6 @@ def write_data_to_json(data: dict, doctype: str) -> str:
     serializable["time_generated"] = cross_platform_strftime(
         now_mountain(), "%-I:%M %p"
     ).lower()
-    serializable["gnpc-events"] = get_gnpc_events()
 
     filepath = f"server/{doctype}"
     with open(filepath, "w", encoding="utf-8") as f:
