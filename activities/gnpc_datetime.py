@@ -105,4 +105,4 @@ def datetime_to_string(dt_obj: datetime):
                 parts[-1] = parts[-1].upper()
         return " ".join(parts)
     except (ValueError, AttributeError) as e:
-        raise ValueError(f"Invalid datetime format: {str(e)}") from e
+        raise ValueError(f"Invalid datetime format: {e!s}") from e

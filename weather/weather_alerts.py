@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
+from typing import ClassVar
 
 import requests
 
@@ -35,7 +36,7 @@ class WeatherAlertService:
     """
 
     BASE_URL = "https://api.weather.gov"
-    ZONES = [
+    ZONES: ClassVar[list[str]] = [
         f"{BASE_URL}/zones/forecast/MTZ301",
         f"{BASE_URL}/zones/forecast/MTZ302",
         f"{BASE_URL}/zones/county/MTC029",
@@ -44,12 +45,13 @@ class WeatherAlertService:
         f"{BASE_URL}/zones/forecast/MTZ003",
         f"{BASE_URL}/zones/fire/MTZ105",
     ]
-    HEADERS = {"User-Agent": "Mozilla/5.0"}
+    HEADERS: ClassVar[dict[str, str]] = {"User-Agent": "Mozilla/5.0"}
     MAX_RETRIES = 10
     RETRY_DELAY = 3
-    MAX_ALERTS = (
-        2  # Temporary limit max alerts until we find a way to filter relevant ones
-    )
+    SEVERITY_ORDER: ClassVar[dict[str, int]] = {
+        "Extreme": 0,
+        "Severe": 1,
+    }
 
     @staticmethod
     def parse_alert_time(text: str) -> datetime | None:
@@ -138,40 +140,78 @@ class WeatherAlertService:
             if any(zone in affected_zones[i] for zone in self.ZONES)
         ]
 
-    def process_alerts(self, alerts: list[dict]) -> list[WeatherAlert]:
-        """Process and deduplicate alerts."""
-        processed_alerts = []
-        seen_headlines = set()
+    def filter_by_relevance(self, alerts: list[dict]) -> list[dict]:
+        """Filter alerts by severity, status, and message type.
 
-        for alert in alerts[: self.MAX_ALERTS]:  # Apply temporary limit
+        Keeps only actionable alerts:
+        - severity must be 'Extreme' or 'Severe'
+        - status must be 'Actual' (not test/exercise/draft)
+        - messageType must not be 'Cancel'
+        """
+        return [
+            alert
+            for alert in alerts
+            if alert.get("severity") in self.SEVERITY_ORDER
+            and alert.get("status") == "Actual"
+            and alert.get("messageType") != "Cancel"
+        ]
+
+    def deduplicate_alerts(self, alerts: list[dict]) -> list[dict]:
+        """Deduplicate alerts by event type, keeping the most recently sent.
+
+        Uses the structured 'event' field from the NWS API instead of parsing headlines.
+        """
+        best_by_event: dict[str, dict] = {}
+        for alert in alerts:
+            event_type = alert.get("event", "")
+            sent = alert.get("sent", "")
+            if event_type not in best_by_event or sent > best_by_event[event_type].get(
+                "sent", ""
+            ):
+                best_by_event[event_type] = alert
+        return list(best_by_event.values())
+
+    def sort_alerts(self, alerts: list[dict]) -> list[dict]:
+        """Sort alerts by severity (Extreme first), then by sent time (newest first)."""
+        return sorted(
+            alerts,
+            key=lambda a: (
+                self.SEVERITY_ORDER.get(a.get("severity", ""), 99),
+                -(
+                    datetime.fromisoformat(a["sent"]).timestamp()
+                    if a.get("sent")
+                    else 0
+                ),
+            ),
+        )
+
+    def process_alerts(self, alerts: list[dict]) -> list[WeatherAlert]:
+        """Filter, deduplicate, sort, and convert alerts to WeatherAlert objects."""
+        filtered = self.filter_by_relevance(alerts)
+        deduped = self.deduplicate_alerts(filtered)
+        ordered = self.sort_alerts(deduped)
+
+        processed = []
+        for alert in ordered:
             text = f"{alert['headline']}: {alert['description']}".replace(r"\n", "")
-            issued_time = self.parse_alert_time(text)
-            if not issued_time:
+            sent_time = (
+                datetime.fromisoformat(alert["sent"]) if alert.get("sent") else None
+            )
+            if sent_time is None:
+                sent_time = self.parse_alert_time(text)
+            if sent_time is None:
                 continue
 
-            weather_alert = WeatherAlert(
-                headline=alert["headline"],
-                description=alert["description"],
-                issued_time=issued_time,
-                full_text=text,
+            processed.append(
+                WeatherAlert(
+                    headline=alert["headline"],
+                    description=alert["description"],
+                    issued_time=sent_time,
+                    full_text=text,
+                )
             )
 
-            # Only keep the latest alert for each headline
-            alert_type = weather_alert.headline.split(" issued")[0]
-            if alert_type not in seen_headlines:
-                processed_alerts.append(weather_alert)
-                seen_headlines.add(alert_type)
-            else:
-                existing_alert = next(
-                    a
-                    for a in processed_alerts
-                    if a.headline.split(" issued")[0] == alert_type
-                )
-                if weather_alert.issued_time > existing_alert.issued_time:
-                    processed_alerts.remove(existing_alert)
-                    processed_alerts.append(weather_alert)
-
-        return sorted(processed_alerts, key=lambda x: x.issued_time, reverse=True)
+        return processed
 
 
 def weather_alerts() -> list[AlertBullet]:

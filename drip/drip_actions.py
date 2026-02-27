@@ -52,7 +52,7 @@ def get_subs(tag: str) -> list:
 
 def bulk_workflow_trigger(sub_list: list) -> BatchResult:
     """
-    Trigger a bulk workflow action in Drip to increase capacity from 3,600/hour to 50,000/hour.
+    Trigger a Drip bulk event batch to send at higher throughput than individual API calls.
 
     Args:
         sub_list (list): A list of subscriber emails.
@@ -78,7 +78,7 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
     ]
 
     for subs in chunks:
-        subs_json = list()
+        subs_json = []
         for i in subs:
             update = {
                 "email": i,

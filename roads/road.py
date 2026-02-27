@@ -13,10 +13,12 @@ class Road(Place):
     place_type = "roads"
 
     def __init__(self, name: str, orientation: str = "EW"):
-        """
-        Constructor
-        """
+        """Initialize a road by name with its known locations and orientation."""
         super().__init__(name)
+        self.north_loc: str = ""
+        self.south_loc: str = ""
+        self.east_loc: str = ""
+        self.west_loc: str = ""
         try:
             self.locations = self.places[self.place_type][name]
         except KeyError as exc:
@@ -28,43 +30,45 @@ class Road(Place):
         else:
             raise ValueError("Road orientation must be NS or EW.")
 
-    def set_coord(self, coord):
+    def set_coord(self, coord: tuple[float, float]) -> None:
         """
         Set appropriate coordinates depending on if road goes NS or EW.
         """
         if self.orientation == "EW":
             long = coord[0]
 
-            if not self.east or long > self.east[0]:
+            if self.east is None or long > self.east[0]:
                 self.east = coord
 
-            if not self.west or long < self.west[0]:
+            if self.west is None or long < self.west[0]:
                 self.west = coord
 
         else:
             lat = coord[1]
 
-            if not self.north or lat > self.north[1]:
+            if self.north is None or lat > self.north[1]:
                 self.north = coord
 
-            if not self.south or lat < self.south[1]:
+            if self.south is None or lat < self.south[1]:
                 self.south = coord
 
         self.coords_set = True
 
-    def get_coord(self):
+    def get_coord(self) -> None:
         """
         Print the coordinates for a location.
         """
         if self.orientation == "EW":
-            print(
-                f"West: {self.west[1], self.west[0]}\nEast: {self.east[1], self.east[0]}"
-            )
+            if self.west and self.east:
+                print(
+                    f"West: {self.west[1], self.west[0]}\nEast: {self.east[1], self.east[0]}"
+                )
 
         else:
-            print(
-                f"North: {self.north[1], self.north[0]}\nSouth: {self.south[1], self.south[0]}"
-            )
+            if self.north and self.south:
+                print(
+                    f"North: {self.north[1], self.north[0]}\nSouth: {self.south[1], self.south[0]}"
+                )
 
     def closure_string(self):
         """

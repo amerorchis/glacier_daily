@@ -118,10 +118,9 @@ def closed_trails() -> TrailsResult:
 
     closures = [i["msg"] for i in closures]  # Extract messages from list
 
-    # Ignore these closures which are redundant or bugs in the list
+    # Filter out closures that are known false positives in the NPS data feed
     reasons_to_ignore = [
         "Swiftcurrent Pass: Closed Due To Bear Activity",
-        "2024-2025 construction",
     ]
 
     # Remove all closures that mention any reason to ignore
@@ -132,7 +131,7 @@ def closed_trails() -> TrailsResult:
     ]
 
     closures = set(closures)  # remove duplicates
-    closures = sorted(list(closures))  # turn back into a list and sort
+    closures = sorted(closures)  # turn back into a list and sort
 
     if closures:
         return TrailsResult(closures=closures)

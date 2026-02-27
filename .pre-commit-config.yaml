@@ -9,17 +9,17 @@ repos:
         exclude: '\.(html|txt)$'
 
 -   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.30.0
     hooks:
       - id: gitleaks
 
 -   repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.11
     hooks:
       - id: actionlint
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.7
+    rev: v0.15.4
     hooks:
       - id: ruff
         args: ["--fix"]

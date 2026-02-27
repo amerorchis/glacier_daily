@@ -59,19 +59,21 @@ select = [
     "B",     # flake8-bugbear
     "S",     # flake8-bandit (security)
     "SIM",   # flake8-simplify
+    "RUF",   # ruff-specific rules
+    "C4",    # flake8-comprehensions
+    "PERF",  # perflint (performance)
+    "PIE",   # flake8-pie (misc practices)
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
-    "S101",  # use of assert (needed in tests)
-    "S603",  # subprocess without shell=True check
-    "S607",  # starting a process with a partial executable path
 ]
 
 [tool.ruff.format]
 docstring-code-format = true
 
 [tool.ruff.lint.per-file-ignores]
-"test/**/*.py" = ["S"]   # disable security warnings in tests
+"test/**/*.py" = ["S"]          # disable security warnings in tests
+"retry_check.py" = ["S603"]     # subprocess.run with trusted input
 
 [tool.ty.environment]
 python-version = "3.11"
@@ -81,14 +83,6 @@ exclude = [
     "frontend_files/",
     "server/",
     "email_html/",
-]
-
-[tool.ty.analysis]
-# Suppress import errors for modules that use try/except import patterns
-# and third-party packages with incomplete type stubs
-allowed-unresolved-imports = [
-    "subscriber_list",
-    "update_subscriber",
 ]
 
 # Test files use mocks, intentional bad types, and duck-typed objects
@@ -101,39 +95,6 @@ too-many-positional-arguments = "ignore"
 missing-argument = "ignore"
 unresolved-attribute = "ignore"
 unsupported-operator = "ignore"
-
-# BeautifulSoup's find/find_all returns PageElement but actual Tags
-# have find/find_all/get methods - BS4 stubs are incomplete
-[[tool.ty.overrides]]
-include = ["activities/gnpc_events.py"]
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
-invalid-argument-type = "ignore"
-no-matching-overload = "ignore"
-
-# Roads module uses dynamically typed attributes (initialized as empty
-# tuples, later reassigned to strings/tuples with data)
-[[tool.ty.overrides]]
-include = ["roads/**/*.py"]
-[tool.ty.overrides.rules]
-index-out-of-bounds = "ignore"
-unresolved-attribute = "ignore"
-unsupported-operator = "ignore"
-invalid-argument-type = "ignore"
-
-# night_sky.py has complex datetime/timezone typing that ty struggles with
-[[tool.ty.overrides]]
-include = ["weather/night_sky.py"]
-[tool.ty.overrides.rules]
-invalid-argument-type = "ignore"
-missing-argument = "ignore"
-no-matching-overload = "ignore"
-
-# Pillow stubs don't expose Image.LANCZOS
-[[tool.ty.overrides]]
-include = ["image_otd/**/*.py", "shared/image_utils.py", "weather/weather_img.py"]
-[tool.ty.overrides.rules]
-unresolved-attribute = "ignore"
 
 [tool.coverage.run]
 omit = [
@@ -152,7 +113,5 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--strict-markers --strict-config"
 filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
     "ignore::urllib3.exceptions.NotOpenSSLWarning",
 ]

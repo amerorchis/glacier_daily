@@ -16,8 +16,6 @@ from shared.image_utils import process_image_for_email
 class ImageProcessingError(Exception):
     """Raised when image processing operations fail"""
 
-    pass
-
 
 def prepare_pic_otd() -> tuple[str, str, str]:
     """Return (directory, filename, local_path) for the picture of the day upload."""
@@ -76,7 +74,7 @@ def process_image(image_path: Path) -> Path:
     except UnidentifiedImageError as e:
         raise ImageProcessingError("Invalid or corrupt image file") from e
     except Exception as e:
-        raise ImageProcessingError(f"Image processing failed: {str(e)}") from e
+        raise ImageProcessingError(f"Image processing failed: {e!s}") from e
 
 
 def resize_full(skip_upload: bool = False) -> tuple[str | None, str, str]:
@@ -117,7 +115,6 @@ if __name__ == "__main__":
         print(f"Image title: {image_title}")
         print(f"Image link: {image_link}")
     except (FileNotFoundError, ImageProcessingError) as e:
-        print(f"Error processing image: {str(e)}")
+        print(f"Error processing image: {e!s}")
     except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
-        # traceback.print_exc()
+        print(f"An unexpected error occurred: {e!s}")

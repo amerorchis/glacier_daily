@@ -3,6 +3,7 @@ A super class for Roads and Hiker/Biker that finds the nearest named location fr
 """
 
 from math import atan2, cos, radians, sin, sqrt
+from typing import Any
 
 from roads.places import places
 
@@ -15,29 +16,23 @@ class Place:
     place_type = None
 
     def __init__(self, name: str) -> None:
-        """
-        Constructor
-        """
+        """Initialize a named place with empty closure state."""
         self.name = name
         self.closures_found = False
         self.entirely_closed = False
         self.coords_set = False
         self.closure_str = ""
         self.places = places
-        self.locations = []
-        self.north = []
-        self.north_loc = (None, None)
-        self.east = []
-        self.east_loc = ()
-        self.south = []
-        self.south_loc = ()
-        self.west = []
-        self.west_loc = ()
+        self.locations: Any = {}
+        self.north: tuple[float, float] | None = None
+        self.east: tuple[float, float] | None = None
+        self.south: tuple[float, float] | None = None
+        self.west: tuple[float, float] | None = None
         self.orientation = ""
 
     def dist(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """
-        Find Euclidean distance between 2 sets of gps coordinates.
+        Calculate great-circle distance between two GPS coordinates using the Haversine formula.
         """
         # Convert latitude and longitude from degrees to radians
         lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
@@ -80,7 +75,7 @@ class Place:
             ("east", self.east),
             ("west", self.west),
         ]:
-            if coords:
+            if coords is not None:
                 self.find_min_distance(direction, coords[::-1])
 
         self.closures_found = True

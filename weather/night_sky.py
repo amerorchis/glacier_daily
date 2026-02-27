@@ -5,7 +5,7 @@ Retrieve and process aurora forecast.
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import NamedTuple
+from typing import ClassVar, NamedTuple
 from zoneinfo import ZoneInfo
 
 import requests
@@ -55,7 +55,7 @@ class Forecast:
 
     FORECAST_URL = "https://services.swpc.noaa.gov/text/3-day-forecast.txt"
 
-    STORM_LEVELS = {
+    STORM_LEVELS: ClassVar[dict[str, float]] = {
         "G5": 9.0,  # Extreme
         "G4": 8.0,  # Severe
         "G3": 7.0,  # Strong
@@ -63,7 +63,7 @@ class Forecast:
         "G1": 5.0,  # Minor
     }
 
-    AURORA_LEVELS = {
+    AURORA_LEVELS: ClassVar[dict[str, tuple[float, float]]] = {
         "not visible": (0.0, 3.5),  # No visible aurora
         "weakly visible": (3.5, 5.0),  # Weak, visible aurora
         "visible": (5.0, 9.0),  # Strong aurora display
@@ -77,9 +77,7 @@ class Forecast:
                 response.raise_for_status()
                 forecast_text = response.text
             except RequestException as e:
-                raise ForecastFetchError(
-                    f"Failed to fetch NOAA forecast: {str(e)}"
-                ) from e
+                raise ForecastFetchError(f"Failed to fetch NOAA forecast: {e!s}") from e
 
         self.raw_text = forecast_text.strip()
         self.forecast_periods: list[KpPeriod] = []
@@ -399,7 +397,7 @@ def aurora_forecast(cloud_cover: float = 0.0) -> tuple[str, str]:
         return "No aurora forecast available", ""
 
     # Find the peak Kp during dark hours
-    v_time = max(dark_hourly_forecast, key=dark_hourly_forecast.get)
+    v_time = max(dark_hourly_forecast, key=lambda k: dark_hourly_forecast[k])
     v = dark_hourly_forecast[v_time]
 
     cast = f"{v} Kp ({Forecast.get_aurora_strength(v)})"

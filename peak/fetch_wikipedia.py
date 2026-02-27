@@ -44,20 +44,18 @@ def _setup_session() -> requests_cache.CachedSession:
 
 def load_peaks() -> list[dict]:
     """Load peaks from CSV file."""
-    peaks = []
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
-        for row in reader:
-            if row["name"]:  # Skip empty rows
-                peaks.append(
-                    {
-                        "name": row["name"].strip(),
-                        "lat": float(row["lat"]),
-                        "lon": float(row["lon"]),
-                        "elevation": int(row["elevation"]),
-                    }
-                )
-    return peaks
+        return [
+            {
+                "name": row["name"].strip(),
+                "lat": float(row["lat"]),
+                "lon": float(row["lon"]),
+                "elevation": int(row["elevation"]),
+            }
+            for row in reader
+            if row["name"]  # Skip empty rows
+        ]
 
 
 def load_partial_results() -> dict[str, dict]:
