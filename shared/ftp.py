@@ -68,7 +68,8 @@ class FTPSession:
         self, directory: str, filename: str, file: str | None = None
     ) -> tuple[str, list[str]]:
         """Upload a file reusing the existing connection. Runs delete_on_first once per directory."""
-        assert self._ftp is not None, "FTPSession must be used as a context manager"
+        if self._ftp is None:
+            raise RuntimeError("FTPSession must be used as a context manager")
 
         self._ftp.cwd("/")
         self._ftp.cwd(directory)
