@@ -43,48 +43,34 @@ class LKGCache:
     def __init__(self, db_path: str = DB_PATH) -> None:
         self._db_path = db_path
         try:
-            self._conn = sqlite3.connect(
-                db_path,
-                check_same_thread=False,
-                isolation_level="DEFERRED",
-            )
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA busy_timeout=5000")
-            self._conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS lkg_data (
-                    module_name TEXT NOT NULL,
-                    field_key   TEXT NOT NULL,
-                    value       TEXT NOT NULL,
-                    saved_date  TEXT NOT NULL,
-                    PRIMARY KEY (module_name, field_key)
-                )
-                """
-            )
-            self._conn.commit()
+            self._open_db(db_path)
         except sqlite3.DatabaseError:
             logger.warning("LKG cache corrupt, recreating")
             self._conn.close()
             os.remove(db_path)
-            self._conn = sqlite3.connect(
-                db_path,
-                check_same_thread=False,
-                isolation_level="DEFERRED",
+            self._open_db(db_path)
+
+    def _open_db(self, db_path: str) -> None:
+        """Open a SQLite connection and ensure the schema exists."""
+        self._conn = sqlite3.connect(
+            db_path,
+            check_same_thread=False,
+            isolation_level="DEFERRED",
+        )
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA busy_timeout=5000")
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS lkg_data (
+                module_name TEXT NOT NULL,
+                field_key   TEXT NOT NULL,
+                value       TEXT NOT NULL,
+                saved_date  TEXT NOT NULL,
+                PRIMARY KEY (module_name, field_key)
             )
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA busy_timeout=5000")
-            self._conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS lkg_data (
-                    module_name TEXT NOT NULL,
-                    field_key   TEXT NOT NULL,
-                    value       TEXT NOT NULL,
-                    saved_date  TEXT NOT NULL,
-                    PRIMARY KEY (module_name, field_key)
-                )
-                """
-            )
-            self._conn.commit()
+            """
+        )
+        self._conn.commit()
 
     @classmethod
     def get_cache(cls) -> LKGCache:
