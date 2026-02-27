@@ -116,9 +116,6 @@ def closed_trails() -> TrailsResult:
     for i in to_delete:
         del closures[i]
 
-    if closures:
-        closures.pop()
-
     closures = [i["msg"] for i in closures]  # Extract messages from list
 
     # Ignore these closures which are redundant or bugs in the list
