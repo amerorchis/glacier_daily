@@ -8,7 +8,7 @@ locations within the park, then uploads them to an FTP server.
 from PIL import Image, ImageDraw, ImageFont
 
 from shared.datetime_utils import format_date_readable, now_mountain
-from shared.ftp import upload_file
+from shared.ftp import FTPSession
 from weather.season import get_season
 from weather.weather import weather_data
 
@@ -38,7 +38,8 @@ def upload_weather() -> str:
         str: Address of the uploaded image.
     """
     directory, filename, local_path = prepare_weather_upload()
-    address, _ = upload_file(directory, filename, local_path)
+    with FTPSession() as ftp:
+        address, _ = ftp.upload(directory, filename, local_path)
     return address
 
 

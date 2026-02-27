@@ -35,7 +35,7 @@ from shared.datetime_utils import (
     format_date_readable,
     now_mountain,
 )
-from shared.ftp import FTPSession, upload_file
+from shared.ftp import FTPSession
 from shared.lkg_cache import LKGCache
 from shared.logging_config import get_logger
 from shared.settings import get_settings
@@ -348,16 +348,6 @@ def write_data_to_json(data: dict, doctype: str) -> str:
         json.dump(serializable, f)
 
     return filepath
-
-
-def send_to_server(file: str, directory: str) -> None:
-    """
-    Upload file to glacier.org using FTP.
-    :return None.
-    """
-
-    filename = file.split("/")[-1]
-    upload_file(directory, filename, file)
 
 
 def purge_cache() -> bool:

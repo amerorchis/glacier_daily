@@ -47,8 +47,6 @@ def generated_data():
         patch("generate_and_upload.get_closed_trails", return_value=""),
         patch("generate_and_upload.weather_data", return_value=mock_weather),
         patch("generate_and_upload.weather_image", return_value="weather_img_url"),
-        # Mock file operations that might fail
-        patch("shared.ftp.upload_file", return_value=("mocked_url", [])),
     ):
         data, _ = gen_data()
         return data

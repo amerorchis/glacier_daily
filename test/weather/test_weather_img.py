@@ -88,13 +88,17 @@ def test_weather_image_missing_base_map(mock_open):
         weather_image([("West Glacier", 75, 45, "Sunny")])
 
 
-@patch("weather.weather_img.upload_file")
-def test_upload_weather(mock_upload):
+def test_upload_weather():
     """Test weather image upload functionality."""
-    mock_upload.return_value = ("http://example.com/image.png", None)
-    result = upload_weather()
-    assert result == "http://example.com/image.png"
-    mock_upload.assert_called_once()
+    mock_ftp = MagicMock()
+    mock_ftp.__enter__ = MagicMock(return_value=mock_ftp)
+    mock_ftp.__exit__ = MagicMock(return_value=False)
+    mock_ftp.upload.return_value = ("http://example.com/image.png", None)
+
+    with patch("weather.weather_img.FTPSession", return_value=mock_ftp):
+        result = upload_weather()
+        assert result == "http://example.com/image.png"
+        mock_ftp.upload.assert_called_once()
 
 
 @patch("weather.weather_img.Image.open")

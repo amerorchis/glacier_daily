@@ -9,7 +9,7 @@ from PIL import Image, UnidentifiedImageError
 
 from image_otd.flickr import FlickrAPIError, get_flickr
 from shared.datetime_utils import now_mountain
-from shared.ftp import upload_file
+from shared.ftp import FTPSession
 from shared.image_utils import process_image_for_email
 
 
@@ -42,7 +42,8 @@ def upload_pic_otd() -> str:
         FileNotFoundError: If the image file doesn't exist
     """
     directory, filename, local_path = prepare_pic_otd()
-    address, _ = upload_file(directory, filename, local_path)
+    with FTPSession() as ftp:
+        address, _ = ftp.upload(directory, filename, local_path)
     return address
 
 

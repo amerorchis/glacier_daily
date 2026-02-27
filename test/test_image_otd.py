@@ -1,6 +1,6 @@
 # test_flickr.py
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from urllib.error import URLError
 
 import pytest
@@ -222,15 +222,19 @@ def test_process_image_invalid_format(tmp_path):
 
 
 def test_upload_pic_otd_success():
+    mock_ftp = MagicMock()
+    mock_ftp.__enter__ = MagicMock(return_value=mock_ftp)
+    mock_ftp.__exit__ = MagicMock(return_value=False)
+    mock_ftp.upload.return_value = ("http://example.com/image.jpg", None)
+
     with (
-        patch("image_otd.image_otd.upload_file") as mock_upload,
+        patch("image_otd.image_otd.FTPSession", return_value=mock_ftp),
         patch("image_otd.image_otd.Path.exists", return_value=True),
     ):
-        mock_upload.return_value = ("http://example.com/image.jpg", None)
         result = upload_pic_otd()
 
         assert result == "http://example.com/image.jpg"
-        mock_upload.assert_called_once()
+        mock_ftp.upload.assert_called_once()
 
 
 def test_upload_pic_otd_file_not_found():

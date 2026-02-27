@@ -224,19 +224,6 @@ def test_write_data_to_json_with_dataclasses(tmp_path, monkeypatch):
     assert parsed["roads"]["no_closures_message"] == "No closures"
 
 
-def test_send_to_server(monkeypatch):
-    called = {}
-    monkeypatch.setattr(
-        gau,
-        "upload_file",
-        lambda d, f, p: called.update({"dir": d, "file": f, "path": p}),
-    )
-    gau.send_to_server("/tmp/test.json", "api")
-    assert called["dir"] == "api"
-    assert called["file"] == "test.json"
-    assert called["path"] == "/tmp/test.json"
-
-
 def test_serve_api(monkeypatch, tmp_path):
     # Patch everything to avoid side effects
     monkeypatch.setattr(gau, "gen_data", lambda: ({"foo": "bar"}, []))

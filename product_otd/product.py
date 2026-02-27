@@ -12,7 +12,7 @@ import requests
 from PIL import Image
 
 from shared.datetime_utils import now_mountain
-from shared.ftp import upload_file
+from shared.ftp import FTPSession
 from shared.image_utils import process_image_for_email
 from shared.settings import get_settings
 
@@ -29,7 +29,8 @@ def upload_potd():
     Upload the product image to the glacier.org ftp server.
     """
     directory, filename, local_path = prepare_potd_upload()
-    address, _ = upload_file(directory, filename, local_path)
+    with FTPSession() as ftp:
+        address, _ = ftp.upload(directory, filename, local_path)
     return address
 
 

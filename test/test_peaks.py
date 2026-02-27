@@ -1,6 +1,6 @@
 import io
 from datetime import date
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import requests
@@ -111,13 +111,15 @@ def test_upload_peak(mock_env_vars):
     today = now_mountain()
     expected_filename = f"{today.month}_{today.day}_{today.year}_peak.jpg"
 
-    with patch(
-        "peak.sat.upload_file", return_value=("https://example.com/peak.jpg", [])
-    ) as upload_file:
+    mock_ftp = MagicMock()
+    mock_ftp.__enter__ = MagicMock(return_value=mock_ftp)
+    mock_ftp.__exit__ = MagicMock(return_value=False)
+    mock_ftp.upload.return_value = ("https://example.com/peak.jpg", [])
+
+    with patch("peak.sat.FTPSession", return_value=mock_ftp):
         result = upload_peak()
 
-        # Verify upload_file was called with correct parameters
-        upload_file.assert_called_once_with(
+        mock_ftp.upload.assert_called_once_with(
             "peak", expected_filename, "email_images/today/peak.jpg"
         )
         assert result == "https://example.com/peak.jpg"

@@ -171,21 +171,29 @@ class TestUploadPotd:
         """Test successful product image upload"""
         expected_url = "https://example.com/uploaded.jpg"
 
-        with patch("product_otd.product.upload_file") as mock_upload:
-            mock_upload.return_value = (expected_url, None)
+        mock_ftp = MagicMock()
+        mock_ftp.__enter__ = MagicMock(return_value=mock_ftp)
+        mock_ftp.__exit__ = MagicMock(return_value=False)
+        mock_ftp.upload.return_value = (expected_url, None)
 
+        with patch("product_otd.product.FTPSession", return_value=mock_ftp):
             result = upload_potd()
 
             assert result == expected_url
-            mock_upload.assert_called_once()
+            mock_ftp.upload.assert_called_once()
 
     def test_upload_error(self):
         """Test handling of upload error"""
-        with patch("product_otd.product.upload_file") as mock_upload:
-            mock_upload.side_effect = Exception("Upload failed")
+        mock_ftp = MagicMock()
+        mock_ftp.__enter__ = MagicMock(return_value=mock_ftp)
+        mock_ftp.__exit__ = MagicMock(return_value=False)
+        mock_ftp.upload.side_effect = Exception("Upload failed")
 
-            with pytest.raises(Exception, match="Upload failed"):
-                upload_potd()
+        with (
+            patch("product_otd.product.FTPSession", return_value=mock_ftp),
+            pytest.raises(Exception, match="Upload failed"),
+        ):
+            upload_potd()
 
 
 if __name__ == "__main__":  # pragma: no cover
