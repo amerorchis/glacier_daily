@@ -37,7 +37,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
         response = requests.get(url, headers=headers, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
-        subs.extend([data["subscribers"][i] for i in range(len(data["subscribers"]))])
+        subs.extend(data["subscribers"])
 
         # Fetch multiple pages if needed
         while data["meta"]["total_pages"] > page:
@@ -46,9 +46,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
             response = requests.get(url, headers=headers, params=params, timeout=30)
             response.raise_for_status()
             data = response.json()
-            subs.extend(
-                [data["subscribers"][i] for i in range(len(data["subscribers"]))]
-            )
+            subs.extend(data["subscribers"])
 
         # If we're getting a list of people to send to just grab emails, else send all of their data.
         if tag in ["Glacier Daily Update", "Test Glacier Daily Update"]:
