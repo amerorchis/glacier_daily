@@ -323,7 +323,7 @@ def test_get_image_otd_flickr_error_fallback():
     with patch("image_otd.image_otd.resize_full") as mock_resize:
         mock_resize.side_effect = FlickrAPIError("API down")
         result = get_image_otd()
-        assert result == ("Flickr API Error", "", "")
+        assert result == ("", "", "")
 
 
 def test_get_flickr_url_error_429_retry(

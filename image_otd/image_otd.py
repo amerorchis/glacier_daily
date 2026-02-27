@@ -106,7 +106,7 @@ def get_image_otd(skip_upload: bool = False) -> tuple[str | None, str, str]:
     try:
         return resize_full(skip_upload=skip_upload)
     except FlickrAPIError:
-        return "Flickr API Error", "", ""
+        return "", "", ""
 
 
 if __name__ == "__main__":

@@ -235,7 +235,7 @@
                     (Product Link)</a>.</p>
         </div>
         <div class="column">
-            {% if my.daily_update.image_otd != "Flickr API Error" %}
+            {% if my.daily_update.image_otd != "" %}
                 <h2>Glacier Image of the Day</h2>
                 <img src="{{ my.daily_update.image_otd }}" alt="Today's picture of the day">
                 {% if my.daily_update.image_otd_title != "" %}
