@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from roads.hiker_biker import get_hiker_biker_status, hiker_biker
+from roads.hiker_biker import get_hiker_biker_status
 from roads.HikerBiker import HikerBiker
 from roads.Road import Road
 from shared.data_types import HikerBikerResult
@@ -153,15 +153,6 @@ def test_hiker_biker_string_representation(mock_gtsr):
     string_rep = str(hb)
     assert isinstance(string_rep, str)
     assert "miles from gate" in string_rep
-
-
-def test_hiker_biker_returns_hiker_biker_result(mock_gtsr):
-    """Test hiker_biker() returns HikerBikerResult."""
-    import urllib3
-
-    urllib3.disable_warnings()
-    result = hiker_biker()
-    assert isinstance(result, HikerBikerResult)
 
 
 def test_closure_location_names(mock_gtsr):

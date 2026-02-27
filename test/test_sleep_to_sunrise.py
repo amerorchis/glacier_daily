@@ -33,7 +33,7 @@ def test_sunrise_timelapse_complete_time(monkeypatch):
         sts, "date", types.SimpleNamespace(today=lambda: date(2025, 5, 28))
     )
     result = sts.sunrise_timelapse_complete_time()
-    assert isinstance(result, float)
+    assert result == 6720.0  # 1 hour to sunrise + 52 min buffer
 
 
 def test_sleep_time_waits(monkeypatch):

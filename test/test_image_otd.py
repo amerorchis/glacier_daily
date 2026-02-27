@@ -1,4 +1,3 @@
-# test_flickr.py
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 from urllib.error import URLError
