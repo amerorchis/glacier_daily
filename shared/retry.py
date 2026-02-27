@@ -2,6 +2,7 @@
 A decorator to retry an operation.
 """
 
+import functools
 from collections.abc import Callable
 from time import sleep
 
@@ -32,6 +33,7 @@ def retry(
         Decorator
         """
 
+        @functools.wraps(func)
         def newfn(*args, **kwargs):
             """
             The new function
