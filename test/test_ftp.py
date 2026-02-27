@@ -1,6 +1,5 @@
 import ftplib
-import types as _types
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -10,10 +9,9 @@ from shared.ftp import FTPSession
 
 
 def test_delete_on_first(monkeypatch):
-    class DummyFTP:
-        def __init__(self):
-            self.deleted = None
+    deleted = []
 
+    class DummyFTP:
         def nlst(self):
             return ["file1", "file2"]
 
@@ -24,18 +22,11 @@ def test_delete_on_first(monkeypatch):
             return "213 20240101000000"
 
         def delete(self, f):
-            self.deleted = f
+            deleted.append(f)
 
-    dummy = DummyFTP()
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 1), strptime=datetime.strptime
-        ),
-    )
-    ftp_mod.delete_on_first(dummy)
-    # Should attempt to delete files if first of month
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
+    ftp_mod.delete_on_first(DummyFTP())
+    assert deleted == ["file1", "file2"]
 
 
 def test_delete_on_first_not_first_of_month(monkeypatch):
@@ -47,13 +38,7 @@ def test_delete_on_first_not_first_of_month(monkeypatch):
             called["nlst"] = True
             return []
 
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 15), strptime=datetime.strptime
-        ),
-    )
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
     ftp_mod.delete_on_first(DummyFTP())
     assert not called["nlst"]
 
@@ -95,20 +80,13 @@ def test_delete_on_first_keeps_recent_files(monkeypatch):
             return 1
 
         def sendcmd(self, cmd):
-            # Return a recent date (yesterday)
-            yesterday = datetime.now() - timedelta(days=1)
-            return f"213 {yesterday.strftime('%Y%m%d%H%M%S')}"
+            # Return a date within 6 months of the mocked "today" (2025-05-01)
+            return "213 20250430000000"
 
         def delete(self, f):
             deleted.append(f)
 
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 1), strptime=datetime.strptime
-        ),
-    )
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
     ftp_mod.delete_on_first(DummyFTP())
     assert "recent_file" not in deleted
 
@@ -148,13 +126,7 @@ def test_upload_file(monkeypatch, mock_required_settings):
     monkeypatch.setattr(ftp_mod, "FTP", lambda server: DummyFTP())
     monkeypatch.setenv("FTP_USERNAME", "u")
     monkeypatch.setenv("FTP_PASSWORD", "p")
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 1), strptime=datetime.strptime
-        ),
-    )
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
 
     with patch("builtins.open", mock_open(read_data=b"data")):
         url, files = ftp_mod.upload_file("dir", "file.txt", "local.txt")
@@ -196,13 +168,7 @@ def test_upload_file_storbinary_exception(monkeypatch, mock_required_settings):
     monkeypatch.setattr(ftp_mod, "FTP", lambda server: DummyFTP())
     monkeypatch.setenv("FTP_USERNAME", "u")
     monkeypatch.setenv("FTP_PASSWORD", "p")
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 15), strptime=datetime.strptime
-        ),
-    )
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
 
     with patch("builtins.open", mock_open(read_data=b"data")):
         url, files = ftp_mod.upload_file("dir", "file.txt", "local.txt")
@@ -241,13 +207,7 @@ def test_upload_file_no_file_param(monkeypatch, mock_required_settings):
     monkeypatch.setattr(ftp_mod, "FTP", lambda server: DummyFTP())
     monkeypatch.setenv("FTP_USERNAME", "u")
     monkeypatch.setenv("FTP_PASSWORD", "p")
-    monkeypatch.setattr(
-        ftp_mod,
-        "datetime",
-        _types.SimpleNamespace(
-            now=lambda: datetime(2025, 5, 15), strptime=datetime.strptime
-        ),
-    )
+    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
     url, files = ftp_mod.upload_file("dir", "file.txt")
     assert url == ""
     assert "existing.txt" in files
