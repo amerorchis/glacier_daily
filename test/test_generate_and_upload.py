@@ -191,6 +191,7 @@ def test_gen_data_with_empty_returns(monkeypatch):
     monkeypatch.setattr(gau, "get_product", lambda **kw: ("", None, "", ""))
     monkeypatch.setattr(gau, "get_notices", lambda: NoticesResult())
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     # Should not raise even with empty values
     data, _ = gau.gen_data()
@@ -277,6 +278,7 @@ def test_gen_data_module_exception_handling(monkeypatch):
         gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
     )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     # gen_data should not raise — it should use fallback values
     result, _ = gau.gen_data()
@@ -310,6 +312,7 @@ def test_gen_data_multiple_module_failures(monkeypatch):
         gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
     )
     monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+    monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     result, _ = gau.gen_data()
     assert isinstance(result, dict)
@@ -479,6 +482,7 @@ class TestLKGSave:
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
         )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "weather_img")
+        monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
         # First run: everything succeeds, LKG populated
         gau.gen_data()
@@ -518,6 +522,7 @@ class TestLKGFallback:
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
         )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
+        monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     def test_dynamic_module_uses_lkg_on_failure(self, monkeypatch):
         """When a dynamic module fails, its LKG data is returned."""
@@ -589,6 +594,7 @@ class TestLKGDateDeterministic:
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
         )
         monkeypatch.setattr(gau, "weather_image", lambda x, **kw: "wi")
+        monkeypatch.setattr(gau, "get_gnpc_events", lambda: [])
 
     def test_cached_module_skips_api_call(self, monkeypatch):
         """Date-deterministic modules skip API calls when LKG has today's data."""
