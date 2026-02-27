@@ -5,11 +5,13 @@ This module provides a function to retrieve a list of subscribers from the Drip 
 import requests
 
 from shared.logging_config import get_logger
+from shared.retry import retry
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
 
+@retry(3, (requests.exceptions.RequestException,), default=[], backoff=15)
 def subscriber_list(tag="Glacier Daily Update") -> list:
     """
     Retrieve a list of subscribers with a specific tag from Drip.
@@ -33,28 +35,22 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
 
     params = {"status": "active", "tags": tag, "per_page": "1000", "page": page}
 
-    try:
+    response = requests.get(url, headers=headers, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    subs.extend(data["subscribers"])
+
+    # Fetch multiple pages if needed
+    while data["meta"]["total_pages"] > page:
+        page += 1
+        params["page"] = page
         response = requests.get(url, headers=headers, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
         subs.extend(data["subscribers"])
 
-        # Fetch multiple pages if needed
-        while data["meta"]["total_pages"] > page:
-            page += 1
-            params["page"] = page
-            response = requests.get(url, headers=headers, params=params, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            subs.extend(data["subscribers"])
+    # If we're getting a list of people to send to just grab emails, else send all of their data.
+    if tag in ["Glacier Daily Update", "Test Glacier Daily Update"]:
+        subs = [i["email"] for i in subs]
 
-        # If we're getting a list of people to send to just grab emails, else send all of their data.
-        if tag in ["Glacier Daily Update", "Test Glacier Daily Update"]:
-            subs = [i["email"] for i in subs]
-
-        return subs
-
-    except requests.exceptions.RequestException as e:
-        # Handle errors
-        logger.error("Failed to retrieve subscribers with tag(s) %s. %s", tag, e)
-        return []
+    return subs
