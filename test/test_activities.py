@@ -8,7 +8,6 @@ import requests
 from activities.events import events_today
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 from activities.gnpc_events import (
-    GNPCRequestError,
     get_gnpc_events,
     scrape_events_page,
 )
@@ -282,11 +281,12 @@ def test_scrape_events_page_success(mock_response):
 def test_scrape_events_page_request_error():
     with (
         patch("requests.get", side_effect=requests.RequestException("Network error")),
-        pytest.raises(GNPCRequestError, match="Failed to access"),
+        patch("shared.retry.sleep"),
     ):
-        scrape_events_page(
+        result = scrape_events_page(
             "https://glacier.org/glacier-conversations", "Glacier Conversation:"
         )
+        assert result == []
 
 
 def test_scrape_events_page_invalid_html():
@@ -365,14 +365,17 @@ def test_get_gnpc_events_partial_failure(sample_conversation_html):
             return Mock(status_code=200, content=sample_conversation_html)
         raise requests.RequestException("Network error")
 
-    with patch("requests.get", side_effect=mock_get):
+    with patch("requests.get", side_effect=mock_get), patch("shared.retry.sleep"):
         events = get_gnpc_events()
         assert len(events) == 1
         assert "Glacier Conversation:" in events[0]["title"]
 
 
 def test_get_gnpc_events_all_failures():
-    with patch("requests.get", side_effect=requests.RequestException("Network error")):
+    with (
+        patch("requests.get", side_effect=requests.RequestException("Network error")),
+        patch("shared.retry.sleep"),
+    ):
         events = get_gnpc_events()
         assert events == []
 
