@@ -11,6 +11,7 @@ import urllib3
 from shared.data_types import CampgroundsResult
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
@@ -25,6 +26,14 @@ _SEASONAL_HARD_FLOOR_MONTHS = {1, 2, 3, 4}
 _SEASONAL_DISPLAY_MONTHS = {4, 5, 6, 7, 8, 9, 10, 11}
 
 
+@retry(
+    3,
+    (requests.exceptions.RequestException,),
+    default=CampgroundsResult(
+        error_message="The campgrounds page on the park website is currently down."
+    ),
+    backoff=15,
+)
 def campground_alerts() -> CampgroundsResult:
     """
     Fetches the status of front country campgrounds from the NPS API and processes the data to identify closures and alerts.
@@ -33,13 +42,7 @@ def campground_alerts() -> CampgroundsResult:
         CampgroundsResult: Structured campground status data.
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
-    try:
-        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
-    except requests.exceptions.RequestException:
-        logger.error("Campground status request failed", exc_info=True)
-        return CampgroundsResult(
-            error_message="The campgrounds page on the park website is currently down."
-        )
+    r = requests.get(url, timeout=10, verify=False)  # noqa: S501
 
     try:
         status = json.loads(r.text)

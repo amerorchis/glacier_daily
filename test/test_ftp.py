@@ -1,5 +1,5 @@
 import ftplib
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -34,7 +34,9 @@ def _make_delete_ftp(
 
 def test_delete_on_first(monkeypatch):
     ftp, deleted = _make_delete_ftp(["file1", "file2"])
-    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
+    monkeypatch.setattr(
+        ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1, tzinfo=UTC)
+    )
     ftp_mod.delete_on_first(ftp)
     assert deleted == ["file1", "file2"]
 
@@ -48,7 +50,9 @@ def test_delete_on_first_not_first_of_month(monkeypatch):
             called["nlst"] = True
             return []
 
-    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+    monkeypatch.setattr(
+        ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15, tzinfo=UTC)
+    )
     ftp_mod.delete_on_first(DummyFTP())
     assert not called["nlst"]
 
@@ -58,7 +62,9 @@ def test_delete_on_first_skips_directories(monkeypatch):
     ftp, deleted = _make_delete_ftp(
         ["a_directory", "old_file"], dir_names={"a_directory"}
     )
-    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
+    monkeypatch.setattr(
+        ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1, tzinfo=UTC)
+    )
     ftp_mod.delete_on_first(ftp)
     assert "a_directory" not in deleted
     assert "old_file" in deleted
@@ -68,7 +74,9 @@ def test_delete_on_first_keeps_recent_files(monkeypatch):
     """Files newer than 6 months should not be deleted."""
     # Date within 6 months of the mocked "today" (2025-05-01)
     ftp, deleted = _make_delete_ftp(["recent_file"], "213 20250430000000")
-    monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1))
+    monkeypatch.setattr(
+        ftp_mod, "now_mountain", lambda: datetime(2025, 5, 1, tzinfo=UTC)
+    )
     ftp_mod.delete_on_first(ftp)
     assert "recent_file" not in deleted
 
@@ -118,7 +126,9 @@ class TestFTPSession:
         monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
         monkeypatch.setenv("FTP_USERNAME", "u")
         monkeypatch.setenv("FTP_PASSWORD", "p")
-        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+        monkeypatch.setattr(
+            ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15, tzinfo=UTC)
+        )
 
         with (
             FTPSession() as session,
@@ -136,7 +146,9 @@ class TestFTPSession:
         monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
         monkeypatch.setenv("FTP_USERNAME", "u")
         monkeypatch.setenv("FTP_PASSWORD", "p")
-        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+        monkeypatch.setattr(
+            ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15, tzinfo=UTC)
+        )
 
         with (
             FTPSession() as session,
@@ -153,7 +165,9 @@ class TestFTPSession:
         monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
         monkeypatch.setenv("FTP_USERNAME", "u")
         monkeypatch.setenv("FTP_PASSWORD", "p")
-        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+        monkeypatch.setattr(
+            ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15, tzinfo=UTC)
+        )
 
         delete_count = {"count": 0}
 
@@ -178,7 +192,9 @@ class TestFTPSession:
         monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
         monkeypatch.setenv("FTP_USERNAME", "u")
         monkeypatch.setenv("FTP_PASSWORD", "p")
-        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+        monkeypatch.setattr(
+            ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15, tzinfo=UTC)
+        )
 
         with pytest.raises(RuntimeError), FTPSession() as _session:
             raise RuntimeError("test error")
@@ -191,7 +207,9 @@ class TestFTPSession:
         monkeypatch.setattr(ftp_mod, "FTP", lambda server: dummy)
         monkeypatch.setenv("FTP_USERNAME", "u")
         monkeypatch.setenv("FTP_PASSWORD", "p")
-        monkeypatch.setattr(ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15))
+        monkeypatch.setattr(
+            ftp_mod, "now_mountain", lambda: datetime(2025, 5, 15, tzinfo=UTC)
+        )
 
         with FTPSession() as session:
             url, files = session.upload("dir", "file.txt")

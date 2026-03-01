@@ -4,7 +4,7 @@ This module provides FTP functionalities including deleting old files and upload
 
 import contextlib
 import ftplib
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from ftplib import FTP
 
 from shared.datetime_utils import now_mountain
@@ -38,7 +38,7 @@ def delete_on_first(ftp: FTP) -> None:
             file_modification_date = ftp.sendcmd("MDTM " + file)
             file_modification_date = datetime.strptime(
                 file_modification_date[4:], "%Y%m%d%H%M%S"
-            )
+            ).replace(tzinfo=UTC)
 
             if file_modification_date < six_months_ago:
                 ftp.delete(file)

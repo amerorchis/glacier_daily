@@ -8,6 +8,7 @@ from requests.exceptions import RequestException
 
 from activities.gnpc_datetime import convert_gnpc_datetimes, datetime_to_string
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
@@ -24,6 +25,7 @@ class GNPCParsingError(GNPCError):
     """Raised when there's an error parsing GNPC website content"""
 
 
+@retry(3, (GNPCRequestError,), default=[], backoff=15)
 def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
     """
     Scrape events from a specific GNPC page.

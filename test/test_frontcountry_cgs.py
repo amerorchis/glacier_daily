@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
+import requests
+
 import trails_and_cgs.frontcountry_cgs as cgs_mod
 from shared.data_types import CampgroundsResult
 
@@ -152,6 +154,19 @@ def test_campground_alerts_down(monkeypatch):
 
 
 # --- Notice extraction ---
+
+
+def test_campground_alerts_retries_on_request_error(monkeypatch):
+    """campground_alerts retries on RequestException and returns error default."""
+
+    def _raise(*args, **kwargs):
+        raise requests.exceptions.ConnectionError("DNS failure")
+
+    monkeypatch.setattr(cgs_mod.requests, "get", _raise)
+    with patch("shared.retry.sleep"):
+        result = cgs_mod.campground_alerts()
+    assert isinstance(result, CampgroundsResult)
+    assert "currently down" in result.error_message
 
 
 def test_notice_extraction(monkeypatch):
