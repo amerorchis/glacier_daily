@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 from datetime import datetime
 
@@ -255,3 +256,43 @@ def test_wifi_renders_structured_data(sample_data):
         assert "Grinnell Glacier" not in content
         assert "Blackfoot Mountain" not in content
         assert "Red Bus Hiking Stick Medallion" not in content
+
+
+@pytest.mark.parametrize(
+    "template",
+    ["email_html/email_template.html", "email_html/wifi_email.html"],
+)
+def test_email_template_no_bare_truthiness(template):
+    """Liquid treats empty strings as truthy, unlike Jinja2.
+
+    All conditionals in Liquid templates must use explicit comparisons
+    (e.g. != blank, == blank, .size > 0, != nil) instead of bare variable
+    checks like {% if var %} or {% unless var %}, which silently break in
+    Liquid when the value is "".
+    """
+    with open(template) as f:
+        source = f.read()
+
+    # Match {% if COND %}, {% elsif COND %}, {% unless COND %}
+    tag_pattern = r"\{%[-\s]*(?:if|elsif|unless)\s+(.+?)\s*-?%\}"
+    comparison_ops = ("!=", "==", ">", "<", ">=", "<=", "contains")
+
+    violations = []
+    for match in re.finditer(tag_pattern, source):
+        full_condition = match.group(1)
+        line_num = source[: match.start()].count("\n") + 1
+
+        # Split on 'or' / 'and' to check each sub-condition
+        subconditions = re.split(r"\s+(?:or|and)\s+", full_condition)
+
+        for sub in subconditions:
+            sub = sub.strip()
+            if any(op in sub for op in comparison_ops):
+                continue
+            violations.append(f"  Line {line_num}: '{sub}' in '{full_condition}'")
+
+    assert not violations, (
+        f"Bare truthiness checks found in {template}. "
+        "In Liquid, empty strings are truthy — use explicit comparisons "
+        "like '!= blank', '== blank', or '.size > 0' instead:\n" + "\n".join(violations)
+    )
