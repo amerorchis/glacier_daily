@@ -86,6 +86,11 @@ def update_scheduled_subs():
                 end_today.append(email)
                 logger.info("%s will no longer get daily updates", email)
 
+    if start_today:
+        logger.info("Scheduled starts today: %d subscriber(s)", len(start_today))
+    if end_today:
+        logger.info("Scheduled ends today: %d subscriber(s)", len(end_today))
+
     start(start_today)
     end(end_today)
 

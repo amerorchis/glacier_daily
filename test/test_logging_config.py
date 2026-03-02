@@ -159,3 +159,42 @@ class TestRunLogCapture:
         setup_logging()
         assert get_log_capture() is not None
         assert isinstance(get_log_capture(), RunLogCapture)
+
+    def test_capture_redacts_email(self, monkeypatch):
+        from shared.run_context import start_run
+
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        start_run("email")
+        setup_logging()
+        logger = logging.getLogger("test.capture.redact")
+        logger.info("user@example.com is starting today")
+        capture = get_log_capture()
+        line = next(ln for ln in capture.buffer if "starting today" in ln)
+        assert "user@example.com" not in line
+        assert "[email redacted]" in line
+
+    def test_capture_redacts_multiple_emails(self, monkeypatch):
+        from shared.run_context import start_run
+
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        start_run("email")
+        setup_logging()
+        logger = logging.getLogger("test.capture.redact.multi")
+        logger.info("Sent to alice@test.com and bob@test.com")
+        capture = get_log_capture()
+        line = next(ln for ln in capture.buffer if "Sent to" in ln)
+        assert "alice@test.com" not in line
+        assert "bob@test.com" not in line
+        assert line.count("[email redacted]") == 2
+
+    def test_capture_does_not_redact_non_email_at(self, monkeypatch):
+        from shared.run_context import start_run
+
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        start_run("email")
+        setup_logging()
+        logger = logging.getLogger("test.capture.redact.noemail")
+        logger.info("Using decorator @retry on function")
+        capture = get_log_capture()
+        line = next(ln for ln in capture.buffer if "decorator" in ln)
+        assert "@retry" in line
