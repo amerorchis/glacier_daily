@@ -43,7 +43,7 @@ def scrape_events_page(url: str, event_type: str) -> list[dict[str, str]]:
     """
     try:
         headers = {"User-Agent": "GNPC-API"}
-        r = requests.get(url, headers=headers, timeout=12)
+        r = requests.get(url, headers=headers, timeout=10)
         r.raise_for_status()
     except RequestException as e:
         raise GNPCRequestError(f"Failed to access {url}: {e!s}") from e

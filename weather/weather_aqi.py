@@ -13,6 +13,8 @@ from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+AQI_UNAVAILABLE_SENTINEL = -99
+
 
 def add_cache_buster(url: str) -> str:
     """
@@ -50,7 +52,7 @@ def get_air_quality() -> int | str:
 
         response = requests.get(
             url_with_cache_buster,
-            timeout=60,
+            timeout=60,  # NPS AQI endpoint is very slow to respond
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
@@ -73,7 +75,7 @@ def get_air_quality() -> int | str:
         )
         if west_glacier:
             aqi = west_glacier["particulatesPA"]["nowCastPM"]["currentAQIVal"]
-            return aqi if aqi != -99 else ""
+            return aqi if aqi != AQI_UNAVAILABLE_SENTINEL else ""
 
         return ""
 

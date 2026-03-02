@@ -13,6 +13,8 @@ from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
+_FTP_RETENTION_DAYS = 180
+
 
 def delete_on_first(ftp: FTP) -> None:
     """
@@ -25,7 +27,7 @@ def delete_on_first(ftp: FTP) -> None:
 
     if current_date.day == 1:
         logger.info("First of the month: deleting files over 6 months old.")
-        six_months_ago = current_date - timedelta(days=6 * 30)
+        six_months_ago = current_date - timedelta(days=_FTP_RETENTION_DAYS)
         files = ftp.nlst()
 
         # Iterate through the files and delete those older than 6 months
@@ -74,11 +76,10 @@ class FTPSession:
         self._ftp.cwd("/")
         self._ftp.cwd(directory)
 
-        if directory not in self._cleaned_dirs:
-            delete_on_first(self._ftp)
-            self._cleaned_dirs.add(directory)
-
         try:
+            if directory not in self._cleaned_dirs:
+                delete_on_first(self._ftp)
+                self._cleaned_dirs.add(directory)
             if file:
                 temp_filename = f"{filename}.tmp"
                 with open(file, "rb") as f:

@@ -52,6 +52,7 @@ class WeatherAlertService:
         "Extreme": 0,
         "Severe": 1,
     }
+    _SEVERITY_UNKNOWN_RANK = 99
 
     @staticmethod
     def parse_alert_time(text: str) -> datetime | None:
@@ -176,7 +177,9 @@ class WeatherAlertService:
         return sorted(
             alerts,
             key=lambda a: (
-                self.SEVERITY_ORDER.get(a.get("severity", ""), 99),
+                self.SEVERITY_ORDER.get(
+                    a.get("severity", ""), self._SEVERITY_UNKNOWN_RANK
+                ),
                 -(
                     datetime.fromisoformat(a["sent"]).timestamp()
                     if a.get("sent")

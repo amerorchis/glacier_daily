@@ -14,6 +14,8 @@ from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
+NPS_EVENTS_PAGE_SIZE = 10
+
 
 def time_sortable(time: str):
     """
@@ -46,10 +48,11 @@ def events_today(now=None) -> EventsResult:
         """
         Get events from endpoint
         """
+        # NPS events API is very slow to respond
         response = requests.get(endpoint, headers=headers, timeout=245)
         response.raise_for_status()
         response = response.json()
-        return response["data"], int(response["total"]) // 10 + 1
+        return response["data"], int(response["total"]) // NPS_EVENTS_PAGE_SIZE + 1
 
     def process_event(event):
         """

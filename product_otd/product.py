@@ -19,6 +19,10 @@ from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
+BC_PAGE_SIZE = 50
+PRODUCT_DESC_MAX_LEN = 150
+MAX_PRODUCT_SEARCH_ATTEMPTS = 50
+
 
 def prepare_potd_upload() -> tuple[str, str, str]:
     """Return (directory, filename, local_path) for product image upload."""
@@ -82,8 +86,8 @@ def get_product(skip_upload: bool = False):
         Retrieve a product at a given index, parse out a description and grab the image url.
         """
         # Calculate the page and index of the random product.
-        product_page = product_otd // 50 + 1
-        product_index = product_otd % 50 - 1
+        product_page = product_otd // BC_PAGE_SIZE + 1
+        product_index = product_otd % BC_PAGE_SIZE - 1
 
         # Retrieve item from response.
         new_url = (
@@ -110,8 +114,8 @@ def get_product(skip_upload: bool = False):
         desc = sub(r"<div[^>]*>|<\/div>", "", desc).strip()  # remove div tags
 
         # Truncate long descriptions
-        if len(desc) > 150:
-            index = desc.find(" ", 150)
+        if len(desc) > PRODUCT_DESC_MAX_LEN:
+            index = desc.find(" ", PRODUCT_DESC_MAX_LEN)
             desc = desc[:index] + "..."
 
         # Get image url
@@ -131,7 +135,7 @@ def get_product(skip_upload: bool = False):
         }
 
     # Keep searching for products if they don't have images.
-    for _attempt in range(50):
+    for _attempt in range(MAX_PRODUCT_SEARCH_ATTEMPTS):
         try:
             product_data = retrieve_potd(product_otd)
             if product_data["image_url"]:

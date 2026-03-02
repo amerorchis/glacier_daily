@@ -112,8 +112,8 @@ def get_flickr() -> FlickrImage:
             },
         )
 
-        max_retries = 2
-        backoff = 4
+        max_retries = 2  # retry count for image download
+        backoff = 4  # initial backoff seconds for 429 responses
         for attempt in range(max_retries):
             try:
                 with (

@@ -18,6 +18,7 @@ from pathlib import Path
 from shared.run_context import RunIdFilter
 
 MAX_LOG_LINES = 500
+LOG_BACKUP_COUNT = 5
 
 
 class RunLogCapture(logging.Handler):
@@ -90,7 +91,7 @@ def setup_logging() -> None:
         file_handler = logging.handlers.RotatingFileHandler(
             filename="logs/glacier_daily.log",
             maxBytes=10 * 1024 * 1024,  # 10MB
-            backupCount=5,
+            backupCount=LOG_BACKUP_COUNT,
         )
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)

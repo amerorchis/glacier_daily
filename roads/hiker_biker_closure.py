@@ -5,6 +5,11 @@ Define an object that represents a hiker/biker closure.
 from roads.place import Place
 from roads.road import Road
 
+LOGAN_PASS_NORTH_BOUNDARY = 48.6998
+LOGAN_PASS_WEST_BOUNDARY = -113.72402
+LOGAN_PASS_EAST_BOUNDARY = -113.71225
+LOGAN_PASS_MILE_MARKER = 32
+
 
 class HikerBiker(Place):
     """
@@ -39,7 +44,7 @@ class HikerBiker(Place):
         for j in self.locations:
             distance = self.dist(coords[0], coords[1], j[0], j[1])
             if distance < min_dist:
-                if distance < 3:
+                if distance < self.LOCATION_MATCH_DISTANCE_KM:
                     setattr(self, f"{direction}_loc", self.locations[j])
                 else:
                     setattr(
@@ -57,17 +62,13 @@ class HikerBiker(Place):
             raise RuntimeError("north coordinates not set")
         longitude = self.north[0]
         latitude = self.north[1]
-        # Logan Pass is at 48.6959, -113.7172
-
-        north_boundary = 48.6998
-        west_boundary = -113.72402
-        east_boundary = -113.71225
-
-        if longitude < west_boundary:
+        if longitude < LOGAN_PASS_WEST_BOUNDARY:
             return "west"
-        elif longitude > east_boundary:
+        elif longitude > LOGAN_PASS_EAST_BOUNDARY:
             return "east"
-        elif latitude > north_boundary:  # West side is technically north of Logan Pass
+        elif (
+            latitude > LOGAN_PASS_NORTH_BOUNDARY
+        ):  # West side is technically north of Logan Pass
             return "west"
         else:
             return "logan"
@@ -87,7 +88,7 @@ class HikerBiker(Place):
         We need to check if we are measuring mileage from the east or west closure of the road.
         """
         if side == "logan":
-            return ", 32 miles up"
+            return f", {LOGAN_PASS_MILE_MARKER} miles up"
 
         if side == "west":
             self.west = gtsr.west
