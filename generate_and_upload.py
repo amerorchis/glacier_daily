@@ -450,7 +450,7 @@ if __name__ == "__main__":  # pragma: no cover
     import argparse as _argparse
     import sys as _sys
 
-    from shared.logging_config import setup_logging
+    from shared.logging_config import get_log_capture, setup_logging
     from shared.run_context import start_run
     from shared.run_report import build_report, upload_status_report
 
@@ -487,16 +487,25 @@ if __name__ == "__main__":  # pragma: no cover
     if _args.force:
         clear_cache()
 
+    _run_error = False
     try:
         environment = settings.ENVIRONMENT
         if environment == "development":
             gen_data()  # Pending uploads ignored in development
         elif environment == "production":
             serve_api(force=_args.force)
+    except Exception:
+        logger.error("generate_and_upload failed", exc_info=True)
+        _run_error = True
     finally:
         report = build_report(environment=settings.ENVIRONMENT)
+        if _run_error:
+            report.overall_status = "failure"
+        report.finalize_status()
         logger.info("Run complete: %s", report.overall_status)
-        logger.info("Run report: %s", report.to_json())
+        capture = get_log_capture()
+        if capture:
+            report.log_lines = list(capture.buffer)
         if settings.ENVIRONMENT == "production":
             try:
                 upload_status_report(report)

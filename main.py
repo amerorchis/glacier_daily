@@ -13,7 +13,7 @@ from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
 from shared.lock import acquire_lock, release_lock
-from shared.logging_config import get_logger, setup_logging
+from shared.logging_config import get_log_capture, get_logger, setup_logging
 from shared.run_context import start_run
 from shared.run_report import build_report, upload_status_report
 from shared.settings import get_settings
@@ -44,21 +44,26 @@ def main(
         logger.error("Another instance is already running. Exiting.")
         return
 
+    subscribers: list[str] = []
     try:
-        sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
-
-        # Retrieve subscribers from Drip.
-        subscribers: list[str] = get_subs(tag)
-        logger.info("Subscribers found: %d", len(subscribers))
-
         batch_result = None
         canary_result: CanaryResult | None = None
+        run_error: str | None = None
+        api_complete = False
         try:
+            sleep_to_sunrise()  # Sleep until sunrise timelapse is finished.
+
+            # Retrieve subscribers from Drip.
+            subscribers = get_subs(tag)
+            logger.info("Subscribers found: %d", len(subscribers))
+
             # Generate data and upload to website.
             serve_api(force=force)
+            api_complete = True
 
             # Allow time for FTP-uploaded timelapse assets to propagate.
-            sleep(10 if not test else 0)
+            _TIMELAPSE_PROPAGATION_WAIT = 0 if test else 10
+            sleep(_TIMELAPSE_PROPAGATION_WAIT)
 
             # Send the email to each subscriber using Drip API.
             batch_result = bulk_workflow_trigger(subscribers)
@@ -66,6 +71,10 @@ def main(
             # Canary verification: check actual delivery if Drip accepted
             if batch_result and batch_result.sent > 0:
                 canary_result = check_canary_delivery()
+        except Exception:
+            phase = "data generation/upload" if not api_complete else "email delivery"
+            logger.error("%s failed", phase, exc_info=True)
+            run_error = f"{phase} raised an exception (see logs)"
         finally:
             report = build_report(environment=settings.ENVIRONMENT)
             report.subscriber_count = len(subscribers)
@@ -74,6 +83,11 @@ def main(
                     "sent": batch_result.sent,
                     "failed": batch_result.failed,
                 }
+            if run_error:
+                report.errors.append(run_error)
+                if not batch_result:
+                    report.email_delivery = {"sent": 0, "failed": 0}
+                report.overall_status = "failure"
             if canary_result is not None:
                 report.email_delivery["canary_verified"] = canary_result.verified
                 report.email_delivery["canary_message"] = canary_result.message
@@ -81,8 +95,12 @@ def main(
                     canary_result.elapsed_seconds
                 )
             report.finalize_status()
+            # Log status before building the report so it's captured in log_lines
             logger.info("Run complete: %s", report.overall_status)
-            logger.info("Run report: %s", report.to_json())
+            # Re-snapshot log buffer to include the status line and any error tracebacks
+            capture = get_log_capture()
+            if capture:
+                report.log_lines = list(capture.buffer)
             if settings.ENVIRONMENT == "production":
                 try:
                     upload_status_report(report)
