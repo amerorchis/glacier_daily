@@ -55,7 +55,7 @@ class TestRetryDecorator:
 
         @retry_mod.retry(times=3, exceptions=(ValueError,), default="fail", backoff=5)
         def f():
-            raise ValueError()
+            raise ValueError
 
         f()
 
@@ -69,7 +69,7 @@ class TestRetryDecorator:
 
         @retry_mod.retry(times=2, exceptions=(ValueError,), default="fail")
         def f():
-            raise ValueError()
+            raise ValueError
 
         f()
 
@@ -129,7 +129,7 @@ class TestRetryDecorator:
 
         @retry_mod.retry(times=2, exceptions=(ValueError,), default="default_value")
         def f():
-            raise ValueError()
+            raise ValueError
 
         assert f() == "default_value"
 
@@ -139,7 +139,7 @@ class TestRetryDecorator:
 
         @retry_mod.retry(times=1, exceptions=(ValueError,), default="")
         def f():
-            raise ValueError()
+            raise ValueError
 
         assert f() == ""
 
@@ -149,7 +149,7 @@ class TestRetryDecorator:
 
         @retry_mod.retry(times=2, exceptions=(ValueError,), default="fail")
         def f():
-            raise ValueError()
+            raise ValueError
 
         with caplog.at_level("WARNING"):
             f()
@@ -167,7 +167,7 @@ class TestRetryDecorator:
         @retry_mod.retry(times=1, exceptions=(ValueError,), default="fail")
         def f():
             calls.append(1)
-            raise ValueError()
+            raise ValueError
 
         result = f()
         assert result == "fail"

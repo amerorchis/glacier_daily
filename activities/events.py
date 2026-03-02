@@ -141,10 +141,9 @@ def events_today(now=None) -> EventsResult:
         msg = seasonal_message(now_dt)
         if msg != "There are no ranger programs today.":
             return EventsResult(seasonal_message=msg)
-        else:
-            return EventsResult(
-                error_message="Ranger program schedule could not be retrieved."
-            )
+        return EventsResult(
+            error_message="Ranger program schedule could not be retrieved."
+        )
 
     except requests.HTTPError as e:
         logger.error("Failed to retrieve events (HTTP): %s", e)

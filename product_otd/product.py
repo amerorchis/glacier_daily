@@ -140,8 +140,7 @@ def get_product(skip_upload: bool = False):
             product_data = retrieve_potd(product_otd)
             if product_data["image_url"]:
                 break
-            else:
-                raise ValueError("Product not found")
+            raise ValueError("Product not found")
 
         except (ValueError, IndexError, KeyError):
             product_otd = random.randint(1, total_products)  # noqa: S311

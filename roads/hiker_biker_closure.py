@@ -64,14 +64,13 @@ class HikerBiker(Place):
         latitude = self.north[1]
         if longitude < LOGAN_PASS_WEST_BOUNDARY:
             return "west"
-        elif longitude > LOGAN_PASS_EAST_BOUNDARY:
+        if longitude > LOGAN_PASS_EAST_BOUNDARY:
             return "east"
-        elif (
+        if (
             latitude > LOGAN_PASS_NORTH_BOUNDARY
         ):  # West side is technically north of Logan Pass
             return "west"
-        else:
-            return "logan"
+        return "logan"
 
     def closure_loc(self) -> None:
         """

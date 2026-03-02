@@ -240,7 +240,7 @@ def weather_alerts() -> list[AlertBullet]:
         return result
 
     except Exception as e:
-        logger.error("Error processing weather alerts: %s", e, exc_info=True)
+        logger.exception("Error processing weather alerts: %s", e)
         return []
 
 

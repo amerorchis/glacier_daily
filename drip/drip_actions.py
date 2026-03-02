@@ -92,10 +92,9 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
                 url, headers=headers, data=json.dumps(data), timeout=10
             )
         except requests.exceptions.RequestException:
-            logger.error(
+            logger.exception(
                 "Drip bulk workflow request failed for batch of %d",
                 len(subs),
-                exc_info=True,
             )
             result.failed += len(subs)
             continue

@@ -177,7 +177,7 @@ def process_video() -> tuple[str, str, str]:
         return video_url, thumbnail_url, descriptor or ""
 
     except Exception as e:
-        logger.error("Unexpected error in process_video: %s", e, exc_info=True)
+        logger.exception("Unexpected error in process_video: %s", e)
         return "", "", ""
 
 

@@ -134,7 +134,7 @@ def closed_roads() -> dict[str, Road]:
     try:
         r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
-        logger.error("Road status request failed", exc_info=True)
+        logger.exception("Road status request failed")
         raise NPSWebsiteError from e
     r.raise_for_status()
     status = json.loads(r.text)
@@ -239,10 +239,10 @@ def get_road_status() -> RoadsResult:
     try:
         return format_road_closures(closed_roads())
     except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
-        logger.error("Road status HTTP error", exc_info=True)
+        logger.exception("Road status HTTP error")
         return RoadsResult()
     except NPSWebsiteError:
-        logger.error("NPS website error", exc_info=True)
+        logger.exception("NPS website error")
         return RoadsResult(
             error_message="The road status page on the park website is currently down."
         )

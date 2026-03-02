@@ -49,7 +49,7 @@ def campground_alerts() -> CampgroundsResult:
     try:
         status = json.loads(r.text)
     except json.JSONDecodeError:
-        logger.error("Campground status JSON decode error", exc_info=True)
+        logger.exception("Campground status JSON decode error")
         return CampgroundsResult(
             error_message="The campgrounds page on the park website is currently down."
         )
@@ -125,7 +125,7 @@ def get_campground_status() -> CampgroundsResult:
     try:
         return campground_alerts()
     except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
-        logger.error("Campground status HTTP error", exc_info=True)
+        logger.exception("Campground status HTTP error")
         return CampgroundsResult()
 
 

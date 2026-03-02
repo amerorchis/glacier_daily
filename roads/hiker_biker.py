@@ -42,7 +42,7 @@ def hiker_biker() -> HikerBikerResult:
             try:
                 r = requests.get(url, timeout=5, verify=False)  # noqa: S501
             except requests.exceptions.RequestException:
-                logger.error("Hiker/biker status request failed", exc_info=True)
+                logger.exception("Hiker/biker status request failed")
                 continue
             r.raise_for_status()
             data.extend(json.loads(r.text).get("features", ""))
@@ -116,7 +116,7 @@ def get_hiker_biker_status() -> HikerBikerResult:
         json.JSONDecodeError,
         NPSWebsiteError,
     ):
-        logger.error("Hiker/biker status error", exc_info=True)
+        logger.exception("Hiker/biker status error")
         return HikerBikerResult()
 
 

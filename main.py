@@ -73,7 +73,7 @@ def main(
                 canary_result = check_canary_delivery()
         except Exception:
             phase = "data generation/upload" if not api_complete else "email delivery"
-            logger.error("%s failed", phase, exc_info=True)
+            logger.exception("%s failed", phase)
             run_error = f"{phase} raised an exception (see logs)"
         finally:
             report = build_report(environment=settings.ENVIRONMENT)
@@ -105,7 +105,7 @@ def main(
                 try:
                     upload_status_report(report)
                 except Exception:
-                    logger.error("Failed to upload status report", exc_info=True)
+                    logger.exception("Failed to upload status report")
     finally:
         release_lock(lock_fd)
 

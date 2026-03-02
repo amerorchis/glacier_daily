@@ -64,8 +64,7 @@ def peak_sat(peak: dict, skip_upload: bool = False) -> str | None:
             if skip_upload:
                 return None
             return upload_peak()
-        else:
-            raise requests.RequestException("Bad status code")
+        raise requests.RequestException("Bad status code")
 
     except (requests.RequestException, PIL.UnidentifiedImageError) as e:
         # If it fails, give the default peak header.

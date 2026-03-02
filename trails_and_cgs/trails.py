@@ -135,10 +135,9 @@ def closed_trails() -> TrailsResult:
 
     if closures:
         return TrailsResult(closures=closures)
-    else:
-        return TrailsResult(
-            no_closures_message="There are no trail closures in effect today!"
-        )
+    return TrailsResult(
+        no_closures_message="There are no trail closures in effect today!"
+    )
 
 
 def get_closed_trails() -> TrailsResult:
@@ -157,7 +156,7 @@ def get_closed_trails() -> TrailsResult:
         IndexError,
         TypeError,
     ):
-        logger.error("Trail status error", exc_info=True)
+        logger.exception("Trail status error")
         return TrailsResult()
 
 

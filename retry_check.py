@@ -103,7 +103,7 @@ def retry(tag: str | None = None, dry_run: bool = False) -> int:
         logger.error("Retry timed out after 30 minutes")
         return 1
     except Exception:
-        logger.error("Failed to launch retry", exc_info=True)
+        logger.exception("Failed to launch retry")
         return 1
 
 
