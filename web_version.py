@@ -23,6 +23,7 @@ def _liquid_to_jinja2(source: str) -> str:
     source = source.replace("!= nil", "is not none")
     source = re.sub(r"\.size\s*>\s*0", "|length > 0", source)
     source = source.replace("!= blank", '!= ""')
+    source = source.replace("== blank", '== ""')
     return source
 
 

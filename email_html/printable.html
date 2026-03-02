@@ -253,18 +253,20 @@
         <p class="section-title">
             <a href="https://www.weather.gov/">Today's Forecast</a>
         </p>
-        <p>{{ my.daily_update.weather.daylight_message }}<br><br>Forecasts Around the Park:</p>
+        <p>{% if my.daily_update.weather.daylight_message %}{{ my.daily_update.weather.daylight_message }}<br><br>{% endif %}Forecasts Around the Park:</p>
         <img class="weather-img" src="{{ my.daily_update.weather_image }}"
             alt="Today's weather forecast in Glacier">
         {% if my.daily_update.weather.aqi_value != None %}
-        <p>The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}. This air quality is considered {{ my.daily_update.weather.aqi_category }}</p>
+        <p>The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}.{% if my.daily_update.weather.aqi_category %} This air quality is considered {{ my.daily_update.weather.aqi_category }}{% endif %}</p>
         {% endif %}
+        {% if my.daily_update.weather.aurora_quality %}
         <p>Evening Viewing Forecasts:<br>
             Aurora: {{ my.daily_update.weather.aurora_quality }} |
             Sunset Color: {{ my.daily_update.weather.sunset_quality }} |
             Cloud Cover: {{ my.daily_update.weather.cloud_cover_pct }}%</p>
+        {% endif %}
         {% if my.daily_update.weather.aurora_message or my.daily_update.weather.sunset_message %}
-        <p>{{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
+        <p>{% if my.daily_update.weather.aurora_message %}{{ my.daily_update.weather.aurora_message }} {% endif %}{{ my.daily_update.weather.sunset_message }}</p>
         {% endif %}
         {% if my.daily_update.weather.alerts %}
         <p class="subsection-title">

@@ -70,7 +70,7 @@
                             </tr>
 
                             {% if my.daily_update.events.events.size > 0 or my.daily_update.events.seasonal_message != blank %}
-                                {% unless my.daily_update.events.error_message %}
+                                {% if my.daily_update.events.error_message == blank %}
                             <!-- Park Activities -->
                             <tr>
                                 <td style="padding: 30px 40px;">
@@ -89,7 +89,7 @@
                                         <li style="font-size: 14px; line-height: 1.7; color: #444444;">{{ event.start_time }} - {{ event.end_time }}: {{ event.name }}, {{ event.location }} <a href="{{ event.link }}" style="font-size: 12px; color: #028CA9; font-style: italic; text-decoration: underline;">(link)</a></li>
                                         {% endfor %}
                                     </ul>
-                                    {% elsif my.daily_update.events.seasonal_message %}
+                                    {% elsif my.daily_update.events.seasonal_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444;">{{ my.daily_update.events.seasonal_message }}</p>
                                     {% endif %}
                                 </td>
@@ -99,7 +99,7 @@
                                     <div style="border-top: 1px solid #e0e0e0;"></div>
                                 </td>
                             </tr>
-                                {% endunless %}
+                                {% endif %}
                             {% endif %}
 
                             <!-- Weather -->
@@ -115,7 +115,7 @@
                                         width="520" alt="Weather"
                                         style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">
-                                        {{ my.daily_update.weather.daylight_message }}<br><br>Forecasts Around the Park:
+                                        {% if my.daily_update.weather.daylight_message != blank %}{{ my.daily_update.weather.daylight_message }}<br><br>{% endif %}Forecasts Around the Park:
                                     </p>
                                     <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                         <tr>
@@ -129,16 +129,18 @@
                                     <div style="font-size: 14px; line-height: 1.7; color: #444444; margin-top: 25px;">
                                         {% if my.daily_update.weather.aqi_value != nil %}
                                         <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 12px;">
-                                            The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}. This air quality is considered {{ my.daily_update.weather.aqi_category }}</p>
+                                            The current AQI in West Glacier is {{ my.daily_update.weather.aqi_value }}.{% if my.daily_update.weather.aqi_category != blank %} This air quality is considered {{ my.daily_update.weather.aqi_category }}{% endif %}</p>
                                         {% endif %}
+                                        {% if my.daily_update.weather.aurora_quality != blank %}
                                         <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 12px;">
                                             Evening Viewing Forecasts:<br>
                                             Aurora: {{ my.daily_update.weather.aurora_quality }} |
                                             Sunset Color: {{ my.daily_update.weather.sunset_quality }} |
                                             Cloud Cover: {{ my.daily_update.weather.cloud_cover_pct }}%</p>
-                                        {% if my.daily_update.weather.aurora_message or my.daily_update.weather.sunset_message %}
+                                        {% endif %}
+                                        {% if my.daily_update.weather.aurora_message != blank or my.daily_update.weather.sunset_message != blank %}
                                         <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 12px;">
-                                            {{ my.daily_update.weather.aurora_message }} {{ my.daily_update.weather.sunset_message }}</p>
+                                            {% if my.daily_update.weather.aurora_message != blank %}{{ my.daily_update.weather.aurora_message }} {% endif %}{{ my.daily_update.weather.sunset_message }}</p>
                                         {% endif %}
                                         {% if my.daily_update.weather.alerts.size > 0 %}
                                         <p style="font-size: 14px; font-weight: 600; color: #3e2f13; margin: 0 0 10px;">
@@ -146,7 +148,7 @@
                                         <ul style="margin: 0 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                             {% for alert in my.daily_update.weather.alerts %}
                                             <li>{{ alert.headline }}
-                                                {% if alert.bullets %}
+                                                {% if alert.bullets.size > 0 %}
                                                 <ul style="margin-top: 5px; margin-bottom: 5px;">
                                                     {% for b in alert.bullets %}<li>{{ b }}</li>{% endfor %}
                                                 </ul>
@@ -190,9 +192,9 @@
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for c in my.daily_update.trails.closures %}<li>{{ c }}</li>{% endfor %}
                                     </ul>
-                                    {% elsif my.daily_update.trails.no_closures_message %}
+                                    {% elsif my.daily_update.trails.no_closures_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.trails.no_closures_message }}</p>
-                                    {% elsif my.daily_update.trails.error_message %}
+                                    {% elsif my.daily_update.trails.error_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.trails.error_message }}</p>
                                     {% endif %}
 
@@ -205,9 +207,9 @@
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for c in my.daily_update.roads.closures %}<li>{{ c }}</li>{% endfor %}
                                     </ul>
-                                    {% elsif my.daily_update.roads.no_closures_message %}
+                                    {% elsif my.daily_update.roads.no_closures_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.roads.no_closures_message }}</p>
-                                    {% elsif my.daily_update.roads.error_message %}
+                                    {% elsif my.daily_update.roads.error_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.roads.error_message }}</p>
                                     {% endif %}
                                     {% endif %}
@@ -220,7 +222,7 @@
                                     <ul style="margin: 0 0 6px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for c in my.daily_update.hikerbiker.closures %}<li>{{ c }}</li>{% endfor %}
                                     </ul>
-                                    {% if my.daily_update.hikerbiker.explanatory_note %}
+                                    {% if my.daily_update.hikerbiker.explanatory_note != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.hikerbiker.explanatory_note }}</p>
                                     {% endif %}
                                     {% endif %}
@@ -234,7 +236,7 @@
                                     <ul style="margin: 0 0 25px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for s in my.daily_update.campgrounds.statuses %}<li>{{ s }}</li>{% endfor %}
                                     </ul>
-                                    {% elsif my.daily_update.campgrounds.error_message %}
+                                    {% elsif my.daily_update.campgrounds.error_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0 0 25px;">{{ my.daily_update.campgrounds.error_message }}</p>
                                     {% endif %}
                                     {% endif %}
@@ -268,7 +270,7 @@
                                     <ul style="margin: 0 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #444444;">
                                         {% for n in my.daily_update.notices.notices %}<li>{{ n }}</li>{% endfor %}
                                     </ul>
-                                    {% elsif my.daily_update.notices.fallback_message %}
+                                    {% elsif my.daily_update.notices.fallback_message != blank %}
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444;">{{ my.daily_update.notices.fallback_message }}</p>
                                     {% endif %}
                                 </td>
@@ -341,7 +343,7 @@
                                 </td>
                             </tr>
 
-                            {% if my.daily_update.image_otd != "" %}
+                            {% if my.daily_update.image_otd != blank %}
                             <!-- Image of the Day -->
                             <tr>
                                 <td style="padding: 30px 40px;">
@@ -357,7 +359,7 @@
                                             style="display: block; margin: 0 0 20px; border: 0; border-radius: 4px; width: 100%; max-width: 520px;">
                                     </a>
                                     <p style="font-size: 14px; line-height: 1.7; color: #444444; margin: 0;">
-                                        {% if my.daily_update.image_otd_title != "" %}{{ my.daily_update.image_otd_title }}<br>{% endif %}
+                                        {% if my.daily_update.image_otd_title != blank %}{{ my.daily_update.image_otd_title }}<br>{% endif %}
                                         <span style="font-size: 12px; color: #666666;">Image courtesy of <a href="{{ my.daily_update.image_otd_link }}" style="color: #666666;">Glacier National Park</a>.</span>
                                     </p>
                                 </td>
@@ -371,7 +373,7 @@
                             </tr>
                             {% endif %}
 
-                            {% if my.daily_update.sunrise_vid != "" and my.daily_update.sunrise_still != "" %}
+                            {% if my.daily_update.sunrise_vid != blank and my.daily_update.sunrise_still != blank %}
                             <!-- Sunrise Timelapse -->
                             <tr>
                                 <td style="padding: 30px 40px;">
