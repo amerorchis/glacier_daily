@@ -3,8 +3,7 @@ This module fetches and processes various weather-related data including forecas
 weather alerts, aurora forecasts, seasonal information, and sunset hues.
 """
 
-import concurrent.futures
-
+from shared.context_executor import ContextAwareExecutor
 from shared.data_types import WeatherResult
 from weather.forecast import get_forecast
 from weather.night_sky import aurora_forecast
@@ -61,7 +60,7 @@ def weather_data() -> WeatherResult:
     Returns:
         WeatherResult: Structured weather data.
     """
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+    with ContextAwareExecutor(max_workers=6) as executor:
         futures = {
             "forecast": executor.submit(get_forecast),
             "aqi": executor.submit(_get_aqi),
