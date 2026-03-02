@@ -129,6 +129,42 @@
   .copy-logs-btn:active { background: #d5dbc4; }
   .copy-logs-btn.copied { color: #2e7d32; border-color: #a5d6a7; background: #e8f5e9; }
 
+  /* Log viewer */
+  .log-viewer {
+    display: none;
+    margin-top: 0.4rem;
+    max-height: 20rem;
+    overflow-y: auto;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    line-height: 1.55;
+    padding: 0.6rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #333;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .log-viewer.open { display: block; }
+  .log-viewer .log-error { color: #f48771; }
+  .log-viewer .log-warning { color: #cca700; }
+
+  .toggle-logs-btn {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c7e44;
+    background: #f0f2ea;
+    border: 1px solid #c5cba8;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .toggle-logs-btn:hover { background: #e2e7d4; }
+
   /* Error state */
   .error-msg { text-align: center; padding: 3rem 1rem; color: #999; background: #fff; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
 
@@ -158,6 +194,26 @@
 
   var REFRESH_MS = 5 * 60 * 1000; // 5 minutes
   var _runData = {}; // keyed by btnId, stores run objects for log copying
+
+  window.toggleLogs = function (viewerId, toggleId) {
+    var viewer = document.getElementById(viewerId);
+    var btn = document.getElementById(toggleId);
+    if (!viewer || !btn) return;
+    var isOpen = viewer.classList.toggle("open");
+    btn.textContent = isOpen ? "Hide Logs" : "View Logs";
+  };
+
+  function formatLogLines(lines) {
+    return lines.map(function (line) {
+      var escaped = line
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      if (/\bERROR\b/.test(line)) return '<span class="log-error">' + escaped + "</span>";
+      if (/\bWARNING\b/.test(line)) return '<span class="log-warning">' + escaped + "</span>";
+      return escaped;
+    }).join("\n");
+  }
 
   window.copyLogs = function (btnId) {
     var run = _runData[btnId];
@@ -300,10 +356,17 @@
     var logLines = run.log_lines || [];
     if (logLines.length > 0) {
       var btnId = "copy-logs-" + (run.run_id || "unknown");
+      var viewerId = "log-viewer-" + (run.run_id || "unknown");
+      var toggleId = "toggle-logs-" + (run.run_id || "unknown");
       _runData[btnId] = run;
       html += '<button class="copy-logs-btn" id="' + btnId
         + '" onclick="copyLogs(\'' + btnId + '\')">'
         + "Copy Logs (" + logLines.length + " lines)</button>";
+      html += '<button class="toggle-logs-btn" id="' + toggleId
+        + '" onclick="toggleLogs(\'' + viewerId + "', '" + toggleId + "')\">"
+        + "View Logs</button>";
+      html += '<div class="log-viewer" id="' + viewerId + '">'
+        + formatLogLines(logLines) + "</div>";
     }
 
     return html;
