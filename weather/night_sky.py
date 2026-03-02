@@ -13,9 +13,14 @@ from astral import LocationInfo
 from astral.sun import sun
 from requests.exceptions import RequestException
 
+from shared.constants import WEST_GLACIER_LAT, WEST_GLACIER_LON
 from shared.datetime_utils import format_time_with_timezone
 
 UTC = ZoneInfo("UTC")
+
+AURORA_CLOUD_COVER_THRESHOLD = 0.3
+AURORA_MENTION_KP_THRESHOLD = 3.8
+KP_PERIOD_HOURS = 3
 
 
 class ForecastError(Exception):
@@ -365,10 +370,10 @@ def aurora_forecast(cloud_cover: float = 0.0) -> tuple[str, str]:
     """Get and format the forecast"""
     f = Forecast()
 
-    cloudy = cloud_cover >= 0.3
+    cloudy = cloud_cover >= AURORA_CLOUD_COVER_THRESHOLD
 
     # Get the dark period and forecast
-    latitude, longitude = 48.528, -113.989
+    latitude, longitude = WEST_GLACIER_LAT, WEST_GLACIER_LON
     timezone = "US/Mountain"
     start_time = datetime.now(tz=UTC)
 
@@ -381,7 +386,7 @@ def aurora_forecast(cloud_cover: float = 0.0) -> tuple[str, str]:
     hourly_forecast = {}
     for period_start, kp_value in wg_forecast.items():
         # Each period is 3 hours, create 3 one-hour periods
-        for hour_offset in range(3):
+        for hour_offset in range(KP_PERIOD_HOURS):
             hour_time = period_start + timedelta(hours=hour_offset)
             hourly_forecast[hour_time] = kp_value
 
@@ -402,7 +407,7 @@ def aurora_forecast(cloud_cover: float = 0.0) -> tuple[str, str]:
 
     cast = f"{v} Kp ({Forecast.get_aurora_strength(v)})"
     msg = ""
-    if v > 3.8:
+    if v > AURORA_MENTION_KP_THRESHOLD:
         msg = f"The aurora will be visible tonight with a peak Kp of {v} at {Forecast.strftime(v_time)} "
         if cloudy:
             msg += "but it will be cloudy."

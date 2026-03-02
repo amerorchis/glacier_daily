@@ -9,12 +9,11 @@ import requests
 
 from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
+from shared.constants import DRIP_BATCH_SIZE
 from shared.logging_config import get_logger
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
-
-DRIP_BATCH_SIZE = 1000
 
 
 @dataclass
@@ -90,13 +89,12 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
 
         try:
             response = requests.post(
-                url, headers=headers, data=json.dumps(data), timeout=30
+                url, headers=headers, data=json.dumps(data), timeout=10
             )
         except requests.exceptions.RequestException:
-            logger.error(
+            logger.exception(
                 "Drip bulk workflow request failed for batch of %d",
                 len(subs),
-                exc_info=True,
             )
             result.failed += len(subs)
             continue
@@ -117,10 +115,14 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
             logger.info("Drip: Bulk workflow add successful!")
             result.sent += len(subs)
         else:
+            errors = r.get("errors", [])
+            err = errors[0] if errors else {}
+            code = err.get("code", "unknown")
+            message = err.get("message") or response.text[:200]
             logger.error(
                 "Failed to add subscribers to the campaign. Error message: %s - %s",
-                r["errors"][0]["code"],
-                r["errors"][0]["message"],
+                code,
+                message,
             )
             result.failed += len(subs)
 

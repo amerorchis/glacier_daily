@@ -13,6 +13,8 @@ from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+KINTLA_ROAD_LAT_THRESHOLD = 48.787
+
 # The NPS carto.nps.gov GeoJSON API uses a certificate chain that fails
 # validation. SSL verification is disabled for these endpoints.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -80,7 +82,7 @@ def _fetch_open_segments(road_name: str) -> set[tuple[float, float]]:
     )
 
     try:
-        r = requests.get(url, timeout=5, verify=False)  # noqa: S501
+        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
         r.raise_for_status()
         data = json.loads(r.text)
     except (requests.exceptions.RequestException, json.JSONDecodeError):
@@ -130,9 +132,9 @@ def closed_roads() -> dict[str, Road]:
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
         SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
     try:
-        r = requests.get(url, timeout=5, verify=False)  # noqa: S501
+        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
     except requests.exceptions.RequestException as e:
-        logger.error("Road status request failed", exc_info=True)
+        logger.exception("Road status request failed")
         raise NPSWebsiteError from e
     r.raise_for_status()
     status = json.loads(r.text)
@@ -189,9 +191,9 @@ def closed_roads() -> dict[str, Road]:
         elif (
             road_name == "Inside North Fork Road"
         ):  # Handle weird naming for Kintla Road
-            if x["start"][1] > 48.787:
+            if x["start"][1] > KINTLA_ROAD_LAT_THRESHOLD:
                 roads["Kintla Road"].set_coord(x["start"])
-            if x["last"][1] > 48.787:
+            if x["last"][1] > KINTLA_ROAD_LAT_THRESHOLD:
                 roads["Kintla Road"].set_coord(x["last"])
 
     # Return dictionary of roads that have a closure found.
@@ -237,10 +239,10 @@ def get_road_status() -> RoadsResult:
     try:
         return format_road_closures(closed_roads())
     except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
-        logger.error("Road status HTTP error", exc_info=True)
+        logger.exception("Road status HTTP error")
         return RoadsResult()
     except NPSWebsiteError:
-        logger.error("NPS website error", exc_info=True)
+        logger.exception("NPS website error")
         return RoadsResult(
             error_message="The road status page on the park website is currently down."
         )

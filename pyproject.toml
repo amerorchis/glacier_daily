@@ -63,9 +63,15 @@ select = [
     "C4",    # flake8-comprehensions
     "PERF",  # perflint (performance)
     "PIE",   # flake8-pie (misc practices)
+    "G",     # flake8-logging-format
+    "RSE",   # flake8-raise
+    "RET",   # flake8-return
+    "A",     # flake8-builtins
+    "ISC",   # flake8-implicit-str-concat
 ]
 ignore = [
-    "E501",  # line too long (handled by formatter)
+    "E501",    # line too long (handled by formatter)
+    "RET504",  # unnecessary assignment before return (readability)
 ]
 
 [tool.ruff.format]

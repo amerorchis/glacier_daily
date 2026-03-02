@@ -133,6 +133,47 @@ class TestTimed:
         assert "First problem" in mod.error
         assert "Second problem" in mod.error
 
+    def test_timed_captures_errors_from_child_threads(self):
+        """ERROR logged in a ContextAwareExecutor child thread is captured by parent @timed."""
+        from shared.context_executor import ContextAwareExecutor
+
+        child_logger = logging.getLogger("test.child_thread")
+
+        @timed("nested_module")
+        def module_with_children():
+            with ContextAwareExecutor(max_workers=2) as executor:
+
+                def child_task():
+                    child_logger.error("Child thread error")
+
+                executor.submit(child_task).result()
+            return "done"
+
+        result = module_with_children()
+        assert result == "done"
+        timing = get_timing()
+        assert timing.modules["nested_module"].status == "warning"
+        assert "Child thread error" in timing.modules["nested_module"].error
+
+    def test_timed_plain_executor_does_not_capture_child_errors(self):
+        """Plain ThreadPoolExecutor child thread errors are NOT captured (no context propagation)."""
+        child_logger = logging.getLogger("test.plain_child")
+
+        @timed("plain_nested")
+        def module_with_plain_children():
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+
+                def child_task():
+                    child_logger.error("Plain child error")
+
+                executor.submit(child_task).result()
+            return "done"
+
+        result = module_with_plain_children()
+        assert result == "done"
+        timing = get_timing()
+        assert timing.modules["plain_nested"].status == "success"
+
 
 class TestRunTiming:
     def test_record_and_summary(self):

@@ -15,6 +15,9 @@ from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
+MAPBOX_ZOOM = 14
+MAPBOX_IMAGE_DIMENSIONS = "1020x600"
+
 
 def prepare_peak_upload() -> tuple[str, str, str]:
     """Return (directory, filename, local_path) for peak image upload."""
@@ -43,9 +46,9 @@ def peak_sat(peak: dict, skip_upload: bool = False) -> str | None:
     lat, lon = peak["lat"], peak["lon"]
 
     # These settings tend to get best peak image
-    zoom = 14
+    zoom = MAPBOX_ZOOM
     bearing = 0
-    dimensions = "1020x600"
+    dimensions = MAPBOX_IMAGE_DIMENSIONS
 
     # Construct url and get image.
     base_url = f"https://api.mapbox.com/styles/v1/{settings.MAPBOX_ACCOUNT}/{settings.MAPBOX_STYLE}/static/"
@@ -61,8 +64,7 @@ def peak_sat(peak: dict, skip_upload: bool = False) -> str | None:
             if skip_upload:
                 return None
             return upload_peak()
-        else:
-            raise requests.RequestException("Bad status code")
+        raise requests.RequestException("Bad status code")
 
     except (requests.RequestException, PIL.UnidentifiedImageError) as e:
         # If it fails, give the default peak header.

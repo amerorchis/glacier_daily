@@ -62,9 +62,8 @@ def cross_platform_strftime(dt: datetime, format_string: str) -> str:
             formatted = formatted.replace(placeholder, value)
 
         return formatted
-    else:
-        # Unix systems support %-modifier natively
-        return dt.strftime(format_string)
+    # Unix systems support %-modifier natively
+    return dt.strftime(format_string)
 
 
 def format_time_12hr(dt: datetime) -> str:

@@ -25,6 +25,10 @@ CACHE_DIR = SCRIPT_DIR / ".wiki_cache"
 
 WIKIPEDIA_API = "https://en.wikipedia.org/w/api.php"
 REQUEST_DELAY = 0.5  # seconds between requests
+WIKI_SEARCH_LIMIT = 5
+WIKI_MAX_RESULTS_TO_CHECK = 3
+WIKI_COORD_TOLERANCE = 0.1
+WIKI_SAVE_INTERVAL = 10
 
 
 def _setup_session() -> requests_cache.CachedSession:
@@ -116,7 +120,7 @@ def search_wikipedia(session: requests_cache.CachedSession, query: str) -> list[
         "action": "query",
         "list": "search",
         "srsearch": query,
-        "srlimit": 5,
+        "srlimit": WIKI_SEARCH_LIMIT,
         "format": "json",
     }
     response = session.get(WIKIPEDIA_API, params=params, timeout=30)
@@ -187,7 +191,7 @@ def verify_article(
         for coord in article_coords:
             lat_diff = abs(coord.get("lat", 0) - peak_lat)
             lon_diff = abs(coord.get("lon", 0) - peak_lon)
-            if lat_diff < 0.1 and lon_diff < 0.1:
+            if lat_diff < WIKI_COORD_TOLERANCE and lon_diff < WIKI_COORD_TOLERANCE:
                 coords_match = True
                 break
 
@@ -230,7 +234,7 @@ def find_wikipedia_article(
 
     for query in search_queries:
         results = search_wikipedia(session, query)
-        for result in results[:3]:
+        for result in results[:WIKI_MAX_RESULTS_TO_CHECK]:
             page = get_page_content(session, result["pageid"])
             if page:
                 text = page.get("extract", "")
@@ -287,7 +291,7 @@ def fetch_all_wikipedia_data() -> list[dict]:
             print("NOT FOUND")
 
         # Save progress periodically
-        if (i + 1) % 10 == 0:
+        if (i + 1) % WIKI_SAVE_INTERVAL == 0:
             save_partial_results(results)
 
     return results

@@ -202,11 +202,10 @@ def test_subscriber_list_multipage(monkeypatch, mock_required_settings):
                     "subscribers": [{"email": "a@example.com"}],
                     "meta": {"total_pages": 2},
                 }
-            else:
-                return {
-                    "subscribers": [{"email": "b@example.com"}],
-                    "meta": {"total_pages": 2},
-                }
+            return {
+                "subscribers": [{"email": "b@example.com"}],
+                "meta": {"total_pages": 2},
+            }
 
         def raise_for_status(self):
             pass

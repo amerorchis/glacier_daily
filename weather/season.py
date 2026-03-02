@@ -32,12 +32,12 @@ def get_season(date: datetime | None = None) -> str:
 
     if month in [12, 1, 2, 3]:
         return "winter"
-    elif month in [4, 5, 6]:
+    if month in [4, 5, 6]:
         return "spring"
-    elif month in [7, 8, 9]:
+    if month in [7, 8, 9]:
         return "summer"
-    else:  # months 10, 11
-        return "fall"
+    # months 10, 11
+    return "fall"
 
 
 if __name__ == "__main__":  # pragma: no cover

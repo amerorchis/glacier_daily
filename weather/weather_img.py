@@ -12,7 +12,17 @@ from shared.ftp import FTPSession
 from weather.season import get_season
 from weather.weather import weather_data
 
-# Constants
+# Image layout constants
+DEFAULT_FONT_SIZE = 20
+MIN_FONT_SIZE = 10
+LOCATION_CELL_WIDTH = 139.11
+CONDITION_TEXT_Y_OFFSET = 24
+DATE_AREA_LEFT = 149
+DATE_AREA_WIDTH = 347
+DATE_TEXT_Y = 74
+OUTPUT_WIDTH = 810
+OUTPUT_HEIGHT = 748
+
 DIMENSIONS: dict[str, tuple[float, float]] = {
     "West Glacier": (292.1848, 462.5),
     "Polebridge": (165.3, 190),
@@ -100,7 +110,7 @@ def weather_image(
 
     # Setup font
     font_path = "email_images/base/OpenSans-Regular.ttf"
-    default_font = _get_font(font_path, 20)
+    default_font = _get_font(font_path, DEFAULT_FONT_SIZE)
 
     # Add weather data for each location
     for location in results:
@@ -110,31 +120,33 @@ def weather_image(
         # Add temperature
         temp_text = f"{high} | {low}"
         text_width = draw.textlength(temp_text, font=default_font)
-        x = left + ((139.11 - text_width) / 2)
+        x = left + ((LOCATION_CELL_WIDTH - text_width) / 2)
         draw.text((x, y), temp_text, font=default_font, fill=(0, 0, 0))
 
         # Add condition with dynamic font sizing
-        font_size = 20
+        font_size = DEFAULT_FONT_SIZE
         condition_font = default_font
         text_width = draw.textlength(cond, font=condition_font)
 
-        while text_width > 139.11 and font_size > 10:
+        while text_width > LOCATION_CELL_WIDTH and font_size > MIN_FONT_SIZE:
             font_size -= 1
             condition_font = _get_font(font_path, font_size)
             text_width = draw.textlength(cond, font=condition_font)
 
-        x = left + ((139.11 - text_width) / 2)
-        draw.text((x, y + 24), cond, font=condition_font, fill=(0, 0, 0))
+        x = left + ((LOCATION_CELL_WIDTH - text_width) / 2)
+        draw.text(
+            (x, y + CONDITION_TEXT_Y_OFFSET), cond, font=condition_font, fill=(0, 0, 0)
+        )
 
     # Add date
     day = format_date_readable(now_mountain()).upper()
     text_width = draw.textlength(day, font=default_font)
-    x = 149 + ((347 - text_width) / 2)
-    draw.text((x, 74), day, font=default_font, fill="#FFFFFF")
+    x = DATE_AREA_LEFT + ((DATE_AREA_WIDTH - text_width) / 2)
+    draw.text((x, DATE_TEXT_Y), day, font=default_font, fill="#FFFFFF")
 
     # Save and resize
     try:
-        image = image.resize((810, 748), Image.Resampling.LANCZOS)
+        image = image.resize((OUTPUT_WIDTH, OUTPUT_HEIGHT), Image.Resampling.LANCZOS)
         image.save("email_images/today/today_park_map.png")
     except OSError as e:
         raise OSError(f"Failed to save image: {e}") from e

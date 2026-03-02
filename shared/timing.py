@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import functools
 import logging
-import threading
 import time
 from collections.abc import Callable
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -14,17 +14,25 @@ from shared.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+_active_capture: ContextVar[logging.Handler | None] = ContextVar(
+    "_active_capture", default=None
+)
+
 
 class _ThreadErrorCapture(logging.Handler):
-    """Temporary handler that captures ERROR+ records on the current thread."""
+    """Temporary handler that captures ERROR+ records within the active context.
+
+    Uses a ContextVar so that child threads created via ContextAwareExecutor
+    inherit the parent's capture handler, while threads from a plain
+    ThreadPoolExecutor (separate modules) remain isolated.
+    """
 
     def __init__(self) -> None:
         super().__init__(level=logging.ERROR)
-        self._target_thread = threading.get_ident()
         self.records: list[logging.LogRecord] = []
 
     def emit(self, record: logging.LogRecord) -> None:
-        if record.thread == self._target_thread:
+        if _active_capture.get(None) is self:
             self.records.append(record)
 
 
@@ -88,6 +96,7 @@ def timed(name: str) -> Callable:
             capture = _ThreadErrorCapture()
             root = logging.getLogger()
             root.addHandler(capture)
+            token = _active_capture.set(capture)
             start = time.monotonic()
             try:
                 result = func(*args, **kwargs)
@@ -126,6 +135,7 @@ def timed(name: str) -> Callable:
                 )
                 raise
             finally:
+                _active_capture.reset(token)
                 root.removeHandler(capture)
 
         return wrapper

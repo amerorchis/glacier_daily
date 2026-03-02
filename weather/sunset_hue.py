@@ -6,10 +6,14 @@ from datetime import datetime
 
 import requests
 
+from shared.constants import WEST_GLACIER_LAT, WEST_GLACIER_LON
 from shared.logging_config import get_logger
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
+
+SUNSET_MIN_QUALITY = 0.41
+SUNSET_MAX_CLOUD_COVER = 0.6
 
 
 def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
@@ -21,8 +25,8 @@ def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
     """
     ERROR_RETURN = (0, "unknown", "")
 
-    lat = "48.528556"
-    long = "-113.991674"
+    lat = str(WEST_GLACIER_LAT)
+    long = str(WEST_GLACIER_LON)
     date = datetime.today().strftime("%Y-%m-%d")
     forecast_type = "sunset"
 
@@ -55,7 +59,7 @@ def get_sunset_hue(test: bool = False) -> tuple[int, str, str]:
     if not quality_text:
         return ERROR_RETURN
 
-    if quality < 0.41 or cloud_cover > 0.6:
+    if quality < SUNSET_MIN_QUALITY or cloud_cover > SUNSET_MAX_CLOUD_COVER:
         msg = ""
     else:
         msg = f"The sunset is forecast to be {quality_text} this evening{'.' if quality_text == 'good' else '!'}"

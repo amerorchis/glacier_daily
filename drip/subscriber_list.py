@@ -4,6 +4,7 @@ This module provides a function to retrieve a list of subscribers from the Drip 
 
 import requests
 
+from shared.constants import DRIP_BATCH_SIZE
 from shared.logging_config import get_logger
 from shared.retry import retry
 from shared.settings import get_settings
@@ -33,9 +34,14 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
     page = 1
     subs = []
 
-    params = {"status": "active", "tags": tag, "per_page": "1000", "page": page}
+    params = {
+        "status": "active",
+        "tags": tag,
+        "per_page": str(DRIP_BATCH_SIZE),
+        "page": page,
+    }
 
-    response = requests.get(url, headers=headers, params=params, timeout=30)
+    response = requests.get(url, headers=headers, params=params, timeout=10)
     response.raise_for_status()
     data = response.json()
     subs.extend(data["subscribers"])
@@ -44,7 +50,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
     while data["meta"]["total_pages"] > page:
         page += 1
         params["page"] = page
-        response = requests.get(url, headers=headers, params=params, timeout=30)
+        response = requests.get(url, headers=headers, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
         subs.extend(data["subscribers"])

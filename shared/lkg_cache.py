@@ -32,6 +32,7 @@ from shared.logging_config import get_logger
 logger = get_logger(__name__)
 
 DB_PATH = ".lkg_cache.db"
+_SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
 class LKGCache:
@@ -58,7 +59,7 @@ class LKGCache:
             isolation_level="DEFERRED",
         )
         self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA busy_timeout=5000")
+        self._conn.execute(f"PRAGMA busy_timeout={_SQLITE_BUSY_TIMEOUT_MS}")
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS lkg_data (

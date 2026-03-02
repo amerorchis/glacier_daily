@@ -103,3 +103,35 @@ def test_main_exits_when_locked(monkeypatch):
 
     main.main(test=True)
     assert "sleep_to_sunrise" not in calls
+
+
+def test_main_catches_serve_api_exception(monkeypatch):
+    """When serve_api raises, main() logs the error instead of propagating."""
+    calls = []
+    _patch_main(monkeypatch, calls)
+
+    def raise_on_serve(**kw):
+        raise TypeError("can't compare offset-naive and offset-aware datetimes")
+
+    monkeypatch.setattr(main, "serve_api", raise_on_serve)
+
+    # Should not raise — the exception is caught and logged
+    main.main(test=True)
+    # Email sending should not have been attempted
+    assert not any("bulk_workflow_trigger" in c for c in calls)
+
+
+def test_main_catches_email_delivery_exception(monkeypatch):
+    """When bulk_workflow_trigger raises, main() logs the error instead of propagating."""
+    calls = []
+    _patch_main(monkeypatch, calls)
+
+    def raise_on_trigger(subs):
+        raise RuntimeError("Drip API exploded")
+
+    monkeypatch.setattr(main, "bulk_workflow_trigger", raise_on_trigger)
+
+    # Should not raise — the exception is caught and logged
+    main.main(test=True)
+    # serve_api should have completed
+    assert "serve_api" in calls

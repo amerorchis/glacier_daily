@@ -112,8 +112,8 @@ def get_flickr() -> FlickrImage:
             },
         )
 
-        max_retries = 2
-        backoff = 4
+        max_retries = 2  # retry count for image download
+        backoff = 4  # initial backoff seconds for 429 responses
         for attempt in range(max_retries):
             try:
                 with (
@@ -129,10 +129,9 @@ def get_flickr() -> FlickrImage:
                             )
                             time.sleep(wait)
                             continue
-                        else:
-                            raise FlickrAPIError(
-                                "Too many requests (HTTP 429) after retries."
-                            )
+                        raise FlickrAPIError(
+                            "Too many requests (HTTP 429) after retries."
+                        )
                     out_file.write(response.read())
                 break
             except URLError as e:
@@ -145,10 +144,9 @@ def get_flickr() -> FlickrImage:
                         )
                         time.sleep(wait)
                         continue
-                    else:
-                        raise FlickrAPIError(
-                            "Too many requests (HTTP 429) after retries."
-                        ) from e
+                    raise FlickrAPIError(
+                        "Too many requests (HTTP 429) after retries."
+                    ) from e
                 raise FlickrAPIError(f"Failed to download image: {e!s}") from e
 
         link = f"https://flickr.com/photos/glaciernps/{photo_id}"

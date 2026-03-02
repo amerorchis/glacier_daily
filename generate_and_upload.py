@@ -130,7 +130,7 @@ def _safe_result(future, name, default, lkg_keys=None):
     try:
         return future.result()
     except Exception as e:
-        logger.error("Module '%s' failed: %s", name, e, exc_info=True)
+        logger.exception("Module '%s' failed: %s", name, e)
         if lkg_keys:
             lkg_data = _load_module_lkg(name, lkg_keys)
             if lkg_data:
@@ -450,7 +450,7 @@ if __name__ == "__main__":  # pragma: no cover
     import argparse as _argparse
     import sys as _sys
 
-    from shared.logging_config import setup_logging
+    from shared.logging_config import get_log_capture, setup_logging
     from shared.run_context import start_run
     from shared.run_report import build_report, upload_status_report
 
@@ -487,18 +487,27 @@ if __name__ == "__main__":  # pragma: no cover
     if _args.force:
         clear_cache()
 
+    _run_error = False
     try:
         environment = settings.ENVIRONMENT
         if environment == "development":
             gen_data()  # Pending uploads ignored in development
         elif environment == "production":
             serve_api(force=_args.force)
+    except Exception:
+        logger.exception("generate_and_upload failed")
+        _run_error = True
     finally:
         report = build_report(environment=settings.ENVIRONMENT)
+        if _run_error:
+            report.overall_status = "failure"
+        report.finalize_status()
         logger.info("Run complete: %s", report.overall_status)
-        logger.info("Run report: %s", report.to_json())
+        capture = get_log_capture()
+        if capture:
+            report.log_lines = list(capture.buffer)
         if settings.ENVIRONMENT == "production":
             try:
                 upload_status_report(report)
             except Exception:
-                logger.error("Failed to upload status report", exc_info=True)
+                logger.exception("Failed to upload status report")

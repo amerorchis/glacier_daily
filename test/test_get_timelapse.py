@@ -241,7 +241,7 @@ class TestProcessVideo:
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
                 return MOCK_TIMELAPSE_DATA
-            elif endpoint_type == "thumbnails":
+            if endpoint_type == "thumbnails":
                 return MOCK_THUMBNAIL_DATA
             return {}
 
@@ -277,7 +277,7 @@ class TestProcessVideo:
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
                 return MOCK_TIMELAPSE_DATA
-            elif endpoint_type == "thumbnails":
+            if endpoint_type == "thumbnails":
                 return MOCK_THUMBNAIL_DATA
             return {}
 
@@ -306,7 +306,7 @@ class TestProcessVideo:
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
                 return {}  # Empty data
-            elif endpoint_type == "thumbnails":
+            if endpoint_type == "thumbnails":
                 return MOCK_THUMBNAIL_DATA
             return {}
 
@@ -324,7 +324,7 @@ class TestProcessVideo:
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
                 return MOCK_TIMELAPSE_DATA
-            elif endpoint_type == "thumbnails":
+            if endpoint_type == "thumbnails":
                 return MOCK_THUMBNAIL_DATA
             return {}
 
@@ -349,7 +349,7 @@ class TestProcessVideo:
         def fetch_side_effect(endpoint_type):
             if endpoint_type == "timelapse":
                 return MOCK_TIMELAPSE_DATA
-            elif endpoint_type == "thumbnails":
+            if endpoint_type == "thumbnails":
                 return MOCK_THUMBNAIL_DATA
             return {}
 

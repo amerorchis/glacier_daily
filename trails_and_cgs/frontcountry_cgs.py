@@ -24,6 +24,8 @@ YEAR_ROUND_CAMPGROUNDS = {"Apgar", "St Mary"}
 _SEASONAL_HARD_FLOOR_MONTHS = {1, 2, 3, 4}
 # Apr-Nov: show the grouped seasonal closure line in the email
 _SEASONAL_DISPLAY_MONTHS = {4, 5, 6, 7, 8, 9, 10, 11}
+# Month at which seasonal language switches from "Not yet open" to "Closed"
+_SEASON_CLOSE_LANGUAGE_MONTH = 8
 
 
 @retry(
@@ -47,7 +49,7 @@ def campground_alerts() -> CampgroundsResult:
     try:
         status = json.loads(r.text)
     except json.JSONDecodeError:
-        logger.error("Campground status JSON decode error", exc_info=True)
+        logger.exception("Campground status JSON decode error")
         return CampgroundsResult(
             error_message="The campgrounds page on the park website is currently down."
         )
@@ -105,7 +107,7 @@ def campground_alerts() -> CampgroundsResult:
     if season_closures and month in _SEASONAL_DISPLAY_MONTHS:
         seasonal = (
             [f"Closed for the season: {', '.join(season_closures)}"]
-            if month >= 8
+            if month >= _SEASON_CLOSE_LANGUAGE_MONTH
             else [f"Not yet open for the season: {', '.join(season_closures)}"]
         )
         statuses.extend(seasonal)
@@ -123,7 +125,7 @@ def get_campground_status() -> CampgroundsResult:
     try:
         return campground_alerts()
     except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
-        logger.error("Campground status HTTP error", exc_info=True)
+        logger.exception("Campground status HTTP error")
         return CampgroundsResult()
 
 

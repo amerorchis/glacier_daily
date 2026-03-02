@@ -14,6 +14,7 @@ class Place:
     """
 
     place_type = None
+    LOCATION_MATCH_DISTANCE_KM = 3
 
     def __init__(self, name: str) -> None:
         """Initialize a named place with empty closure state."""
@@ -55,7 +56,7 @@ class Place:
         for j in self.locations:
             distance = self.dist(coords[0], coords[1], j[0], j[1])
             if distance < min_dist:
-                if distance < 3:
+                if distance < self.LOCATION_MATCH_DISTANCE_KM:
                     setattr(self, f"{direction}_loc", self.locations[j])
                 else:
                     setattr(

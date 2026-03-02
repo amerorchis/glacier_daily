@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 
 SCRIPT_DIR = Path(__file__).parent
 WIKIPEDIA_JSON = SCRIPT_DIR / "peaks_wikipedia.json"
+PEAK_COORD_MATCH_TOLERANCE = 0.001
 
 
 def _get_peak_summary(name: str, lat: float, lon: float) -> str | None:
@@ -26,8 +27,8 @@ def _get_peak_summary(name: str, lat: float, lon: float) -> str | None:
     for peak_data in data.get("peaks", []):
         if (
             peak_data["name"] == name
-            and abs(peak_data["lat"] - lat) < 0.001
-            and abs(peak_data["lon"] - lon) < 0.001
+            and abs(peak_data["lat"] - lat) < PEAK_COORD_MATCH_TOLERANCE
+            and abs(peak_data["lon"] - lon) < PEAK_COORD_MATCH_TOLERANCE
         ):
             return peak_data.get("summary")
     return None
