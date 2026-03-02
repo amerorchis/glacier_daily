@@ -12,6 +12,7 @@ This module provides environment-aware logging configuration that:
 import logging
 import logging.handlers
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -19,6 +20,12 @@ from shared.run_context import RunIdFilter
 
 MAX_LOG_LINES = 500
 LOG_BACKUP_COUNT = 5
+
+# Matches email addresses while avoiding false positives on version strings
+# like package@1.2.3 by requiring a 2+ letter TLD.
+_EMAIL_RE = re.compile(
+    r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})*"
+)
 
 
 class RunLogCapture(logging.Handler):
@@ -31,6 +38,7 @@ class RunLogCapture(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         try:
             line = self.format(record)
+            line = _EMAIL_RE.sub("[email redacted]", line)
             if len(self.buffer) < MAX_LOG_LINES:
                 self.buffer.append(line)
             elif len(self.buffer) == MAX_LOG_LINES:
