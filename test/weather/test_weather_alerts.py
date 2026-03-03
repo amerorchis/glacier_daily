@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
+import requests
 
 from shared.data_types import AlertBullet
 from weather.weather_alerts import WeatherAlert, WeatherAlertService, weather_alerts
@@ -352,6 +353,12 @@ class TestMainFunction:
 
     @patch.object(WeatherAlertService, "fetch_alerts")
     def test_weather_alerts_error_handling(self, mock_fetch):
-        mock_fetch.side_effect = Exception("Test error")
+        mock_fetch.side_effect = requests.exceptions.RequestException("Test error")
         result = weather_alerts()
         assert result == []
+
+    @patch.object(WeatherAlertService, "fetch_alerts")
+    def test_weather_alerts_propagates_unexpected_errors(self, mock_fetch):
+        mock_fetch.side_effect = TypeError("unexpected bug")
+        with pytest.raises(TypeError, match="unexpected bug"):
+            weather_alerts()

@@ -109,9 +109,13 @@ class TestModuleReturnTypes:
 
     def test_get_hiker_biker_status_returns_hiker_biker_result(self):
         """Verify get_hiker_biker_status returns a HikerBikerResult."""
-        with patch("roads.hiker_biker.requests.get") as mock_get:
+        with (
+            patch("roads.hiker_biker.requests.get") as mock_get,
+            patch("roads.hiker_biker.closed_roads", return_value={}),
+        ):
             mock_response = Mock()
-            mock_response.json.return_value = {"features": []}
+            mock_response.text = '{"features": []}'
+            mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
 
             from roads.hiker_biker import get_hiker_biker_status

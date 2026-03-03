@@ -238,7 +238,7 @@ def weather_alerts() -> list[AlertBullet]:
             result.append(AlertBullet(headline=headline, bullets=bullets))
         return result
 
-    except Exception as e:
+    except (requests.exceptions.RequestException, KeyError, ValueError) as e:
         logger.exception("Error processing weather alerts: %s", e)
         return []
 

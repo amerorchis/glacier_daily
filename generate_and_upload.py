@@ -1,4 +1,4 @@
-#!/home/pi/.local/bin/uv run --python 3.11 python
+#!/home/pi/.local/bin/uv run python
 """
 Generate all of the data with a ThreadPoolExecutor, then upload it to the glacier.org
 server with FTP.
@@ -255,7 +255,11 @@ def gen_data() -> tuple[dict, list]:
                 product_future, "product", ("", None, "", "")
             )
 
-    weather_img = weather_image(weather.forecasts, skip_upload=True)
+    weather_img = (
+        weather_image(weather.forecasts, skip_upload=True)
+        if weather.forecasts
+        else None
+    )
 
     # Collect deferred image uploads for the caller to process
     pending_uploads = []

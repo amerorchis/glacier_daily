@@ -115,10 +115,6 @@ def get_hiker_biker_status() -> HikerBikerResult:
         return hiker_biker()
     except (
         requests.exceptions.RequestException,
-        KeyError,
-        ValueError,
-        TypeError,
-        json.JSONDecodeError,
         NPSWebsiteError,
     ):
         logger.exception("Hiker/biker status error")

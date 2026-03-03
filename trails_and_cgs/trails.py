@@ -156,13 +156,7 @@ def get_closed_trails() -> TrailsResult:
     """
     try:
         return closed_trails()
-    except (
-        requests.exceptions.HTTPError,
-        json.decoder.JSONDecodeError,
-        KeyError,
-        IndexError,
-        TypeError,
-    ):
+    except requests.exceptions.RequestException:
         logger.exception("Trail status error")
         return TrailsResult()
 

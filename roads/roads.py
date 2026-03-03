@@ -248,8 +248,8 @@ def get_road_status() -> RoadsResult:
     """
     try:
         return format_road_closures(closed_roads())
-    except (requests.exceptions.HTTPError, KeyError, IndexError, TypeError):
-        logger.exception("Road status HTTP error")
+    except requests.exceptions.RequestException:
+        logger.exception("Road status error")
         return RoadsResult()
     except NPSWebsiteError:
         logger.exception("NPS website error")
