@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import threading
 import time
 from collections.abc import Callable
 from contextvars import ContextVar
@@ -51,19 +52,22 @@ class RunTiming:
     """Collects timing data for all modules in a run."""
 
     modules: dict[str, ModuleResult] = field(default_factory=dict)
+    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def record(self, result: ModuleResult) -> None:
-        self.modules[result.name] = result
+        with self._lock:
+            self.modules[result.name] = result
 
     def summary(self) -> dict[str, dict]:
-        return {
-            name: {
-                "status": r.status,
-                "duration_seconds": round(r.duration_seconds, 2),
-                "error": r.error,
+        with self._lock:
+            return {
+                name: {
+                    "status": r.status,
+                    "duration_seconds": round(r.duration_seconds, 2),
+                    "error": r.error,
+                }
+                for name, r in self.modules.items()
             }
-            for name, r in self.modules.items()
-        }
 
 
 _timing: RunTiming | None = None

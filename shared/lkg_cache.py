@@ -116,17 +116,18 @@ class LKGCache:
         if the data is from a different day.
         """
         today = now_mountain().strftime("%Y-%m-%d")
-        results: dict[str, str] = {}
-        for key in keys:
-            row = self._conn.execute(
-                """SELECT value, saved_date FROM lkg_data
-                   WHERE module_name = ? AND field_key = ?""",
-                (module_name, key),
-            ).fetchone()
-            if row is None or row[1] != today:
-                return None
-            results[key] = row[0]
-        return results
+        with self._lock:
+            results: dict[str, str] = {}
+            for key in keys:
+                row = self._conn.execute(
+                    """SELECT value, saved_date FROM lkg_data
+                       WHERE module_name = ? AND field_key = ?""",
+                    (module_name, key),
+                ).fetchone()
+                if row is None or row[1] != today:
+                    return None
+                results[key] = row[0]
+            return results
 
     def clear_modules(self, module_names: list[str]) -> None:
         """Remove cached data for specific modules.
