@@ -1,4 +1,4 @@
-#!/home/pi/.local/bin/uv run --python 3.11 python
+#!/home/pi/.local/bin/uv run python
 
 """
 Retry checker for Glacier Daily email.

@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 import trails_and_cgs.trails as trails_mod
 from shared.data_types import TrailsResult
 
@@ -170,12 +172,27 @@ def test_reasons_to_ignore_filtering(monkeypatch):
     assert any("Avalanche Lake" in c for c in result.closures)
 
 
-def test_get_closed_trails_catches_exceptions(monkeypatch):
-    """get_closed_trails should catch KeyError and return an empty TrailsResult."""
+def test_get_closed_trails_catches_request_exceptions(monkeypatch):
+    """get_closed_trails should catch RequestException and return an empty TrailsResult."""
+    import requests
+
     monkeypatch.setattr(
-        trails_mod, "closed_trails", lambda: (_ for _ in ()).throw(KeyError("boom"))
+        trails_mod,
+        "closed_trails",
+        lambda: (_ for _ in ()).throw(
+            requests.exceptions.RequestException("network error")
+        ),
     )
     result = trails_mod.get_closed_trails()
     assert isinstance(result, TrailsResult)
     assert not result.closures
     assert not result.error_message
+
+
+def test_get_closed_trails_propagates_unexpected_exceptions(monkeypatch):
+    """get_closed_trails should NOT catch KeyError — let it propagate to _safe_result()."""
+    monkeypatch.setattr(
+        trails_mod, "closed_trails", lambda: (_ for _ in ()).throw(KeyError("boom"))
+    )
+    with pytest.raises(KeyError, match="boom"):
+        trails_mod.get_closed_trails()

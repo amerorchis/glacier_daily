@@ -150,7 +150,7 @@ def events_today(now=None) -> EventsResult:
         msg = seasonal_message(now_dt)
         return EventsResult(seasonal_message=msg)
 
-    except (JSONDecodeError, KeyError, IndexError, TypeError) as e:
+    except (requests.exceptions.RequestException, JSONDecodeError) as e:
         logger.error("Failed to retrieve events: %s", e)
         return _handle_fetch_failure()
 
