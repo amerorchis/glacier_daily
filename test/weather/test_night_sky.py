@@ -91,8 +91,9 @@ def test_forecast_validation_error():
         Forecast("Invalid forecast text")
 
 
+@patch("shared.retry.sleep")
 @patch("requests.get")
-def test_forecast_fetch_error(mock_get):
+def test_forecast_fetch_error(mock_get, _mock_sleep):
     """Test that network errors raise ForecastFetchError"""
     mock_get.side_effect = RequestException("Network error")
     with pytest.raises(ForecastFetchError):

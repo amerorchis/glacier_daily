@@ -138,8 +138,9 @@ def test_hiker_biker_status_no_closures(mock_get, mock_gtsr):
         assert result.closures == []
 
 
+@patch("shared.retry.sleep")
 @patch("requests.get")
-def test_hiker_biker_status_error_handling(mock_get):
+def test_hiker_biker_status_error_handling(mock_get, _mock_sleep):
     """Test error handling"""
     mock_get.side_effect = requests.exceptions.HTTPError("Test error")
     result = get_hiker_biker_status()
@@ -202,10 +203,11 @@ def test_hiker_biker_request_exception_on_url(monkeypatch, mock_gtsr):
     with (
         patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads),
         patch("requests.get", side_effect=mock_get),
+        patch("shared.retry.sleep"),
     ):
         result = get_hiker_biker_status()
         assert result == HikerBikerResult()
-        assert call_count["n"] == 2  # Both URLs attempted
+        assert call_count["n"] >= 2  # Both URLs attempted (with retries)
 
 
 def test_hiker_biker_no_geometry(monkeypatch, mock_gtsr):

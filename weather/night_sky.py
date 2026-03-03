@@ -11,10 +11,10 @@ from zoneinfo import ZoneInfo
 import requests
 from astral import LocationInfo
 from astral.sun import sun
-from requests.exceptions import RequestException
 
 from shared.constants import WEST_GLACIER_LAT, WEST_GLACIER_LON
 from shared.datetime_utils import format_time_with_timezone
+from shared.retry import retry
 
 UTC = ZoneInfo("UTC")
 
@@ -77,12 +77,9 @@ class Forecast:
     def __init__(self, forecast_text: str | None = None):
         """Initialize forecast object, fetching from NOAA if no text provided."""
         if forecast_text is None:
-            try:
-                response = requests.get(self.FORECAST_URL, timeout=10)
-                response.raise_for_status()
-                forecast_text = response.text
-            except RequestException as e:
-                raise ForecastFetchError(f"Failed to fetch NOAA forecast: {e!s}") from e
+            forecast_text = self._fetch_forecast_text()
+            if forecast_text is None:
+                raise ForecastFetchError("Failed to fetch NOAA forecast after retries")
 
         self.raw_text = forecast_text.strip()
         self.forecast_periods: list[KpPeriod] = []
@@ -93,6 +90,14 @@ class Forecast:
         self._parse_date()
         self._parse_kp_indices()
         self._validate_data()
+
+    @staticmethod
+    @retry(3, (requests.exceptions.RequestException,), default=None, backoff=10)
+    def _fetch_forecast_text() -> str | None:
+        """Fetch forecast text from NOAA with retry logic."""
+        response = requests.get(Forecast.FORECAST_URL, timeout=15)
+        response.raise_for_status()
+        return response.text
 
     @classmethod
     def from_file(cls, filepath: str) -> "Forecast":

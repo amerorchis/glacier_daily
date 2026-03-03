@@ -15,6 +15,7 @@ from shared.datetime_utils import now_mountain
 from shared.ftp import FTPSession
 from shared.image_utils import process_image_for_email
 from shared.logging_config import get_logger
+from shared.retry import retry
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
@@ -41,14 +42,20 @@ def upload_potd():
     return address
 
 
-def resize_image(url):
+@retry(2, (requests.exceptions.RequestException,), default=False, backoff=5)
+def resize_image(url) -> bool:
     """
     Fetch a product image and process it for the email template.
+
+    Returns:
+        True on success, False after retries are exhausted.
     """
-    response = requests.get(url, timeout=5)
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
     image = Image.open(BytesIO(response.content))
     result = process_image_for_email(image)
     result.save("email_images/today/product_otd.jpg")
+    return True
 
 
 def get_product(skip_upload: bool = False):
@@ -72,7 +79,13 @@ def get_product(skip_upload: bool = False):
             raise requests.exceptions.RequestException
         products = json.loads(r.text)
         total_products = products["meta"]["pagination"]["total"]
-    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as e:
+    except (
+        requests.exceptions.RequestException,
+        KeyError,
+        IndexError,
+        TypeError,
+        json.JSONDecodeError,
+    ) as e:
         logger.error("Unexpected BigCommerce product list response: %s", e)
         return ("", "", "", "")
 
@@ -149,7 +162,9 @@ def get_product(skip_upload: bool = False):
         return ("", "", "", "")
 
     # Resize and upload the image retrieved
-    resize_image(product_data["image_url"])
+    if not resize_image(product_data["image_url"]):
+        logger.error("Failed to fetch product image")
+        return ("", "", "", "")
 
     image_url = None if skip_upload else upload_potd()
 

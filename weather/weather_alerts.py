@@ -6,7 +6,6 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from time import sleep
 from typing import ClassVar
 
 import requests
@@ -14,6 +13,7 @@ import requests
 from shared.data_types import AlertBullet
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
@@ -46,8 +46,6 @@ class WeatherAlertService:
         f"{BASE_URL}/zones/fire/MTZ105",
     ]
     HEADERS: ClassVar[dict[str, str]] = {"User-Agent": "Mozilla/5.0"}
-    MAX_RETRIES = 10
-    RETRY_DELAY = 3
     SEVERITY_ORDER: ClassVar[dict[str, int]] = {
         "Extreme": 0,
         "Severe": 1,
@@ -118,19 +116,20 @@ class WeatherAlertService:
 
         return message + "</ul>"
 
-    def fetch_alerts(self) -> list[dict]:
+    @staticmethod
+    @retry(3, (requests.exceptions.RequestException,), default=[], backoff=10)
+    def fetch_alerts() -> list[dict]:
         """Fetch alerts with retry logic."""
-        for _ in range(self.MAX_RETRIES):
-            response = requests.get(
-                f"{self.BASE_URL}/alerts/active/area/MT",
-                headers=self.HEADERS,
-                timeout=10,
+        response = requests.get(
+            f"{WeatherAlertService.BASE_URL}/alerts/active/area/MT",
+            headers=WeatherAlertService.HEADERS,
+            timeout=20,
+        )
+        if response.status_code != 200:
+            raise requests.exceptions.RequestException(
+                f"Weather alert API returned status {response.status_code}"
             )
-            if response.status_code == 200:
-                return json.loads(response.content)["features"]
-            logger.warning("Weather alert API returned status %s", response.status_code)
-            sleep(self.RETRY_DELAY)
-        return []
+        return json.loads(response.content)["features"]
 
     def filter_local_alerts(self, alerts: list[dict]) -> list[dict]:
         """Filter alerts for local zones."""

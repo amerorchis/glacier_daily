@@ -33,6 +33,9 @@ def test_closed_trails_returns_trails_result(monkeypatch):
     class DummyResp:
         text = '{"features": [{"properties": {"name": "Trail X", "trail_status_info": "CLOSED", "location": "Somewhere"}, "geometry": {"coordinates": [[0,0],[1,1],[2,2]]}}]}'
 
+        def raise_for_status(self):
+            pass
+
     monkeypatch.setattr(trails_mod.requests, "get", lambda *a, **k: DummyResp())
     result = trails_mod.closed_trails()
     assert isinstance(result, TrailsResult)

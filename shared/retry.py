@@ -52,7 +52,8 @@ def retry(
                         times,
                     )
                     attempt += 1
-                    sleep(backoff)
+                    if attempt < times:
+                        sleep(backoff)
 
             logger.error(
                 "All %d attempts failed for %s: %s",

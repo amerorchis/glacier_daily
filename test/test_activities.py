@@ -86,17 +86,19 @@ def test_events_today_json_decode_error(mock_nps_api):
     mock_resp.raise_for_status = Mock()
     mock_resp.json.side_effect = requests.exceptions.JSONDecodeError("fail", "", 0)
     mock_nps_api.return_value = mock_resp
-    result = events_today("2024-07-01")
+    with patch("shared.retry.sleep"):
+        result = events_today("2024-07-01")
     assert isinstance(result, EventsResult)
     assert "could not be retrieved" in result.error_message
 
 
 def test_events_today_http_error(mock_nps_api):
-    """Test that HTTPError returns EventsResult with error_message."""
+    """Test that HTTPError returns EventsResult with error_message after retries."""
     mock_nps_api.side_effect = requests.HTTPError("502 Server Error")
-    result = events_today("2024-07-01")
+    with patch("shared.retry.sleep"):
+        result = events_today("2024-07-01")
     assert isinstance(result, EventsResult)
-    assert result.error_message == "502 Response"
+    assert "could not be retrieved" in result.error_message
 
 
 def test_events_today_no_events_summer(mock_nps_api):

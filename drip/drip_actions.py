@@ -11,6 +11,7 @@ from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
 from shared.constants import DRIP_BATCH_SIZE
 from shared.logging_config import get_logger
+from shared.retry import retry
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
@@ -47,6 +48,12 @@ def get_subs(tag: str) -> list:
             subs.remove(i)
 
     return subs
+
+
+@retry(2, (requests.exceptions.RequestException,), default=None, backoff=10)
+def _post_drip_batch(url: str, headers: dict, data: dict) -> requests.Response | None:
+    """Post a batch of events to Drip API."""
+    return requests.post(url, headers=headers, data=json.dumps(data), timeout=15)
 
 
 def bulk_workflow_trigger(sub_list: list) -> BatchResult:
@@ -87,15 +94,8 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
 
         data = {"batches": [{"events": subs_json}]}
 
-        try:
-            response = requests.post(
-                url, headers=headers, data=json.dumps(data), timeout=10
-            )
-        except requests.exceptions.RequestException:
-            logger.exception(
-                "Drip bulk workflow request failed for batch of %d",
-                len(subs),
-            )
+        response = _post_drip_batch(url, headers, data)
+        if response is None:
             result.failed += len(subs)
             continue
 

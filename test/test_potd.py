@@ -63,7 +63,7 @@ class TestGetProduct:
         """Test successful product retrieval"""
         with (
             patch("requests.get") as mock_get,
-            patch("product_otd.product.resize_image"),
+            patch("product_otd.product.resize_image", return_value=True),
             patch("product_otd.product.upload_potd") as mock_upload,
             patch("random.randrange", return_value=1),
         ):
@@ -82,13 +82,29 @@ class TestGetProduct:
             assert product_link == "https://shop.glacier.org/test-product"
             assert desc == "Test product description"
 
+    def test_get_product_image_fetch_fails(
+        self, mock_product_response, mock_image_response, mock_env_vars
+    ):
+        """Test that failed image fetch returns empty tuple."""
+        with (
+            patch("requests.get") as mock_get,
+            patch("product_otd.product.resize_image", return_value=False),
+            patch("random.randrange", return_value=1),
+        ):
+            mock_get.side_effect = [
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_image_response)),
+            ]
+            result = get_product()
+            assert result == ("", "", "", "")
+
     def test_get_product_api_error(self, mock_env_vars):
-        """Test handling of API error"""
+        """Test handling of API error returns empty tuple."""
         with patch("requests.get") as mock_get:
             mock_get.return_value = Mock(status_code=500)
-
-            with pytest.raises(requests.exceptions.RequestException):
-                get_product()
+            result = get_product()
+            assert result == ("", "", "", "")
 
     def test_get_product_skip_upload(
         self, mock_product_response, mock_image_response, mock_env_vars
@@ -96,7 +112,7 @@ class TestGetProduct:
         """Test get_product with skip_upload=True returns None for image."""
         with (
             patch("requests.get") as mock_get,
-            patch("product_otd.product.resize_image"),
+            patch("product_otd.product.resize_image", return_value=True),
             patch("random.randrange", return_value=1),
         ):
             mock_get.side_effect = [
@@ -137,20 +153,23 @@ class TestResizeImage:
             mock_result = MagicMock()
             mock_process.return_value = mock_result
 
-            resize_image("https://example.com/test.jpg")
+            result = resize_image("https://example.com/test.jpg")
 
+            assert result is True
             mock_process.assert_called_once()
             mock_result.save.assert_called_once_with(
                 "email_images/today/product_otd.jpg"
             )
 
     def test_resize_image_request_error(self):
-        """Test handling of request error"""
-        with patch("requests.get") as mock_get:
+        """Test handling of request error returns False after retries."""
+        with (
+            patch("requests.get") as mock_get,
+            patch("shared.retry.sleep"),
+        ):
             mock_get.side_effect = requests.exceptions.RequestException
-
-            with pytest.raises(requests.exceptions.RequestException):
-                resize_image("https://example.com/test.jpg")
+            result = resize_image("https://example.com/test.jpg")
+            assert result is False
 
     def test_resize_image_invalid_image(self):
         """Test handling of invalid image data"""

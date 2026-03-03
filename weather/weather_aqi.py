@@ -10,6 +10,7 @@ import uuid
 import requests
 
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
@@ -39,6 +40,7 @@ def add_cache_buster(url: str) -> str:
     return final_url
 
 
+@retry(3, (requests.exceptions.RequestException,), default="", backoff=10)
 def get_air_quality() -> int | str:
     """
     Fetch the current Air Quality Index (AQI) for West Glacier.
@@ -81,10 +83,6 @@ def get_air_quality() -> int | str:
 
     except requests.exceptions.JSONDecodeError:
         logger.error("AQI JSON decoding error")
-        return ""
-
-    except requests.exceptions.RequestException as e:
-        logger.error("AQI request error: %s", e)
         return ""
 
     except (KeyError, IndexError, TypeError) as e:

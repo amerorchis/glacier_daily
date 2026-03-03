@@ -58,7 +58,11 @@ def mock_all_data_sources(monkeypatch):
         gau, "get_road_status", lambda: RoadsResult(closures=["Road closure"])
     )
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+    monkeypatch.setattr(
+        gau,
+        "events_today",
+        lambda: EventsResult(seasonal_message="No ranger programs today."),
+    )
     monkeypatch.setattr(
         gau, "get_image_otd", lambda **kw: ("img", "img_title", "img_link")
     )
@@ -184,7 +188,11 @@ def test_gen_data_with_empty_returns(monkeypatch):
     monkeypatch.setattr(gau, "get_campground_status", lambda: CampgroundsResult())
     monkeypatch.setattr(gau, "get_road_status", lambda: RoadsResult())
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+    monkeypatch.setattr(
+        gau,
+        "events_today",
+        lambda: EventsResult(seasonal_message="No ranger programs today."),
+    )
     monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("", "", ""))
     monkeypatch.setattr(gau, "peak", lambda **kw: ("", None, ""))
     monkeypatch.setattr(gau, "process_video", lambda: ("", "", ""))
@@ -269,7 +277,11 @@ def test_gen_data_module_exception_handling(monkeypatch):
         gau, "get_road_status", lambda: RoadsResult(closures=["Road closure"])
     )
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+    monkeypatch.setattr(
+        gau,
+        "events_today",
+        lambda: EventsResult(seasonal_message="No ranger programs today."),
+    )
     monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
     monkeypatch.setattr(gau, "peak", failing_peak)
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
@@ -303,7 +315,11 @@ def test_gen_data_multiple_module_failures(monkeypatch):
         gau, "get_road_status", lambda: RoadsResult(closures=["Road closure"])
     )
     monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-    monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+    monkeypatch.setattr(
+        gau,
+        "events_today",
+        lambda: EventsResult(seasonal_message="No ranger programs today."),
+    )
     monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
     monkeypatch.setattr(gau, "peak", lambda **kw: ("peak_name", "peak_img", "map"))
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "desc"))
@@ -473,7 +489,11 @@ class TestLKGSave:
             gau, "get_road_status", lambda: RoadsResult(closures=["roads"])
         )
         monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-        monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+        monkeypatch.setattr(
+            gau,
+            "events_today",
+            lambda: EventsResult(seasonal_message="No ranger programs today."),
+        )
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "pk_map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
@@ -513,7 +533,11 @@ class TestLKGFallback:
             gau, "get_road_status", lambda: RoadsResult(closures=["roads"])
         )
         monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-        monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+        monkeypatch.setattr(
+            gau,
+            "events_today",
+            lambda: EventsResult(seasonal_message="No ranger programs today."),
+        )
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
@@ -585,7 +609,11 @@ class TestLKGDateDeterministic:
             gau, "get_road_status", lambda: RoadsResult(closures=["roads"])
         )
         monkeypatch.setattr(gau, "get_hiker_biker_status", lambda: HikerBikerResult())
-        monkeypatch.setattr(gau, "events_today", lambda: EventsResult())
+        monkeypatch.setattr(
+            gau,
+            "events_today",
+            lambda: EventsResult(seasonal_message="No ranger programs today."),
+        )
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
