@@ -47,11 +47,15 @@ def sample_image():
 
 def test_peak_selection(mock_env_vars):
     """Test random peak selection"""
-    with patch("random.seed") as mock_seed:
+    mock_rng = MagicMock()
+    mock_rng.choice = MagicMock(
+        side_effect=lambda peaks: peaks[0]  # Always pick the first peak
+    )
+    with patch("random.Random", return_value=mock_rng) as mock_random_cls:
         result = peak(test=True)
 
-        # Check that random seed was set with today's date
-        mock_seed.assert_called_once_with(date.today().strftime("%Y%m%d"))
+        # Check that Random was instantiated with today's date as seed
+        mock_random_cls.assert_called_once_with(date.today().strftime("%Y%m%d"))
 
         # Verify result format
         peak_name, peak_img, peak_map = result
@@ -165,14 +169,13 @@ def test_peak_with_invalid_coordinates(mock_env_vars):
 
 def test_peak_csv_read():
     """Test reading of peaks from CSV"""
-    with patch("random.seed"):
-        result = peak(test=True)
+    result = peak(test=True)
 
-        # Verify basic peak data format
-        peak_name, _, peak_map = result
-        assert " - " in peak_name  # Should contain name and elevation
-        assert "ft." in peak_name
-        assert "@" in peak_map  # Should contain coordinates
+    # Verify basic peak data format
+    peak_name, _, peak_map = result
+    assert " - " in peak_name  # Should contain name and elevation
+    assert "ft." in peak_name
+    assert "@" in peak_map  # Should contain coordinates
 
 
 class TestGetPeakSummary:
