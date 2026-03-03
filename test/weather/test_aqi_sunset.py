@@ -145,7 +145,7 @@ def test_get_air_quality_json_error():
 
 def test_get_air_quality_request_error():
     """Test handling of request error"""
-    with patch("requests.get") as mock_get:
+    with patch("requests.get") as mock_get, patch("shared.retry.sleep"):
         mock_get.side_effect = requests.exceptions.RequestException()
 
         aqi = get_air_quality()
@@ -155,7 +155,7 @@ def test_get_air_quality_request_error():
 
 def test_get_air_quality_timeout():
     """Test handling of request timeout"""
-    with patch("requests.get") as mock_get:
+    with patch("requests.get") as mock_get, patch("shared.retry.sleep"):
         mock_get.side_effect = requests.exceptions.Timeout()
 
         aqi = get_air_quality()

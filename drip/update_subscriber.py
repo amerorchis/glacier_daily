@@ -8,9 +8,18 @@ import urllib.parse
 import requests
 
 from shared.logging_config import get_logger
+from shared.retry import retry
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
+
+
+@retry(2, (requests.exceptions.RequestException,), default=None, backoff=10)
+def _post_subscriber_update(
+    url: str, headers: dict, data: dict
+) -> requests.Response | None:
+    """Post subscriber update to Drip API."""
+    return requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
 
 
 def update_subscriber(updates: dict):
@@ -35,15 +44,25 @@ def update_subscriber(updates: dict):
 
     data = {"subscribers": [updates]}
 
-    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
-    r = response.json()
+    response = _post_subscriber_update(url, headers, data)
+    if response is None:
+        logger.error("Failed to update %s: all retry attempts exhausted", email)
+        return
+
+    try:
+        r = response.json()
+    except json.JSONDecodeError:
+        logger.error("Failed to parse Drip response for %s", email)
+        return
 
     if response.status_code == 200:
         logger.info("Drip: %s was updated", email)
     else:
+        errors = r.get("errors", [{}])
+        err = errors[0] if errors else {}
         logger.error(
             "Failed to update %s: %s - %s",
             email,
-            r["errors"][0]["code"],
-            r["errors"][0]["message"],
+            err.get("code", "unknown"),
+            err.get("message", "(no message)"),
         )

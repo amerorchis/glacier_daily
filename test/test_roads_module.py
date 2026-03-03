@@ -30,7 +30,10 @@ class TestClosedRoads:
 
     def test_request_exception_raises_nps_error(self):
         """Verify NPSWebsiteError raised on request failure."""
-        with patch("roads.roads.requests.get") as mock_get:
+        with (
+            patch("roads.roads.requests.get") as mock_get,
+            patch("shared.retry.sleep"),
+        ):
             mock_get.side_effect = requests.RequestException("Connection failed")
             with pytest.raises(NPSWebsiteError):
                 closed_roads()
@@ -315,18 +318,19 @@ class TestFormatRoadClosures:
 class TestGetRoadStatus:
     """Tests for the get_road_status() wrapper function."""
 
-    def test_http_error_returns_empty_result(self):
-        """Verify empty RoadsResult returned on HTTP error."""
+    def test_http_error_returns_down_message_after_retries(self):
+        """Verify website down message returned on HTTP error after retries."""
         mock_response = Mock()
         mock_response.raise_for_status.side_effect = requests.HTTPError("404")
         mock_response.text = '{"features": []}'
 
-        with patch("roads.roads.requests.get", return_value=mock_response):
+        with (
+            patch("roads.roads.requests.get", return_value=mock_response),
+            patch("shared.retry.sleep"),
+        ):
             result = get_road_status()
             assert isinstance(result, RoadsResult)
-            assert result.closures == []
-            assert result.no_closures_message == ""
-            assert result.error_message == ""
+            assert "currently down" in result.error_message
 
     def test_nps_website_error_returns_down_message(self):
         """Verify website down message on NPS error."""
@@ -479,7 +483,10 @@ class TestFetchOpenSegments:
 
     def test_request_failure_returns_empty(self):
         """Verify empty set returned on request failure."""
-        with patch("roads.roads.requests.get") as mock_get:
+        with (
+            patch("roads.roads.requests.get") as mock_get,
+            patch("shared.retry.sleep"),
+        ):
             mock_get.side_effect = requests.RequestException("Failed")
             result = _fetch_open_segments("Going-to-the-Sun")
             assert result == set()
@@ -637,7 +644,10 @@ class TestOverlappingSegmentHandling:
                 raise requests.RequestException("Failed to fetch open segments")
             return closed_response
 
-        with patch("roads.roads.requests.get", side_effect=mock_get):
+        with (
+            patch("roads.roads.requests.get", side_effect=mock_get),
+            patch("shared.retry.sleep"),
+        ):
             result = closed_roads()
             # Should still report the closure even if open segments fetch failed
             assert "Going-to-the-Sun Road" in result

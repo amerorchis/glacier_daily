@@ -83,6 +83,19 @@ _FIELD_TO_MODULE = {
 }
 
 
+def _is_substantive(value) -> bool:
+    """Check if a value has meaningful content worth caching.
+
+    Empty dataclass instances (all fields falsy) are considered non-substantive
+    to prevent failed module defaults from overwriting good cached data.
+    """
+    if not value:
+        return False
+    if hasattr(value, "__dataclass_fields__"):
+        return any(getattr(value, f) for f in value.__dataclass_fields__)
+    return True
+
+
 def _save_module_lkg(module_name, data):
     """Save successful module output to LKG cache.
 
@@ -128,9 +141,12 @@ def _submit_timed(executor, name, func, *args, **kwargs):
 def _safe_result(future, name, default, lkg_keys=None):
     """Safely get a future's result, falling back to LKG then default."""
     try:
-        return future.result()
+        return future.result(timeout=300)
     except Exception as e:
-        logger.exception("Module '%s' failed: %s", name, e)
+        if isinstance(e, TimeoutError):
+            logger.error("Module '%s' timed out after 300s", name)
+        else:
+            logger.exception("Module '%s' failed: %s", name, e)
         if lkg_keys:
             lkg_data = _load_module_lkg(name, lkg_keys)
             if lkg_data:
@@ -307,7 +323,9 @@ def gen_data() -> tuple[dict, list]:
     # LKG: Save successful module data
     for module_name, keys in _ALL_MODULE_KEYS.items():
         module_data = {
-            k: drip_template_fields[k] for k in keys if drip_template_fields.get(k)
+            k: drip_template_fields[k]
+            for k in keys
+            if _is_substantive(drip_template_fields.get(k))
         }
         if module_data:
             _save_module_lkg(module_name, module_data)

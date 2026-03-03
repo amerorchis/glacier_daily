@@ -86,7 +86,10 @@ def test_peak_sat_image_generation(mock_env_vars, sample_peak_data):
 
 def test_peak_sat_api_error(mock_env_vars, sample_peak_data):
     """Test handling of Mapbox API errors"""
-    with patch("requests.get", side_effect=requests.RequestException("API Error")):
+    with (
+        patch("requests.get", side_effect=requests.RequestException("API Error")),
+        patch("shared.retry.sleep"),
+    ):
         result = peak_sat(sample_peak_data)
         assert result == "https://glacier.org/daily/summer/peak.jpg"
 
@@ -155,7 +158,8 @@ def test_peak_with_invalid_coordinates(mock_env_vars):
         "lon": "invalid",
     }
 
-    result = peak_sat(invalid_peak)
+    with patch("shared.retry.sleep"):
+        result = peak_sat(invalid_peak)
     assert result == "https://glacier.org/daily/summer/peak.jpg"
 
 

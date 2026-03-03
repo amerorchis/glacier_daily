@@ -113,7 +113,7 @@ class TestWeatherAlertService:
         assert len(result) == 2
         assert "High Wind Watch" in result[0]["properties"]["headline"]
 
-    @patch("weather.weather_alerts.sleep")
+    @patch("shared.retry.sleep")
     @patch("requests.get")
     def test_fetch_alerts_retry_then_success(
         self, mock_get, _mock_sleep, weather_service, sample_api_response
@@ -127,7 +127,7 @@ class TestWeatherAlertService:
 
         mock_get.side_effect = [fail_response, success_response]
 
-        result = weather_service.fetch_alerts()
+        result = WeatherAlertService.fetch_alerts()
         assert len(result) == 2
         assert mock_get.call_count == 2
 

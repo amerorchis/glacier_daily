@@ -5,11 +5,12 @@ This module retrieves and processes daily events from the National Park Service 
 from datetime import datetime
 
 import requests
-from requests.exceptions import JSONDecodeError, ReadTimeout
+from requests.exceptions import JSONDecodeError
 
 from shared.data_types import Event, EventsResult
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger
+from shared.retry import retry
 from shared.settings import get_settings
 
 logger = get_logger(__name__)
@@ -33,6 +34,15 @@ def time_sortable(time: str):
     return datetime.combine(today, time_obj)
 
 
+@retry(3, (requests.exceptions.RequestException,), default=None, backoff=5)
+def fetch_events(endpoint, headers):
+    """Get events from endpoint."""
+    response = requests.get(endpoint, headers=headers, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    return data["data"], int(data["total"]) // NPS_EVENTS_PAGE_SIZE + 1
+
+
 def events_today(now=None) -> EventsResult:
     """
     Retrieve and process today's events from the National Park Service API.
@@ -43,16 +53,6 @@ def events_today(now=None) -> EventsResult:
     Returns:
         EventsResult: Structured events data.
     """
-
-    def fetch_events(endpoint, headers):
-        """
-        Get events from endpoint
-        """
-        # NPS events API is very slow to respond
-        response = requests.get(endpoint, headers=headers, timeout=245)
-        response.raise_for_status()
-        response = response.json()
-        return response["data"], int(response["total"]) // NPS_EVENTS_PAGE_SIZE + 1
 
     def process_event(event):
         """
@@ -114,15 +114,31 @@ def events_today(now=None) -> EventsResult:
     if now is None:
         now = now_mountain().strftime("%Y-%m-%d")
 
+    def _handle_fetch_failure() -> EventsResult:
+        year, month, day = (int(i) for i in now.split("-"))
+        now_dt = datetime(year, month, day)
+        msg = seasonal_message(now_dt)
+        if msg != "There are no ranger programs today.":
+            return EventsResult(seasonal_message=msg)
+        return EventsResult(
+            error_message="Ranger program schedule could not be retrieved."
+        )
+
     try:
         endpoint = f"http://developer.nps.gov/api/v1/events?parkCode=glac&dateStart={now}&dateEnd={now}"
         headers = {"X-Api-Key": get_settings().NPS}
 
-        raw_events, pages = fetch_events(endpoint, headers)
+        result = fetch_events(endpoint, headers)
+        if result is None:
+            return _handle_fetch_failure()
+
+        raw_events, pages = result
         for page in range(2, pages + 1):
             new_endpoint = f"{endpoint}&pageNumber={page}"
-            new_events, _ = fetch_events(new_endpoint, headers)
-            raw_events.extend(new_events)
+            page_result = fetch_events(new_endpoint, headers)
+            if page_result is not None:
+                new_events, _ = page_result
+                raw_events.extend(new_events)
 
         year, month, day = (int(i) for i in now.split("-"))
         now_dt = datetime(year, month, day)
@@ -134,20 +150,9 @@ def events_today(now=None) -> EventsResult:
         msg = seasonal_message(now_dt)
         return EventsResult(seasonal_message=msg)
 
-    except (JSONDecodeError, ReadTimeout, KeyError, IndexError, TypeError) as e:
+    except (JSONDecodeError, KeyError, IndexError, TypeError) as e:
         logger.error("Failed to retrieve events: %s", e)
-        year, month, day = (int(i) for i in now.split("-"))
-        now_dt = datetime(year, month, day)
-        msg = seasonal_message(now_dt)
-        if msg != "There are no ranger programs today.":
-            return EventsResult(seasonal_message=msg)
-        return EventsResult(
-            error_message="Ranger program schedule could not be retrieved."
-        )
-
-    except requests.HTTPError as e:
-        logger.error("Failed to retrieve events (HTTP): %s", e)
-        return EventsResult(error_message="502 Response")
+        return _handle_fetch_failure()
 
 
 if __name__ == "__main__":

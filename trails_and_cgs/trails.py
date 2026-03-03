@@ -10,6 +10,7 @@ import urllib3
 
 from shared.data_types import TrailsResult
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
@@ -54,6 +55,15 @@ def remove_duplicate_trails(trail_list: list) -> list:
     return filtered_list
 
 
+@retry(3, (requests.exceptions.RequestException,), default=None, backoff=5)
+def _fetch_trail_data() -> dict | None:
+    """Fetch trail closure GeoJSON data from NPS API."""
+    url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27"
+    r = requests.get(url, timeout=10, verify=False)  # noqa: S501
+    r.raise_for_status()
+    return json.loads(r.text)
+
+
 def closed_trails() -> TrailsResult:
     """
     Fetch and process the list of closed trails from the Glacier National Park website.
@@ -61,15 +71,11 @@ def closed_trails() -> TrailsResult:
     Returns:
         TrailsResult: Structured trail closure data.
     """
-    url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=SELECT%20*%20FROM%20nps_trails%20WHERE%20status%20=%20%27closed%27"
-    try:
-        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
-    except requests.exceptions.RequestException as e:
-        logger.error("Error fetching trail closures: %s", e)
+    status = _fetch_trail_data()
+    if status is None:
         return TrailsResult(
             error_message="The trail closures page on the park website is currently down."
         )
-    status = json.loads(r.text)
 
     try:
         trails = status["features"]

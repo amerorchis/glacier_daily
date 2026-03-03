@@ -59,8 +59,8 @@ class TestRetryDecorator:
 
         f()
 
-        # Should sleep after each failed attempt (3 times total)
-        assert sleep_calls == [5, 5, 5]
+        # Should sleep between attempts (not after the final failure)
+        assert sleep_calls == [5, 5]
 
     def test_default_backoff_value(self, monkeypatch):
         """Verify default backoff of 15 seconds is used."""
@@ -73,8 +73,8 @@ class TestRetryDecorator:
 
         f()
 
-        # Default backoff is 15
-        assert sleep_calls == [15, 15]
+        # Default backoff is 15; sleep only between attempts (not after final)
+        assert sleep_calls == [15]
 
     def test_args_forwarding(self):
         """Verify positional arguments are passed to wrapped function."""

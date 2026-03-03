@@ -10,6 +10,7 @@ import urllib3
 from roads.road import Road
 from shared.data_types import RoadsResult
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
@@ -63,6 +64,7 @@ def _segments_overlap(seg1: tuple[float, float], seg2: tuple[float, float]) -> b
     return seg1[0] < seg2[1] and seg2[0] < seg1[1]
 
 
+@retry(3, (requests.exceptions.RequestException,), default=set(), backoff=5)
 def _fetch_open_segments(road_name: str) -> set[tuple[float, float]]:
     """
     Fetch open road segments for a specific road from NPS API.
@@ -81,12 +83,12 @@ def _fetch_open_segments(road_name: str) -> set[tuple[float, float]]:
         f"%20AND%20rdname%20LIKE%20%27%25{encoded_name}%25%27"
     )
 
+    r = requests.get(url, timeout=10, verify=False)  # noqa: S501
+    r.raise_for_status()
+
     try:
-        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
-        r.raise_for_status()
         data = json.loads(r.text)
-    except (requests.exceptions.RequestException, json.JSONDecodeError):
-        # If we can't fetch open segments, return empty set (fail-safe)
+    except json.JSONDecodeError:
         return set()
 
     open_segments = set()
@@ -121,6 +123,18 @@ def _is_covered_by_open(
     return False
 
 
+@retry(3, (requests.exceptions.RequestException,), default=None, backoff=5)
+def _fetch_closed_roads_data() -> dict | None:
+    """Fetch closed road GeoJSON data from NPS API."""
+    url = (
+        "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="
+        "SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
+    )
+    r = requests.get(url, timeout=10, verify=False)  # noqa: S501
+    r.raise_for_status()
+    return json.loads(r.text)
+
+
 def closed_roads() -> dict[str, Road]:
     """
     Retrieve closed road info from NPS and convert coordinates to names.
@@ -129,15 +143,9 @@ def closed_roads() -> dict[str, Road]:
     'closed' for the same section of road. When this occurs, we default to 'open'
     since the road is actually passable in that section.
     """
-    url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q=\
-        SELECT%20*%20FROM%20glac_road_nds%20WHERE%20status%20=%20%27closed%27"
-    try:
-        r = requests.get(url, timeout=10, verify=False)  # noqa: S501
-    except requests.exceptions.RequestException as e:
-        logger.exception("Road status request failed")
-        raise NPSWebsiteError from e
-    r.raise_for_status()
-    status = json.loads(r.text)
+    status = _fetch_closed_roads_data()
+    if status is None:
+        raise NPSWebsiteError
 
     if not status.get("features"):
         return {}

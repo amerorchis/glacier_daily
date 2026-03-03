@@ -12,12 +12,21 @@ from roads.hiker_biker_closure import HikerBiker
 from roads.roads import NPSWebsiteError, closed_roads
 from shared.data_types import HikerBikerResult
 from shared.logging_config import get_logger
+from shared.retry import retry
 
 logger = get_logger(__name__)
 
 # The NPS carto.nps.gov GeoJSON API uses a certificate chain that fails
 # validation. SSL verification is disabled for these endpoints.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+@retry(2, (requests.exceptions.RequestException,), default=None, backoff=5)
+def _fetch_hiker_biker_data(url: str) -> list | None:
+    """Fetch hiker/biker closure data from a single NPS endpoint."""
+    r = requests.get(url, timeout=10, verify=False)  # noqa: S501
+    r.raise_for_status()
+    return json.loads(r.text).get("features", [])
 
 
 def hiker_biker() -> HikerBikerResult:
@@ -39,13 +48,9 @@ def hiker_biker() -> HikerBikerResult:
         data = []
 
         for url in urls:
-            try:
-                r = requests.get(url, timeout=5, verify=False)  # noqa: S501
-            except requests.exceptions.RequestException:
-                logger.exception("Hiker/biker status request failed")
-                continue
-            r.raise_for_status()
-            data.extend(json.loads(r.text).get("features", ""))
+            features = _fetch_hiker_biker_data(url)
+            if features is not None:
+                data.extend(features)
 
         # If there is no hiker/biker info or no GTSR closure return empty result.
         if not data or not gtsr:
