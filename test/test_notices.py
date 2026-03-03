@@ -10,14 +10,14 @@ from shared.data_types import NoticesResult
 
 @pytest.fixture
 def mock_gspread():
-    with patch("gspread.authorize") as mock_auth:
+    with patch("gspread.Client") as mock_cls:
         # Create mock client
         mock_client = Mock()
         mock_spreadsheet = Mock()
         mock_worksheet = Mock()
 
         # Setup the chain of calls
-        mock_auth.return_value = mock_client
+        mock_cls.return_value = mock_client
         mock_client.open_by_key.return_value = mock_spreadsheet
         mock_spreadsheet.sheet1 = mock_worksheet
 
