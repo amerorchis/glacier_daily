@@ -5,12 +5,15 @@ weather alerts, aurora forecasts, seasonal information, and sunset hues.
 
 from shared.context_executor import ContextAwareExecutor
 from shared.data_types import WeatherResult
+from shared.logging_config import get_logger
 from weather.forecast import get_forecast
 from weather.night_sky import aurora_forecast
 from weather.season import get_season
 from weather.sunset_hue import get_sunset_hue
 from weather.weather_alerts import weather_alerts
 from weather.weather_aqi import get_air_quality
+
+logger = get_logger(__name__)
 
 AQI_CATEGORIES: list[tuple[int, str]] = [
     (50, "good."),
@@ -69,12 +72,41 @@ def weather_data() -> WeatherResult:
             "sunset_hue": executor.submit(get_sunset_hue),
         }
 
-        forecasts, daylight_message = futures["forecast"].result()
-        aqi_value, aqi_category = futures["aqi"].result()
-        alerts = futures["alerts"].result()
-        season = futures["season"].result()
-        cloud_cover, sunset_quality, sunset_message = futures["sunset_hue"].result()
-        aurora_quality, aurora_message = aurora_forecast(cloud_cover)
+        try:
+            forecasts, daylight_message = futures["forecast"].result()
+        except Exception:
+            logger.exception("Forecast sub-module failed")
+            forecasts, daylight_message = [], ""
+
+        try:
+            aqi_value, aqi_category = futures["aqi"].result()
+        except Exception:
+            logger.exception("AQI sub-module failed")
+            aqi_value, aqi_category = None, ""
+
+        try:
+            alerts = futures["alerts"].result()
+        except Exception:
+            logger.exception("Alerts sub-module failed")
+            alerts = []
+
+        try:
+            season = futures["season"].result()
+        except Exception:
+            logger.exception("Season sub-module failed")
+            season = None
+
+        try:
+            cloud_cover, sunset_quality, sunset_message = futures["sunset_hue"].result()
+        except Exception:
+            logger.exception("Sunset hue sub-module failed")
+            cloud_cover, sunset_quality, sunset_message = 0, "unknown", ""
+
+        try:
+            aurora_quality, aurora_message = aurora_forecast(cloud_cover)
+        except Exception:
+            logger.exception("Aurora sub-module failed")
+            aurora_quality, aurora_message = "", ""
 
     return WeatherResult(
         daylight_message=daylight_message,

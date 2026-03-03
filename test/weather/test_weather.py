@@ -115,14 +115,35 @@ def test_get_aqi_function():
         assert category == ""
 
 
-def test_error_handling_in_weather_services(mock_all_weather_services):
-    """Test handling of errors from weather services"""
+def test_forecast_failure_preserves_other_weather_data(mock_all_weather_services):
+    """If forecast fails, other weather data is still returned."""
     mock_all_weather_services["forecast"].side_effect = Exception("API Error")
+    result = weather_data()
 
-    with pytest.raises(Exception) as exc_info:
-        weather_data()
+    assert isinstance(result, WeatherResult)
+    assert result.forecasts == []
+    assert result.daylight_message == ""
+    # Other fields still populated from their (mocked) sub-modules
+    assert result.season == MOCK_SEASON_RETURN
+    assert result.alerts == MOCK_ALERTS_RETURN
+    assert result.aurora_quality == "Good"
 
-    assert "API Error" in str(exc_info.value)
+
+def test_multiple_submodule_failures(mock_all_weather_services):
+    """weather_data() returns partial data even when several sub-modules fail."""
+    mock_all_weather_services["forecast"].side_effect = Exception("forecast down")
+    mock_all_weather_services["aqi"].side_effect = Exception("aqi down")
+    mock_all_weather_services["aurora"].side_effect = Exception("aurora down")
+
+    result = weather_data()
+    assert isinstance(result, WeatherResult)
+    # Failed sub-modules get defaults
+    assert result.forecasts == []
+    assert result.aqi_value is None
+    assert result.aurora_quality == ""
+    # Successful sub-modules still populated
+    assert result.season == MOCK_SEASON_RETURN
+    assert result.sunset_quality == "Good"
 
 
 def test_empty_forecasts(mock_all_weather_services):
