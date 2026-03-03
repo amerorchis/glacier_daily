@@ -45,6 +45,7 @@ def campground_alerts() -> CampgroundsResult:
     """
     url = "https://carto.nps.gov/user/glaclive/api/v2/sql?format=JSON&q=SELECT%20*%20FROM%20glac_front_country_campgrounds"
     r = requests.get(url, timeout=10, verify=False)  # noqa: S501
+    r.raise_for_status()
 
     try:
         status = json.loads(r.text)
