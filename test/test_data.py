@@ -7,9 +7,17 @@ from unittest.mock import patch
 import pytest
 
 from generate_and_upload import gen_data
+from shared.data_types import (
+    CampgroundsResult,
+    EventsResult,
+    HikerBikerResult,
+    NoticesResult,
+    RoadsResult,
+    TrailsResult,
+)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def generated_data():
     """Fixture to provide generated data for tests."""
     from unittest.mock import Mock
@@ -23,13 +31,19 @@ def generated_data():
 
     # Mock all the external dependencies to avoid real API calls and file access
     with (
-        patch("generate_and_upload.events_today", return_value="mocked events"),
+        patch(
+            "generate_and_upload.events_today",
+            return_value=EventsResult(seasonal_message="mocked events"),
+        ),
         patch("generate_and_upload.get_gnpc_events", return_value=[]),
         patch(
             "generate_and_upload.get_image_otd",
             return_value=("img_url", "title", "link"),
         ),
-        patch("generate_and_upload.get_notices", return_value="mocked notices"),
+        patch(
+            "generate_and_upload.get_notices",
+            return_value=NoticesResult(notices=["mocked notice"]),
+        ),
         patch(
             "generate_and_upload.peak",
             return_value=("Peak Name - 8000 ft.", "peak_img", "peak_map"),
@@ -38,13 +52,19 @@ def generated_data():
             "generate_and_upload.get_product",
             return_value=("Product", "img", "link", "desc"),
         ),
-        patch("generate_and_upload.get_hiker_biker_status", return_value=""),
-        patch("generate_and_upload.get_road_status", return_value=""),
+        patch(
+            "generate_and_upload.get_hiker_biker_status",
+            return_value=HikerBikerResult(),
+        ),
+        patch("generate_and_upload.get_road_status", return_value=RoadsResult()),
         patch(
             "generate_and_upload.process_video", return_value=("vid", "still", "str")
         ),
-        patch("generate_and_upload.get_campground_status", return_value="campgrounds"),
-        patch("generate_and_upload.get_closed_trails", return_value=""),
+        patch(
+            "generate_and_upload.get_campground_status",
+            return_value=CampgroundsResult(statuses=["campground status"]),
+        ),
+        patch("generate_and_upload.get_closed_trails", return_value=TrailsResult()),
         patch("generate_and_upload.weather_data", return_value=mock_weather),
         patch("generate_and_upload.weather_image", return_value="weather_img_url"),
     ):
