@@ -188,3 +188,29 @@ class TestRetryDecorator:
         result = f()
         assert result == "success"
         assert attempts[0] == 2
+
+    def test_mutable_default_list_is_deepcopied(self, monkeypatch):
+        """Verify mutable list default is deep-copied so calls don't share the same object."""
+        monkeypatch.setattr("shared.retry.sleep", lambda x: None)
+
+        @retry_mod.retry(1, (ValueError,), default=[], backoff=0)
+        def f():
+            raise ValueError
+
+        result1 = f()
+        result2 = f()
+        assert result1 == result2
+        assert result1 is not result2
+
+    def test_mutable_default_set_is_deepcopied(self, monkeypatch):
+        """Verify mutable set default is deep-copied so calls don't share the same object."""
+        monkeypatch.setattr("shared.retry.sleep", lambda x: None)
+
+        @retry_mod.retry(1, (ValueError,), default=set(), backoff=0)
+        def f():
+            raise ValueError
+
+        result1 = f()
+        result2 = f()
+        assert result1 == result2
+        assert result1 is not result2
