@@ -61,11 +61,14 @@ class TestGetProduct:
         self, mock_product_response, mock_image_response, mock_env_vars
     ):
         """Test successful product retrieval"""
+        mock_rng = MagicMock()
+        mock_rng.randrange.return_value = 1
+        mock_rng.randint.return_value = 1
         with (
             patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image", return_value=True),
             patch("product_otd.product.upload_potd") as mock_upload,
-            patch("random.randrange", return_value=1),
+            patch("random.Random", return_value=mock_rng),
         ):
             # Mock API responses
             mock_get.side_effect = [
@@ -86,10 +89,13 @@ class TestGetProduct:
         self, mock_product_response, mock_image_response, mock_env_vars
     ):
         """Test that failed image fetch returns empty tuple."""
+        mock_rng = MagicMock()
+        mock_rng.randrange.return_value = 1
+        mock_rng.randint.return_value = 1
         with (
             patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image", return_value=False),
-            patch("random.randrange", return_value=1),
+            patch("random.Random", return_value=mock_rng),
         ):
             mock_get.side_effect = [
                 Mock(status_code=200, text=json.dumps(mock_product_response)),
@@ -110,10 +116,13 @@ class TestGetProduct:
         self, mock_product_response, mock_image_response, mock_env_vars
     ):
         """Test get_product with skip_upload=True returns None for image."""
+        mock_rng = MagicMock()
+        mock_rng.randrange.return_value = 1
+        mock_rng.randint.return_value = 1
         with (
             patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image", return_value=True),
-            patch("random.randrange", return_value=1),
+            patch("random.Random", return_value=mock_rng),
         ):
             mock_get.side_effect = [
                 Mock(status_code=200, text=json.dumps(mock_product_response)),

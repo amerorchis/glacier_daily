@@ -14,6 +14,9 @@ def _make_response(rows):
     class DummyResp:
         text = json.dumps({"rows": rows})
 
+        def raise_for_status(self):
+            pass
+
     return DummyResp()
 
 
@@ -146,6 +149,9 @@ def test_phrasing_closed_for_season_aug_onward(monkeypatch):
 def test_campground_alerts_down(monkeypatch):
     class DummyResp:
         text = "{}"
+
+        def raise_for_status(self):
+            pass
 
     monkeypatch.setattr(cgs_mod.requests, "get", lambda *a, **k: DummyResp())
     result = cgs_mod.campground_alerts()

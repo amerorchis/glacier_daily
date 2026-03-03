@@ -45,8 +45,8 @@ def peak(test=False, skip_upload: bool = False):
         peaks = list(csv.DictReader(p))
 
     # Select a random one with current date as seed
-    random.seed(date.today().strftime("%Y%m%d"))
-    today = random.choice(peaks)  # noqa: S311
+    rng = random.Random(date.today().strftime("%Y%m%d"))  # noqa: S311
+    today = rng.choice(peaks)
 
     peak_img = peak_sat(today, skip_upload=skip_upload) if not test else None
 

@@ -74,15 +74,15 @@ def get_flickr() -> FlickrImage:
         photos = flickr.photos.search(user_id=settings.GLACIERNPS_UID, per_page="1")
         total = int(photos["photos"]["total"])
 
-        random.seed(datetime.today().strftime("%Y:%m:%d"))
-        potd_num = random.randint(1, total)  # noqa: S311
+        rng = random.Random(datetime.today().strftime("%Y:%m:%d"))  # noqa: S311
+        potd_num = rng.randint(1, total)
         photos = flickr.photos.search(
             user_id=settings.GLACIERNPS_UID, per_page="1", page=potd_num
         )
 
         # Retry if no photos found
         while len(photos["photos"]["photo"]) == 0:
-            potd_num = random.randint(1, total)  # noqa: S311
+            potd_num = rng.randint(1, total)
             photos = flickr.photos.search(
                 user_id=settings.GLACIERNPS_UID, per_page="1", page=potd_num
             )

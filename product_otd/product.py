@@ -90,8 +90,8 @@ def get_product(skip_upload: bool = False):
         return ("", "", "", "")
 
     # Select one of these products
-    random.seed(now_mountain().strftime("%Y:%m:%d"))
-    product_otd = random.randrange(1, total_products + 1)  # noqa: S311
+    rng = random.Random(now_mountain().strftime("%Y:%m:%d"))  # noqa: S311
+    product_otd = rng.randrange(1, total_products + 1)
 
     # Function to retrieve a product.
     def retrieve_potd(product_otd):
@@ -99,8 +99,8 @@ def get_product(skip_upload: bool = False):
         Retrieve a product at a given index, parse out a description and grab the image url.
         """
         # Calculate the page and index of the random product.
-        product_page = product_otd // BC_PAGE_SIZE + 1
-        product_index = product_otd % BC_PAGE_SIZE - 1
+        product_page = (product_otd - 1) // BC_PAGE_SIZE + 1
+        product_index = (product_otd - 1) % BC_PAGE_SIZE
 
         # Retrieve item from response.
         new_url = (
@@ -156,7 +156,7 @@ def get_product(skip_upload: bool = False):
             raise ValueError("Product not found")
 
         except (ValueError, IndexError, KeyError):
-            product_otd = random.randint(1, total_products)  # noqa: S311
+            product_otd = rng.randint(1, total_products)
     else:
         # All attempts exhausted without finding a product with an image
         return ("", "", "", "")

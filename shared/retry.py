@@ -2,6 +2,7 @@
 A decorator to retry an operation.
 """
 
+import copy
 import functools
 from collections.abc import Callable
 from time import sleep
@@ -61,7 +62,7 @@ def retry(
                 func.__name__,
                 last_exception,
             )
-            return default
+            return copy.deepcopy(default)
 
         return newfn
 

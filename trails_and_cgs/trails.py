@@ -89,6 +89,7 @@ def closed_trails() -> TrailsResult:
 
     for i in trails:
         name = i["name"]
+        reason = ""
 
         if i.get("status_reason"):
             reason = i["status_reason"].replace("CLOSED", "closed").replace("  ", " ")

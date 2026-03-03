@@ -29,13 +29,13 @@ def _fetch_hiker_biker_data(url: str) -> list | None:
     return json.loads(r.text).get("features", [])
 
 
-def hiker_biker() -> HikerBikerResult:
+def hiker_biker(road_closures: dict | None = None) -> HikerBikerResult:
     """
     Retrieve hiker biker closure locations.
     """
     try:
         # Find GTSR road closure info.
-        closures = closed_roads()
+        closures = road_closures if road_closures is not None else closed_roads()
         gtsr = closures.get("Going-to-the-Sun Road", "")
 
         urls = [

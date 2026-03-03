@@ -35,7 +35,7 @@ def get_notices() -> NoticesResult:
         )
 
         # Create a client
-        client = gspread.authorize(credentials)
+        client = gspread.Client(auth=credentials)
 
         # Open a spreadsheet
         spreadsheet = client.open_by_key(settings.NOTICES_SPREADSHEET_ID)

@@ -10,6 +10,7 @@ import dataclasses
 import pytest
 
 import shared.lkg_cache as _lkg_module
+from roads.roads import closed_roads
 from shared.lkg_cache import LKGCache
 from shared.logging_config import reset_log_capture
 from shared.run_context import reset_run
@@ -32,6 +33,7 @@ def _reset_settings(monkeypatch):
     reset_timing()
     reset_log_capture()
     LKGCache.reset()
+    closed_roads.cache_clear()
     monkeypatch.setattr(_lkg_module, "DB_PATH", ":memory:")
     for f in dataclasses.fields(Settings):
         monkeypatch.setenv(f.name, "")
@@ -41,6 +43,7 @@ def _reset_settings(monkeypatch):
     reset_timing()
     reset_log_capture()
     LKGCache.reset()
+    closed_roads.cache_clear()
 
 
 @pytest.fixture
