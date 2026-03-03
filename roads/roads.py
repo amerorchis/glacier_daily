@@ -3,6 +3,7 @@ Get road status from NPS.
 """
 
 import json
+from functools import lru_cache
 
 import requests
 import urllib3
@@ -135,6 +136,7 @@ def _fetch_closed_roads_data() -> dict | None:
     return json.loads(r.text)
 
 
+@lru_cache(maxsize=1)
 def closed_roads() -> dict[str, Road]:
     """
     Retrieve closed road info from NPS and convert coordinates to names.
