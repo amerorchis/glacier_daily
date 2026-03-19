@@ -214,6 +214,94 @@ class TestWeatherAlertService:
     def test_deduplicate_empty(self, weather_service):
         assert weather_service.deduplicate_alerts([]) == []
 
+    # --- collapse_by_phenomenon tests ---
+
+    def test_collapse_warning_beats_watch(self, weather_service):
+        alerts = [
+            {
+                "event": "High Wind Watch",
+                "sent": "2025-01-13T13:00:00-07:00",
+                "headline": "watch",
+            },
+            {
+                "event": "High Wind Warning",
+                "sent": "2025-01-13T14:00:00-07:00",
+                "headline": "warning",
+            },
+        ]
+        result = weather_service.collapse_by_phenomenon(alerts)
+        assert len(result) == 1
+        assert result[0]["event"] == "High Wind Warning"
+
+    def test_collapse_warning_beats_advisory(self, weather_service):
+        alerts = [
+            {
+                "event": "Wind Advisory",
+                "sent": "2025-01-13T12:00:00-07:00",
+                "headline": "advisory",
+            },
+            {
+                "event": "Wind Warning",
+                "sent": "2025-01-13T14:00:00-07:00",
+                "headline": "warning",
+            },
+        ]
+        result = weather_service.collapse_by_phenomenon(alerts)
+        assert len(result) == 1
+        assert result[0]["event"] == "Wind Warning"
+
+    def test_collapse_watch_beats_advisory(self, weather_service):
+        alerts = [
+            {
+                "event": "Winter Storm Advisory",
+                "sent": "2025-01-13T12:00:00-07:00",
+                "headline": "advisory",
+            },
+            {
+                "event": "Winter Storm Watch",
+                "sent": "2025-01-13T14:00:00-07:00",
+                "headline": "watch",
+            },
+        ]
+        result = weather_service.collapse_by_phenomenon(alerts)
+        assert len(result) == 1
+        assert result[0]["event"] == "Winter Storm Watch"
+
+    def test_collapse_different_phenomena_kept(self, weather_service):
+        alerts = [
+            {
+                "event": "High Wind Warning",
+                "sent": "2025-01-13T13:00:00-07:00",
+                "headline": "wind",
+            },
+            {
+                "event": "High Wind Watch",
+                "sent": "2025-01-13T14:00:00-07:00",
+                "headline": "wind watch",
+            },
+            {
+                "event": "Winter Storm Warning",
+                "sent": "2025-01-13T14:00:00-07:00",
+                "headline": "storm",
+            },
+        ]
+        result = weather_service.collapse_by_phenomenon(alerts)
+        assert len(result) == 2
+        events = {a["event"] for a in result}
+        assert events == {"High Wind Warning", "Winter Storm Warning"}
+
+    def test_collapse_empty(self, weather_service):
+        assert weather_service.collapse_by_phenomenon([]) == []
+
+    def test_collapse_no_known_suffix(self, weather_service):
+        """Alerts without Warning/Watch/Advisory suffix are kept as-is."""
+        alerts = [
+            {"event": "Blizzard Warning", "sent": "2025-01-13T13:00:00-07:00"},
+            {"event": "Special Weather Statement", "sent": "2025-01-13T14:00:00-07:00"},
+        ]
+        result = weather_service.collapse_by_phenomenon(alerts)
+        assert len(result) == 2
+
     # --- sort_alerts tests ---
 
     def test_sort_by_severity_then_time(self, weather_service):
@@ -333,6 +421,43 @@ class TestWeatherAlertService:
         assert len(result) == 2
         assert "Blizzard" in result[0].headline
         assert "High Wind" in result[1].headline
+
+    def test_full_pipeline_collapses_same_phenomenon(self, weather_service):
+        """Wind Warning + Wind Watch should collapse to just the Warning."""
+        alerts = [
+            {
+                "severity": "Severe",
+                "status": "Actual",
+                "messageType": "Alert",
+                "event": "High Wind Warning",
+                "sent": "2025-01-13T15:00:00-07:00",
+                "headline": "High Wind Warning issued January 13 at 3:00PM MST",
+                "description": "* WHAT...Strong winds.",
+            },
+            {
+                "severity": "Severe",
+                "status": "Actual",
+                "messageType": "Alert",
+                "event": "High Wind Watch",
+                "sent": "2025-01-13T13:00:00-07:00",
+                "headline": "High Wind Watch issued January 13 at 1:00PM MST",
+                "description": "* WHAT...Gusty winds possible.",
+            },
+            {
+                "severity": "Extreme",
+                "status": "Actual",
+                "messageType": "Alert",
+                "event": "Blizzard Warning",
+                "sent": "2025-01-13T10:00:00-07:00",
+                "headline": "Blizzard Warning issued January 13 at 10:00AM MST",
+                "description": "* WHAT...Blizzard conditions.",
+            },
+        ]
+        result = weather_service.process_alerts(alerts)
+        assert len(result) == 2
+        assert "Blizzard" in result[0].headline
+        assert "High Wind Warning" in result[1].headline
+        assert not any("Watch" in r.headline for r in result)
 
 
 class TestMainFunction:
