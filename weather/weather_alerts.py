@@ -52,6 +52,14 @@ class WeatherAlertService:
     }
     _SEVERITY_UNKNOWN_RANK = 99
 
+    # NWS alert level hierarchy: lower number = higher priority
+    ALERT_LEVEL_ORDER: ClassVar[dict[str, int]] = {
+        "Warning": 0,
+        "Watch": 1,
+        "Advisory": 2,
+    }
+    _ALERT_LEVEL_SUFFIXES = ("Warning", "Watch", "Advisory")
+
     @staticmethod
     def parse_alert_time(text: str) -> datetime | None:
         """Parse alert time from text string."""
@@ -156,6 +164,46 @@ class WeatherAlertService:
             and alert.get("messageType") != "Cancel"
         ]
 
+    def _extract_phenomenon(self, event: str) -> str:
+        """Extract the weather phenomenon from an event name by stripping the alert level suffix.
+
+        E.g., "High Wind Warning" -> "High Wind", "Winter Storm Watch" -> "Winter Storm".
+        Returns the original event name if no known suffix is found.
+        """
+        for suffix in self._ALERT_LEVEL_SUFFIXES:
+            if event.endswith(f" {suffix}"):
+                return event[: -(len(suffix) + 1)]
+        return event
+
+    def _alert_level_rank(self, event: str) -> int:
+        """Return the alert level rank for an event name (lower = higher priority)."""
+        for suffix, rank in self.ALERT_LEVEL_ORDER.items():
+            if event.endswith(f" {suffix}"):
+                return rank
+        return len(self.ALERT_LEVEL_ORDER)  # Unknown suffix sorts last
+
+    def collapse_by_phenomenon(self, alerts: list[dict]) -> list[dict]:
+        """Collapse alerts of the same weather phenomenon, keeping only the highest-priority level.
+
+        E.g., if both "High Wind Warning" and "High Wind Watch" exist, only the Warning is kept.
+        Alert level priority: Warning > Watch > Advisory.
+        """
+        best_by_phenomenon: dict[str, dict] = {}
+        for alert in alerts:
+            event = alert.get("event", "")
+            phenomenon = self._extract_phenomenon(event)
+            rank = self._alert_level_rank(event)
+
+            if phenomenon not in best_by_phenomenon:
+                best_by_phenomenon[phenomenon] = alert
+            else:
+                existing_rank = self._alert_level_rank(
+                    best_by_phenomenon[phenomenon].get("event", "")
+                )
+                if rank < existing_rank:
+                    best_by_phenomenon[phenomenon] = alert
+        return list(best_by_phenomenon.values())
+
     def deduplicate_alerts(self, alerts: list[dict]) -> list[dict]:
         """Deduplicate alerts by event type, keeping the most recently sent.
 
@@ -191,7 +239,8 @@ class WeatherAlertService:
         """Filter, deduplicate, sort, and convert alerts to WeatherAlert objects."""
         filtered = self.filter_by_relevance(alerts)
         deduped = self.deduplicate_alerts(filtered)
-        ordered = self.sort_alerts(deduped)
+        collapsed = self.collapse_by_phenomenon(deduped)
+        ordered = self.sort_alerts(collapsed)
 
         processed = []
         for alert in ordered:
