@@ -22,14 +22,14 @@ roads = {
     },
     "Two Medicine Road": {
         (48.484638, -113.36904): "Two Medicine Lake*",
-        (48.50516, -113.329091): "the Park Boundary*",
+        (48.50516, -113.329091): "the park boundary*",
         (48.49612, -113.34811): "Running Eagle Falls",
         (48.50495, -113.32998): "the entrance station",
     },
     "Many Glacier Road": {
         (48.797482, -113.676452): "the Swiftcurrent Trailhead*",
         (48.80082, -113.65713): "the T-intersection at the Many Glacier Hotel",
-        (48.829879, -113.524473): "the Park Boundary*",
+        (48.829879, -113.524473): "the park boundary*",
     },
     "Bowman Lake Road": {
         (48.786903, -114.282752): "the Polebridge Entrance Station*",
@@ -54,6 +54,7 @@ roads = {
 hiker_biker = {
     (48.52822, -113.97697): ("Apgar", 2.8),
     (48.61694, -113.87562): ("Lake McDonald Lodge", 10.7),
+    (48.63508, -113.86344): ("North McDonald Road", 12.2),
     (48.64601, -113.84608): ("Moose Country", 13.5),
     (48.67968, -113.81944): ("Avalanche", 16.4),
     (48.69523, -113.81716): ("Red Rock Point", 17.6),
