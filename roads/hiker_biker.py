@@ -77,6 +77,16 @@ def hiker_biker(road_closures: dict | None = None) -> HikerBikerResult:
                 .replace("Hiker/Biker ", "")
             )
 
+            # The NPS dataset sometimes mislabels Avalanche Hazard Closures
+            # as Road Crew Closures in the name field. Use the description
+            # to detect and correct this.
+            description = i["properties"].get("description", "")
+            if (
+                "Avalanche Hazard Closure" in description
+                and "Road Crew" in closure_type
+            ):
+                closure_type = "Avalanche Hazard Closure:"
+
             # If there are coordinates, generate a string with the name of the closure location.
             if i["geometry"]:
                 coord = tuple(i["geometry"]["coordinates"])
