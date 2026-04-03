@@ -26,13 +26,21 @@ def mock_closure_data():
     return {
         "features": [
             {
-                "properties": {"name": "Road Crew Closure", "status": "active"},
+                "properties": {
+                    "name": "Road Crew Closure",
+                    "description": "The Road Crew Closure is in place while road crews are working.",
+                    "status": "active",
+                },
                 "geometry": {
                     "coordinates": [-113.80047, 48.75494]  # The Loop coordinates
                 },
             },
             {
-                "properties": {"name": "Avalanche Hazard Closure", "status": "active"},
+                "properties": {
+                    "name": "Avalanche Hazard Closure",
+                    "description": "The Avalanche Hazard Closure is a hard closure.",
+                    "status": "active",
+                },
                 "geometry": {
                     "coordinates": [
                         -113.74776,
@@ -244,6 +252,55 @@ def test_closure_dist_unknown_side(mock_gtsr):
     hb = HikerBiker("Test", (-113.80047, 48.75494), mock_gtsr)
     result = hb.closure_dist("unknown", mock_gtsr)
     assert result == ""
+
+
+def test_mislabeled_avalanche_hazard_closure(monkeypatch, mock_gtsr):
+    """Test that a closure mislabeled as Road Crew in the name field is
+    corrected to Avalanche Hazard when the description says otherwise."""
+    closure_data = {
+        "features": [
+            {
+                "properties": {
+                    "name": "Hiker/Biker Road Crew Closure",
+                    "description": (
+                        "The Avalanche Hazard Closure is a hard closure "
+                        "set for hiker/bikers while plow crews are not working."
+                    ),
+                    "status": "active",
+                },
+                "geometry": {
+                    "coordinates": [-113.819046, 48.680931]  # Avalanche area
+                },
+            }
+        ]
+    }
+
+    def mock_closed_roads():
+        mock_gtsr.west_loc = ("Lake McDonald Lodge", 10.7)
+        mock_gtsr.east_loc = ("Rising Sun", 43.4)
+        return {"Going-to-the-Sun Road": mock_gtsr}
+
+    mock_response_with_data = Mock()
+    mock_response_with_data.status_code = 200
+    mock_response_with_data.text = json.dumps(closure_data)
+    mock_response_with_data.raise_for_status = Mock()
+
+    mock_response_empty = Mock()
+    mock_response_empty.status_code = 200
+    mock_response_empty.text = json.dumps({"features": []})
+    mock_response_empty.raise_for_status = Mock()
+
+    with (
+        patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads),
+        patch(
+            "requests.get",
+            side_effect=[mock_response_with_data, mock_response_empty],
+        ),
+    ):
+        result = get_hiker_biker_status()
+        assert len(result.closures) == 1
+        assert "Avalanche Hazard Closure" in result.closures[0]
+        assert "Road Crew" not in result.closures[0]
 
 
 def test_get_side_north_of_logan(mock_gtsr):
