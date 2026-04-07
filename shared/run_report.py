@@ -54,6 +54,13 @@ class RunReport:
             self.overall_status = "failure"
         elif failed > 0 and self.overall_status == "success":
             self.overall_status = "partial"
+        elif (
+            sent == 0
+            and failed == 0
+            and self.run_type == "email"
+            and self.overall_status == "success"
+        ):
+            self.overall_status = "failure"
 
         # Canary failure is informational — add to errors but don't change status
         canary = self.email_delivery.get("canary_verified")
