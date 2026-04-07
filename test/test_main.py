@@ -135,3 +135,16 @@ def test_main_catches_email_delivery_exception(monkeypatch):
     main.main(test=True)
     # serve_api should have completed
     assert "serve_api" in calls
+
+
+def test_main_fails_when_no_subscribers(monkeypatch):
+    """When get_subs returns empty list, run is marked as failure (not success)."""
+    calls = []
+    _patch_main(monkeypatch, calls)
+    monkeypatch.setattr(main, "get_subs", lambda tag: [])
+
+    # Should not raise — the exception is caught internally
+    main.main(test=True)
+    # Data generation and email sending should not have been attempted
+    assert "serve_api" not in calls
+    assert not any("bulk_workflow_trigger" in c for c in calls)

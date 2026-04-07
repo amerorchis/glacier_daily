@@ -57,6 +57,9 @@ def main(
             subscribers = get_subs(tag)
             logger.info("Subscribers found: %d", len(subscribers))
 
+            if not subscribers:
+                raise RuntimeError("No subscribers retrieved — Drip API may be down")
+
             # Generate data and upload to website.
             serve_api(force=force)
             api_complete = True

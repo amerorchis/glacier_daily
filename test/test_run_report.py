@@ -240,6 +240,20 @@ class TestFinalizeStatus:
         report.finalize_status()
         assert report.overall_status == "failure"
 
+    def test_zero_sent_zero_failed_email_run_is_failure(self):
+        """sent=0, failed=0 on an email run should be failure, not success."""
+        report = RunReport(overall_status="success", run_type="email")
+        report.email_delivery = {"sent": 0, "failed": 0}
+        report.finalize_status()
+        assert report.overall_status == "failure"
+
+    def test_zero_sent_zero_failed_web_update_stays_success(self):
+        """sent=0, failed=0 on a non-email run should remain success."""
+        report = RunReport(overall_status="success", run_type="web_update")
+        report.email_delivery = {"sent": 0, "failed": 0}
+        report.finalize_status()
+        assert report.overall_status == "success"
+
     def test_canary_failure_adds_error(self):
         report = RunReport(overall_status="success")
         report.email_delivery = {
