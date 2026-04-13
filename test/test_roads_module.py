@@ -25,6 +25,14 @@ from roads.roads import (
 from shared.data_types import RoadsResult
 
 
+def _make_open_response(features: list) -> Mock:
+    """Build a mock open-segments response with the given feature list."""
+    r = Mock()
+    r.text = json.dumps({"features": features})
+    r.raise_for_status = Mock()
+    return r
+
+
 class TestClosedRoads:
     """Tests for the closed_roads() function."""
 
@@ -100,8 +108,8 @@ class TestClosedRoads:
 
     def test_inside_north_fork_road_maps_to_kintla(self):
         """Verify Inside North Fork Road maps to Kintla Road when above threshold."""
-        mock_response = Mock()
-        mock_response.text = json.dumps(
+        closed_response = Mock()
+        closed_response.text = json.dumps(
             {
                 "features": [
                     {
@@ -120,16 +128,21 @@ class TestClosedRoads:
                 ]
             }
         )
-        mock_response.raise_for_status = Mock()
+        closed_response.raise_for_status = Mock()
 
-        with patch("roads.roads.requests.get", return_value=mock_response):
+        def mock_get(url, **kwargs):
+            if "open" in url:
+                return _make_open_response([])
+            return closed_response
+
+        with patch("roads.roads.requests.get", side_effect=mock_get):
             result = closed_roads()
             assert "Kintla Road" in result
 
     def test_inside_north_fork_road_below_threshold_ignored(self):
         """Verify Inside North Fork Road coordinates below threshold are ignored."""
-        mock_response = Mock()
-        mock_response.text = json.dumps(
+        closed_response = Mock()
+        closed_response.text = json.dumps(
             {
                 "features": [
                     {
@@ -148,17 +161,22 @@ class TestClosedRoads:
                 ]
             }
         )
-        mock_response.raise_for_status = Mock()
+        closed_response.raise_for_status = Mock()
 
-        with patch("roads.roads.requests.get", return_value=mock_response):
+        def mock_get(url, **kwargs):
+            if "open" in url:
+                return _make_open_response([])
+            return closed_response
+
+        with patch("roads.roads.requests.get", side_effect=mock_get):
             result = closed_roads()
             # Kintla Road should not have closures_found since coords below threshold
             assert result.get("Kintla Road") is None or not result.get("Kintla Road")
 
     def test_two_medicine_road_name_fixed(self):
         """Verify Two Medicine Road name is corrected from 'to Running Eagle' variant."""
-        mock_response = Mock()
-        mock_response.text = json.dumps(
+        closed_response = Mock()
+        closed_response.text = json.dumps(
             {
                 "features": [
                     {
@@ -172,16 +190,21 @@ class TestClosedRoads:
                 ]
             }
         )
-        mock_response.raise_for_status = Mock()
+        closed_response.raise_for_status = Mock()
 
-        with patch("roads.roads.requests.get", return_value=mock_response):
+        def mock_get(url, **kwargs):
+            if "open" in url:
+                return _make_open_response([])
+            return closed_response
+
+        with patch("roads.roads.requests.get", side_effect=mock_get):
             result = closed_roads()
             assert "Two Medicine Road" in result
 
     def test_cut_bank_road_name_variants_normalized(self):
         """Verify Cut Bank Creek Road variants are normalized to match dictionary key."""
-        mock_response = Mock()
-        mock_response.text = json.dumps(
+        closed_response = Mock()
+        closed_response.text = json.dumps(
             {
                 "features": [
                     {
@@ -213,9 +236,14 @@ class TestClosedRoads:
                 ]
             }
         )
-        mock_response.raise_for_status = Mock()
+        closed_response.raise_for_status = Mock()
 
-        with patch("roads.roads.requests.get", return_value=mock_response):
+        def mock_get(url, **kwargs):
+            if "open" in url:
+                return _make_open_response([])
+            return closed_response
+
+        with patch("roads.roads.requests.get", side_effect=mock_get):
             result = closed_roads()
             # Both segments should be processed under the same road
             assert "Cut Bank Creek Road" in result
@@ -226,8 +254,8 @@ class TestClosedRoads:
 
     def test_nested_coordinates_handled(self):
         """Verify single-element coordinate arrays are unwrapped correctly."""
-        mock_response = Mock()
-        mock_response.text = json.dumps(
+        closed_response = Mock()
+        closed_response.text = json.dumps(
             {
                 "features": [
                     {
@@ -245,9 +273,14 @@ class TestClosedRoads:
                 ]
             }
         )
-        mock_response.raise_for_status = Mock()
+        closed_response.raise_for_status = Mock()
 
-        with patch("roads.roads.requests.get", return_value=mock_response):
+        def mock_get(url, **kwargs):
+            if "open" in url:
+                return _make_open_response([])
+            return closed_response
+
+        with patch("roads.roads.requests.get", side_effect=mock_get):
             result = closed_roads()
             assert "Camas Road" in result
 
@@ -507,7 +540,6 @@ class TestOverlappingSegmentHandling:
 
     def test_closed_segment_skipped_when_overlapping_open(self):
         """Verify closed segments are skipped when they overlap with open segments."""
-        # Mock the closed roads response
         closed_response = Mock()
         closed_response.text = json.dumps(
             {
@@ -530,23 +562,20 @@ class TestOverlappingSegmentHandling:
         )
         closed_response.raise_for_status = Mock()
 
-        # Mock the open segments response (same section marked open)
-        open_response = Mock()
-        open_response.text = json.dumps(
-            {
-                "features": [
-                    {
-                        "geometry": {
-                            "coordinates": [
-                                [-113.977, 48.53],  # Overlapping section
-                                [-113.885, 48.61],
-                            ]
-                        }
-                    }
-                ]
-            }
+        # Same section marked open (includes rdname for _fetch_all_open_segments)
+        open_response = _make_open_response(
+            [
+                {
+                    "properties": {"rdname": "Going-to-the-Sun Road"},
+                    "geometry": {
+                        "coordinates": [
+                            [-113.977, 48.53],  # Overlapping section
+                            [-113.885, 48.61],
+                        ]
+                    },
+                }
+            ]
         )
-        open_response.raise_for_status = Mock()
 
         def mock_get(url, **kwargs):
             if "open" in url:
@@ -560,7 +589,6 @@ class TestOverlappingSegmentHandling:
 
     def test_closed_segment_kept_when_no_overlap(self):
         """Verify closed segments are kept when they don't overlap with open."""
-        # Mock the closed roads response - segment east of Logan Pass
         closed_response = Mock()
         closed_response.text = json.dumps(
             {
@@ -583,23 +611,20 @@ class TestOverlappingSegmentHandling:
         )
         closed_response.raise_for_status = Mock()
 
-        # Mock the open segments response - different section (west end)
-        open_response = Mock()
-        open_response.text = json.dumps(
-            {
-                "features": [
-                    {
-                        "geometry": {
-                            "coordinates": [
-                                [-113.99, 48.52],  # Foot of Lake McDonald
-                                [-113.88, 48.62],  # Lake McDonald Lodge
-                            ]
-                        }
-                    }
-                ]
-            }
+        # Open segment is on the west end — no overlap with the closed east segment
+        open_response = _make_open_response(
+            [
+                {
+                    "properties": {"rdname": "Going-to-the-Sun Road"},
+                    "geometry": {
+                        "coordinates": [
+                            [-113.99, 48.52],  # Foot of Lake McDonald
+                            [-113.88, 48.62],  # Lake McDonald Lodge
+                        ]
+                    },
+                }
+            ]
         )
-        open_response.raise_for_status = Mock()
 
         def mock_get(url, **kwargs):
             if "open" in url:
@@ -610,6 +635,42 @@ class TestOverlappingSegmentHandling:
             result = closed_roads()
             # GTSR should be in results since closed segment doesn't overlap with open
             assert "Going-to-the-Sun Road" in result
+
+    def test_closed_loop_segment_skipped(self):
+        """Verify closed-loop segments (parking areas) are excluded from road closures."""
+        closed_response = Mock()
+        closed_response.text = json.dumps(
+            {
+                "features": [
+                    {
+                        "properties": {
+                            "rdname": "Many Glacier Road",
+                            "status": "closed",
+                            "reason": "Seasonal Closure",
+                        },
+                        "geometry": {
+                            # Loop: first coord == last coord (Swiftcurrent Trailhead parking)
+                            "coordinates": [
+                                [-113.676452, 48.797482],
+                                [-113.677822, 48.79761],
+                                [-113.678501, 48.7976],
+                                [-113.676452, 48.797482],  # Same as start
+                            ]
+                        },
+                    }
+                ]
+            }
+        )
+        closed_response.raise_for_status = Mock()
+
+        def mock_get(url, **kwargs):
+            if "open" in url:
+                return _make_open_response([])
+            return closed_response
+
+        with patch("roads.roads.requests.get", side_effect=mock_get):
+            result = closed_roads()
+            assert "Many Glacier Road" not in result
 
     def test_fetch_open_failure_doesnt_break_closure_detection(self):
         """Verify closed roads still works if fetching open segments fails."""

@@ -180,13 +180,6 @@ def closed_roads() -> dict[str, Road]:
             else i["geometry"]["coordinates"][0]
         )
 
-        # For GTSR, check if this closed segment overlaps with an open segment
-        # If so, skip it (default to open when there's conflicting data)
-        if road_name == "Going-to-the-Sun Road" and gtsr_open_segments:
-            closed_bounds = _get_segment_bounds(coordinates)
-            if _is_covered_by_open(closed_bounds, gtsr_open_segments):
-                continue  # Skip this closed segment - it's marked open elsewhere
-
         x = {
             "status": i["properties"]["status"],
             "reason": i["properties"]["reason"],
@@ -194,6 +187,18 @@ def closed_roads() -> dict[str, Road]:
             "last": coordinates[-1],
             "length": len(coordinates),
         }
+
+        # Skip closed-loop segments (parking areas, turnarounds — not road closures).
+        # A loop has identical start and end coordinates.
+        if x["start"] == x["last"]:
+            continue
+
+        # For GTSR, check if this closed segment overlaps with an open segment.
+        # If so, skip it (default to open when there's conflicting data).
+        if road_name == "Going-to-the-Sun Road" and gtsr_open_segments:
+            closed_bounds = _get_segment_bounds(coordinates)
+            if _is_covered_by_open(closed_bounds, gtsr_open_segments):
+                continue  # Skip this closed segment - it's marked open elsewhere
 
         if road_name in roads:
             roads[road_name].set_coord(x["start"])
