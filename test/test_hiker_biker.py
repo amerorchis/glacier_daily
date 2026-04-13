@@ -303,6 +303,102 @@ def test_mislabeled_avalanche_hazard_closure(monkeypatch, mock_gtsr):
         assert "Road Crew" not in result.closures[0]
 
 
+def _make_duplicate_closure_response(name1: str, name2: str) -> dict:
+    """Build a two-closure API response for duplicate-label tests."""
+    return {
+        "features": [
+            {
+                "properties": {"name": name1, "description": "", "status": "active"},
+                "geometry": {
+                    # The Loop area — closer to west gate, lower mile marker
+                    "coordinates": [-113.80047, 48.75494]
+                },
+            },
+            {
+                "properties": {"name": name2, "description": "", "status": "active"},
+                "geometry": {
+                    # Bird Woman Falls area — further from west gate, higher mile marker
+                    "coordinates": [-113.74776, 48.73928]
+                },
+            },
+        ]
+    }
+
+
+def _run_duplicate_test(closure_data: dict, mock_gtsr) -> "HikerBikerResult":
+    def mock_closed_roads():
+        mock_gtsr.west_loc = ("Lake McDonald Lodge", 10.7)
+        mock_gtsr.east_loc = ("Rising Sun", 43.4)
+        return {"Going-to-the-Sun Road": mock_gtsr}
+
+    mock_with_data = Mock()
+    mock_with_data.status_code = 200
+    mock_with_data.text = json.dumps(closure_data)
+    mock_with_data.raise_for_status = Mock()
+
+    mock_empty = Mock()
+    mock_empty.status_code = 200
+    mock_empty.text = json.dumps({"features": []})
+    mock_empty.raise_for_status = Mock()
+
+    with (
+        patch("roads.hiker_biker.closed_roads", side_effect=mock_closed_roads),
+        patch("requests.get", side_effect=[mock_with_data, mock_empty]),
+    ):
+        return get_hiker_biker_status()
+
+
+def test_duplicate_road_crew_same_side_relabeled(mock_gtsr):
+    """Two Road Crew closures on the same side: shorter stays Road Crew,
+    longer (further from gate) is re-labeled Avalanche Hazard."""
+    result = _run_duplicate_test(
+        _make_duplicate_closure_response(
+            "Hiker/Biker Road Crew Closure", "Hiker/Biker Road Crew Closure"
+        ),
+        mock_gtsr,
+    )
+    assert len(result.closures) == 2
+    road_crew = [c for c in result.closures if "Road Crew" in c]
+    avalanche = [c for c in result.closures if "Avalanche Hazard" in c]
+    assert len(road_crew) == 1
+    assert len(avalanche) == 1
+    assert "The Loop" in road_crew[0]
+    assert "Bird Woman" in avalanche[0]
+
+
+def test_duplicate_avalanche_same_side_relabeled(mock_gtsr):
+    """Two Avalanche closures on the same side: shorter becomes Road Crew,
+    longer stays Avalanche."""
+    result = _run_duplicate_test(
+        _make_duplicate_closure_response(
+            "Avalanche Hazard Closure", "Avalanche Hazard Closure"
+        ),
+        mock_gtsr,
+    )
+    assert len(result.closures) == 2
+    road_crew = [c for c in result.closures if "Road Crew" in c]
+    avalanche = [c for c in result.closures if "Avalanche Hazard" in c]
+    assert len(road_crew) == 1
+    assert len(avalanche) == 1
+    assert "The Loop" in road_crew[0]
+    assert "Bird Woman" in avalanche[0]
+
+
+def test_different_types_same_side_unchanged(mock_gtsr):
+    """One Road Crew and one Avalanche on the same side: labels are left as-is."""
+    result = _run_duplicate_test(
+        _make_duplicate_closure_response(
+            "Hiker/Biker Road Crew Closure", "Avalanche Hazard Closure"
+        ),
+        mock_gtsr,
+    )
+    assert len(result.closures) == 2
+    road_crew = [c for c in result.closures if "Road Crew" in c]
+    avalanche = [c for c in result.closures if "Avalanche Hazard" in c]
+    assert len(road_crew) == 1
+    assert len(avalanche) == 1
+
+
 def test_get_side_north_of_logan(mock_gtsr):
     """Test that coordinates north of Logan Pass boundary return 'west'."""
     # Latitude > north_boundary (48.6998) and longitude between boundaries
