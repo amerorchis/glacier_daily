@@ -67,7 +67,9 @@ def hiker_biker(road_closures: dict | None = None) -> HikerBikerResult:
             )
         ]
 
-        statuses = []
+        # Build [closure_type, hiker_biker] pairs. Use a list (not tuple) so
+        # closure_type can be corrected in the duplicate-detection pass below.
+        entries: list[list] = []
         for i in data:
             # Clean up naming conventions.
             closure_type = (
@@ -87,16 +89,35 @@ def hiker_biker(road_closures: dict | None = None) -> HikerBikerResult:
             ):
                 closure_type = "Avalanche Hazard Closure:"
 
-            # If there are coordinates, generate a string with the name of the closure location.
             if i["geometry"]:
                 coord = tuple(i["geometry"]["coordinates"])
-                statuses.append(
-                    f"{closure_type} {HikerBiker(closure_type, coord, gtsr)}"
-                )
+                entries.append([closure_type, HikerBiker(closure_type, coord, gtsr)])
 
-            # Otherwise pass.
-            else:
-                continue
+        # When two closures on the same side share the same type label, the NPS
+        # likely forgot to differentiate them. Re-label by distance from gate:
+        # shorter = Road Crew Closure, longer = Avalanche Hazard Closure.
+        # If the two closures already have different labels, leave them alone.
+        by_side: dict[str, list[tuple[int, float, str]]] = {}
+        for idx, (closure_type, hb) in enumerate(entries):
+            by_side.setdefault(hb.get_side(), []).append(
+                (idx, hb.mile_marker, closure_type)
+            )
+
+        for side, side_entries in by_side.items():
+            if len(side_entries) >= 2:
+                types = {ct for _, _, ct in side_entries}
+                if len(types) == 1:  # all same label — disambiguate by distance
+                    # West: lower mile_marker = closer to gate = Road Crew (sort asc)
+                    # East: higher mile_marker = closer to gate = Road Crew (sort desc)
+                    reverse = side == "east"
+                    sorted_entries = sorted(
+                        side_entries, key=lambda e: e[1], reverse=reverse
+                    )
+                    entries[sorted_entries[0][0]][0] = "Road Crew Closure:"
+                    for idx, _, _ in sorted_entries[1:]:
+                        entries[idx][0] = "Avalanche Hazard Closure:"
+
+        statuses = [f"{ct} {hb}" for ct, hb in entries]
 
         # Return empty result if there are no hiker biker restrictions listed.
         if not statuses or all("None listed" in item for item in statuses):
