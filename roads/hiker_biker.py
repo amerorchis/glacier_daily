@@ -117,6 +117,31 @@ def hiker_biker(road_closures: dict | None = None) -> HikerBikerResult:
                     for idx, _, _ in sorted_entries[1:]:
                         entries[idx][0] = "Avalanche Hazard Closure:"
 
+        # Merge a Road Crew and a Hazard closure that map to the same named
+        # location into a single bullet. Runs after the relabel pass so it also
+        # catches pairs that were disambiguated above.
+        merged_out: set[int] = set()
+        for i in range(len(entries)):
+            if i in merged_out:
+                continue
+            ct_i, hb_i = entries[i]
+            loc_i = hb_i.north_loc[0]
+            if not loc_i or "name of location not found" in loc_i:
+                continue
+            for j in range(i + 1, len(entries)):
+                if j in merged_out:
+                    continue
+                ct_j, hb_j = entries[j]
+                if hb_j.north_loc[0] != loc_i:
+                    continue
+                has_road_crew = "Road Crew" in ct_i or "Road Crew" in ct_j
+                has_hazard = "Hazard" in ct_i or "Hazard" in ct_j
+                if has_road_crew and has_hazard:
+                    entries[i][0] = "Road Crew & Hazard Closure:"
+                    merged_out.add(j)
+                    break
+        entries = [e for idx, e in enumerate(entries) if idx not in merged_out]
+
         statuses = [f"{ct} {hb}" for ct, hb in entries]
 
         # Return empty result if there are no hiker biker restrictions listed.
