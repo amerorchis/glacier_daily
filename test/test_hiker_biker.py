@@ -404,3 +404,48 @@ def test_get_side_north_of_logan(mock_gtsr):
     # Latitude > north_boundary (48.6998) and longitude between boundaries
     hb = HikerBiker("Test North", (-113.72, 48.71), mock_gtsr)
     assert hb.get_side() == "west"
+
+
+def _make_same_location_response(name1: str, name2: str) -> dict:
+    """Build a two-closure API response where both closures resolve to the
+    same named location (The Loop) via slightly offset coordinates."""
+    return {
+        "features": [
+            {
+                "properties": {"name": name1, "description": "", "status": "active"},
+                "geometry": {"coordinates": [-113.80047, 48.75494]},  # The Loop
+            },
+            {
+                "properties": {"name": name2, "description": "", "status": "active"},
+                # Slightly offset but still within 3 km — resolves to The Loop
+                "geometry": {"coordinates": [-113.80200, 48.75600]},
+            },
+        ]
+    }
+
+
+def test_road_crew_and_hazard_same_location_merged(mock_gtsr):
+    """Road Crew and Avalanche Hazard resolving to the same named location
+    merge into a single 'Road Crew & Hazard Closure:' bullet."""
+    result = _run_duplicate_test(
+        _make_same_location_response(
+            "Hiker/Biker Road Crew Closure", "Avalanche Hazard Closure"
+        ),
+        mock_gtsr,
+    )
+    assert len(result.closures) == 1
+    assert result.closures[0].startswith("Road Crew & Hazard Closure:")
+    assert "The Loop" in result.closures[0]
+
+
+def test_duplicate_road_crew_same_location_merged(mock_gtsr):
+    """Two Road Crew closures resolving to the same named location get
+    relabeled into a Road Crew/Avalanche pair, then merged into one bullet."""
+    result = _run_duplicate_test(
+        _make_same_location_response(
+            "Hiker/Biker Road Crew Closure", "Hiker/Biker Road Crew Closure"
+        ),
+        mock_gtsr,
+    )
+    assert len(result.closures) == 1
+    assert result.closures[0].startswith("Road Crew & Hazard Closure:")
