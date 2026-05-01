@@ -6,7 +6,6 @@ then return a description, link to product, and link to photo.
 import json
 import random
 from io import BytesIO
-from re import sub
 
 import requests
 from PIL import Image
@@ -20,9 +19,31 @@ from shared.settings import get_settings
 
 logger = get_logger(__name__)
 
-BC_PAGE_SIZE = 50
+SHOPIFY_API_VERSION = "2024-10"
+SHOPIFY_PAGE_SIZE = 250
+MAX_PAGES = 20
 PRODUCT_DESC_MAX_LEN = 150
 MAX_PRODUCT_SEARCH_ATTEMPTS = 50
+SHOP_DOMAIN = "https://shop.glacier.org"
+
+PRODUCTS_QUERY = f"""
+query Products($cursor: String) {{
+  products(first: {SHOPIFY_PAGE_SIZE}, after: $cursor, query: "status:active") {{
+    edges {{
+      node {{
+        handle
+        title
+        description
+        totalInventory
+        tracksInventory
+        seo {{ description }}
+        featuredImage {{ url }}
+      }}
+    }}
+    pageInfo {{ hasNextPage endCursor }}
+  }}
+}}
+"""
 
 
 def prepare_potd_upload() -> tuple[str, str, str]:
@@ -58,110 +79,104 @@ def resize_image(url) -> bool:
     return True
 
 
-def get_product(skip_upload: bool = False):
+def _clean_description(raw: str) -> str:
+    """Trim a product description to PRODUCT_DESC_MAX_LEN characters."""
+    desc = raw.replace("&nbsp;", "").strip()
+    if len(desc) > PRODUCT_DESC_MAX_LEN:
+        cut = desc.find(" ", PRODUCT_DESC_MAX_LEN)
+        if cut == -1:
+            cut = PRODUCT_DESC_MAX_LEN
+        desc = desc[:cut] + "..."
+    return desc
+
+
+def _fetch_eligible_products(endpoint: str, headers: dict) -> list[dict]:
+    """Walk Storefront pagination and return all in-stock published products."""
+    products: list[dict] = []
+    cursor: str | None = None
+
+    for _ in range(MAX_PAGES):
+        body = {"query": PRODUCTS_QUERY, "variables": {"cursor": cursor}}
+        r = requests.post(endpoint, headers=headers, json=body, timeout=12)
+        r.raise_for_status()
+        payload = json.loads(r.text)
+
+        if payload.get("errors"):
+            raise ValueError(f"Shopify GraphQL errors: {payload['errors']}")
+
+        connection = payload["data"]["products"]
+        products.extend(edge["node"] for edge in connection["edges"])
+
+        page_info = connection["pageInfo"]
+        if not page_info["hasNextPage"]:
+            break
+        cursor = page_info["endCursor"]
+
+    return products
+
+
+def _build_product_data(node: dict) -> dict | None:
+    """Convert a Shopify product node into our internal dict.
+
+    Returns None if the product is missing an image or is out of stock.
+    Products that don't track inventory are treated as always available.
     """
-    Grab a random product from the BigCommerce API.
-    """
-    # Connect to API
-    settings = get_settings()
-    url = (
-        f"https://api.bigcommerce.com/stores/{settings.BC_STORE_HASH}/v3/catalog/products?"
-        "inventory_level:min=1&is_visible=true"
-    )
-    header = {
-        "X-Auth-Token": settings.BC_TOKEN,
+    featured = node.get("featuredImage")
+    if not featured or not featured.get("url"):
+        return None
+
+    if node.get("tracksInventory") and (node.get("totalInventory") or 0) <= 0:
+        return None
+
+    seo = node.get("seo") or {}
+    raw_desc = seo.get("description") or node.get("description") or ""
+
+    return {
+        "image_url": featured["url"],
+        "name": node["title"],
+        "desc": _clean_description(raw_desc),
+        "product_link": f"{SHOP_DOMAIN}/products/{node['handle']}",
     }
 
-    # Figure out total number of products
+
+def get_product(skip_upload: bool = False):
+    """
+    Grab a random product from the Shopify Storefront API.
+    """
+    settings = get_settings()
+    endpoint = f"https://{settings.SHOPIFY_STORE_DOMAIN}/admin/api/{SHOPIFY_API_VERSION}/graphql.json"
+    headers = {
+        "X-Shopify-Access-Token": settings.SHOPIFY_ACCESS_TOKEN,
+        "Content-Type": "application/json",
+    }
+
     try:
-        r = requests.get(url=url, headers=header, timeout=12)
-        if r.status_code == 500:
-            raise requests.exceptions.RequestException
-        products = json.loads(r.text)
-        total_products = products["meta"]["pagination"]["total"]
+        products = _fetch_eligible_products(endpoint, headers)
     except (
         requests.exceptions.RequestException,
+        ValueError,
         KeyError,
-        IndexError,
         TypeError,
         json.JSONDecodeError,
     ) as e:
-        logger.error("Unexpected BigCommerce product list response: %s", e)
+        logger.error("Unexpected Shopify product list response: %s", e)
         return ("", "", "", "")
 
-    # Select one of these products
+    if not products:
+        logger.error("Shopify returned no eligible products")
+        return ("", "", "", "")
+
     rng = random.Random(now_mountain().strftime("%Y:%m:%d"))  # noqa: S311
-    product_otd = rng.randrange(1, total_products + 1)
 
-    # Function to retrieve a product.
-    def retrieve_potd(product_otd):
-        """
-        Retrieve a product at a given index, parse out a description and grab the image url.
-        """
-        # Calculate the page and index of the random product.
-        product_page = (product_otd - 1) // BC_PAGE_SIZE + 1
-        product_index = (product_otd - 1) % BC_PAGE_SIZE
-
-        # Retrieve item from response.
-        new_url = (
-            f"https://api.bigcommerce.com/stores/{settings.BC_STORE_HASH}/v3/catalog/products?"
-            f"inventory_level:min=1&is_visible=true&page={product_page}"
-        )
-        r = requests.get(url=new_url, headers=header, timeout=12)
-        products = json.loads(r.text)
-        item = products["data"][product_index]
-        name = item["name"]
-
-        # Match instances of multiple line breaks and reduce them to a single <br>
-        desc = (
-            item["meta_description"]
-            if item["meta_description"]
-            else item["description"]
-        )
-        pattern = r"(<(?!br\s*\/?)[^>]*>)|((<br\s*\/?>)\s*)+"
-        desc = sub(pattern, lambda m: m.group(1) if m.group(1) else "<br>", desc)
-
-        desc = desc.replace("&nbsp;", "")  # remove non-breaking spaces
-        desc = sub(r"<p[^>]*>|<\/p>", "", desc)  # remove paragraph tags
-        desc = sub(r"(?<=\w)(\.)", r"\1 ", desc)  # add space after sentence
-        desc = sub(r"<div[^>]*>|<\/div>", "", desc).strip()  # remove div tags
-
-        # Truncate long descriptions
-        if len(desc) > PRODUCT_DESC_MAX_LEN:
-            index = desc.find(" ", PRODUCT_DESC_MAX_LEN)
-            desc = desc[:index] + "..."
-
-        # Get image url
-        item_url = f"https://shop.glacier.org{item['custom_url']['url']}"
-        get_image_url = (
-            f"https://api.bigcommerce.com/stores/{settings.BC_STORE_HASH}/v3/catalog/products/"
-            f"{item['id']}/images"
-        )
-        r = requests.get(url=get_image_url, headers=header, timeout=12)
-        image_url = json.loads(r.text)["data"][0]["url_zoom"]
-
-        return {
-            "image_url": image_url,
-            "name": name,
-            "desc": desc,
-            "product_link": item_url,
-        }
-
-    # Keep searching for products if they don't have images.
-    for _attempt in range(MAX_PRODUCT_SEARCH_ATTEMPTS):
-        try:
-            product_data = retrieve_potd(product_otd)
-            if product_data["image_url"]:
-                break
-            raise ValueError("Product not found")
-
-        except (ValueError, IndexError, KeyError):
-            product_otd = rng.randint(1, total_products)
+    product_data: dict | None = None
+    for _ in range(MAX_PRODUCT_SEARCH_ATTEMPTS):
+        node = products[rng.randrange(len(products))]
+        product_data = _build_product_data(node)
+        if product_data is not None:
+            break
     else:
-        # All attempts exhausted without finding a product with an image
         return ("", "", "", "")
 
-    # Resize and upload the image retrieved
     if not resize_image(product_data["image_url"]):
         logger.error("Failed to fetch product image")
         return ("", "", "", "")
