@@ -64,7 +64,7 @@ class TestSettingsFromEnv:
             "FTP_SERVER",
             "ENVIRONMENT",
             "DRIP_CAMPAIGN_ID",
-            "BC_TOKEN",
+            "SHOPIFY_ACCESS_TOKEN",
             "CACHE_PURGE",
         ):
             monkeypatch.delenv(var, raising=False)
@@ -75,7 +75,7 @@ class TestSettingsFromEnv:
         assert s.FTP_SERVER == "ftp.glacier.org"
         assert s.ENVIRONMENT == "development"
         assert s.DRIP_CAMPAIGN_ID == "169298893"
-        assert s.BC_TOKEN == ""
+        assert s.SHOPIFY_ACCESS_TOKEN == ""
         assert s.CACHE_PURGE == ""
 
     def test_env_overrides_defaults(self, monkeypatch):

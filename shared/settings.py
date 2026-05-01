@@ -34,8 +34,8 @@ class Settings:
     MAPBOX_TOKEN: str
 
     # --- Service keys (default "" — modules degrade gracefully) ---
-    BC_TOKEN: str = ""
-    BC_STORE_HASH: str = ""
+    SHOPIFY_STORE_DOMAIN: str = ""
+    SHOPIFY_ACCESS_TOKEN: str = ""
     FLICKR_KEY: str = ""
     FLICKR_SECRET: str = ""
     GLACIERNPS_UID: str = ""

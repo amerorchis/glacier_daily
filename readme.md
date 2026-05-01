@@ -157,7 +157,7 @@ uv run python -W ignore -m peak.peak
 - `trails_and_cgs/` - Trail closures and campground availability
 - `peak/` - Daily featured peak with satellite imagery
 - `image_otd/` - Daily image selection from Flickr
-- `product_otd/` - Featured product from BigCommerce
+- `product_otd/` - Featured product from Shopify
 - `sunrise_timelapse/` - Video processing and timelapse compilation
 - `notices/` - Administrative notices from Google Sheets
 
