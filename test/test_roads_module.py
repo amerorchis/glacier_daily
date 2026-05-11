@@ -460,6 +460,21 @@ class TestSegmentsOverlap:
         seg2 = (-113.9, -113.5)
         assert _segments_overlap(seg1, seg2) is True
 
+    def test_adjacent_segments_with_curvature(self):
+        """
+        Adjacent segments sharing an endpoint can have bounding boxes that
+        overlap by a few tens of meters because the road curves past the
+        endpoint. That curvature artifact must not be treated as real overlap.
+
+        Regression: NPS data had an open segment ending at Avalanche
+        (-113.81992) and a closed segment whose endpoint was also at Avalanche
+        but whose bounding box extended to -113.82054 due to the road curve.
+        The ~60 m overlap caused the real closure to be silently dropped.
+        """
+        open_seg = (-113.86427, -113.81992)
+        closed_seg = (-113.82054, -113.77667)
+        assert _segments_overlap(open_seg, closed_seg) is False
+
 
 class TestIsCoveredByOpen:
     """Tests for the _is_covered_by_open() helper function."""

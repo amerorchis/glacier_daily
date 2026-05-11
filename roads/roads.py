@@ -17,6 +17,13 @@ logger = get_logger(__name__)
 
 KINTLA_ROAD_LAT_THRESHOLD = 48.787
 
+# Minimum longitude overlap (in degrees) required to consider two road segments
+# as actually overlapping. At GNP's latitude, 0.001° ≈ 73 m. Road segments that
+# share an endpoint can have bounding boxes that overlap by a few tens of meters
+# because the road curves slightly past the endpoint; the tolerance filters out
+# those curvature artifacts so adjacent segments aren't misread as overlapping.
+SEGMENT_OVERLAP_TOLERANCE = 0.001
+
 # The NPS carto.nps.gov GeoJSON API uses a certificate chain that fails
 # validation. SSL verification is disabled for these endpoints.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -51,18 +58,21 @@ def _segments_overlap(seg1: tuple[float, float], seg2: tuple[float, float]) -> b
     """
     Check if two segments (defined by west/east longitude bounds) overlap.
 
-    Segments that only share an endpoint are NOT considered overlapping.
-    This ensures that when a closed segment ends exactly where an open segment
-    begins, we still report the closure endpoint correctly.
+    Segments that only touch at an endpoint — or whose bounding boxes overlap
+    by less than SEGMENT_OVERLAP_TOLERANCE due to road curvature past a shared
+    endpoint — are NOT considered overlapping. This ensures that when a closed
+    segment ends where an open segment begins, we still report the closure
+    endpoint correctly.
 
     Args:
         seg1: (west_lon, east_lon) for first segment
         seg2: (west_lon, east_lon) for second segment
 
     Returns:
-        True if segments overlap (not just touch at an endpoint)
+        True if segments overlap by more than the curvature tolerance
     """
-    return seg1[0] < seg2[1] and seg2[0] < seg1[1]
+    overlap = min(seg1[1], seg2[1]) - max(seg1[0], seg2[0])
+    return overlap > SEGMENT_OVERLAP_TOLERANCE
 
 
 @retry(3, (requests.exceptions.RequestException,), default=set(), backoff=5)
