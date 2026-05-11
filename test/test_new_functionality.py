@@ -129,38 +129,39 @@ class TestProductMaxIterations:
     """Test that product selection doesn't loop forever."""
 
     def test_returns_empty_after_max_attempts(self, monkeypatch):
-        monkeypatch.setenv("SHOPIFY_STORE_DOMAIN", "test.myshopify.com")
-        monkeypatch.setenv("SHOPIFY_ACCESS_TOKEN", "test")
+        monkeypatch.setenv("BC_TOKEN", "test")
+        monkeypatch.setenv("BC_STORE_HASH", "test")
 
-        # Every product has no featuredImage, so the search loop should
-        # exhaust MAX_PRODUCT_SEARCH_ATTEMPTS and return the empty tuple.
-        no_image_response = {
-            "data": {
-                "products": {
-                    "edges": [
-                        {
-                            "node": {
-                                "handle": "no-image",
-                                "title": "No Image Product",
-                                "description": "desc",
-                                "totalInventory": 5,
-                                "tracksInventory": True,
-                                "seo": {"description": "desc"},
-                                "featuredImage": None,
-                            }
-                        }
-                    ],
-                    "pageInfo": {"hasNextPage": False, "endCursor": None},
-                }
-            }
-        }
-
-        with patch("requests.post") as mock_post:
-            mock_post.return_value = Mock(
+        with patch("requests.get") as mock_get:
+            # First call returns total products count
+            first_response = Mock(
                 status_code=200,
-                text=json.dumps(no_image_response),
-                raise_for_status=Mock(),
+                text=json.dumps({"data": [], "meta": {"pagination": {"total": 5}}}),
             )
+            # Subsequent calls return products without images
+            product_response = Mock(
+                status_code=200,
+                text=json.dumps(
+                    {
+                        "data": [
+                            {
+                                "id": 1,
+                                "name": "No Image Product",
+                                "custom_url": {"url": "/test"},
+                                "meta_description": "desc",
+                                "description": "desc",
+                            }
+                        ],
+                        "meta": {"pagination": {"total": 5}},
+                    }
+                ),
+            )
+            image_response = Mock(status_code=200, text=json.dumps({"data": []}))
+
+            mock_get.side_effect = [first_response] + [
+                product_response,
+                image_response,
+            ] * 60  # More than enough for 50 iterations
 
             from product_otd.product import get_product
 

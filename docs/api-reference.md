@@ -76,13 +76,14 @@ Tables queried:
 
 ## E-commerce and Marketing
 
-### Shopify Admin API
+### BigCommerce API
 
-- Endpoint: `https://{store_domain}/admin/api/2024-10/graphql.json` (GraphQL, POST)
+- Endpoints:
+  - Products: `https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products`
+  - Product images: `https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products/{id}/images`
 - Module: `product_otd/product.py`
 - Purpose: Featured product information and images
-- Query: `products(query: "status:active")` walked via `pageInfo` cursor; selects `handle`, `title`, `description`, `totalInventory`, `tracksInventory`, `seo.description`, `featuredImage.url`. Out-of-stock products (where `tracksInventory` is true and `totalInventory <= 0`) are skipped at selection time.
-- Authentication: `SHOPIFY_STORE_DOMAIN` (the `*.myshopify.com` host) and `SHOPIFY_ACCESS_TOKEN` (Admin API access token from OAuth, sent in `X-Shopify-Access-Token` header) required. `read_products` scope is sufficient.
+- Authentication: `BC_TOKEN` (`X-Auth-Token` header) and `BC_STORE_HASH` required
 
 ### Drip Email API
 
@@ -196,8 +197,8 @@ MAPBOX_TOKEN=your_mapbox_token
 FLICKR_KEY=your_flickr_key
 FLICKR_SECRET=your_flickr_secret
 GLACIERNPS_UID=your_glaciernps_user_id
-SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
-SHOPIFY_ACCESS_TOKEN=your_storefront_access_token
+BC_TOKEN=your_bigcommerce_token
+BC_STORE_HASH=your_store_hash
 SUNSETHUE_KEY=your_sunsethue_key
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service_account.json
 NOTICES_SPREADSHEET_ID=your_spreadsheet_id

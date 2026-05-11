@@ -15,28 +15,26 @@ from product_otd.product import (
 
 
 @pytest.fixture
-def mock_graphql_response():
-    """Fixture for mocking Shopify Admin GraphQL product response."""
+def mock_product_response():
+    """Fixture for mocking BigCommerce API product response"""
     return {
-        "data": {
-            "products": {
-                "edges": [
-                    {
-                        "node": {
-                            "handle": "test-product",
-                            "title": "Test Product",
-                            "description": "Detailed test description",
-                            "totalInventory": 10,
-                            "tracksInventory": True,
-                            "seo": {"description": "Test product description"},
-                            "featuredImage": {"url": "https://example.com/test.jpg"},
-                        }
-                    }
-                ],
-                "pageInfo": {"hasNextPage": False, "endCursor": None},
+        "data": [
+            {
+                "id": 1,
+                "name": "Test Product",
+                "custom_url": {"url": "/test-product"},
+                "meta_description": "Test product description",
+                "description": "Detailed test description",
             }
-        }
+        ],
+        "meta": {"pagination": {"total": 50}},
     }
+
+
+@pytest.fixture
+def mock_image_response():
+    """Fixture for mocking BigCommerce API image response"""
+    return {"data": [{"url_zoom": "https://example.com/test.jpg"}]}
 
 
 @pytest.fixture
@@ -52,82 +50,89 @@ def mock_image():
 @pytest.fixture
 def mock_env_vars(monkeypatch):
     """Fixture to set required environment variables"""
-    monkeypatch.setenv("SHOPIFY_STORE_DOMAIN", "test.myshopify.com")
-    monkeypatch.setenv("SHOPIFY_ACCESS_TOKEN", "test_token")
+    monkeypatch.setenv("BC_TOKEN", "test_token")
+    monkeypatch.setenv("BC_STORE_HASH", "test_store")
 
 
 class TestGetProduct:
     """Test suite for get_product function"""
 
-    def test_get_product_success(self, mock_graphql_response, mock_env_vars):
+    def test_get_product_success(
+        self, mock_product_response, mock_image_response, mock_env_vars
+    ):
         """Test successful product retrieval"""
         mock_rng = MagicMock()
-        mock_rng.randrange.return_value = 0
+        mock_rng.randrange.return_value = 1
+        mock_rng.randint.return_value = 1
         with (
-            patch("requests.post") as mock_post,
+            patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image", return_value=True),
             patch("product_otd.product.upload_potd") as mock_upload,
             patch("random.Random", return_value=mock_rng),
         ):
-            mock_post.return_value = Mock(
-                status_code=200,
-                text=json.dumps(mock_graphql_response),
-                raise_for_status=Mock(),
-            )
+            # Mock API responses
+            mock_get.side_effect = [
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_image_response)),
+            ]
             mock_upload.return_value = "https://example.com/uploaded.jpg"
 
             title, image_url, product_link, desc = get_product()
 
             assert title == "Test Product"
             assert image_url == "https://example.com/uploaded.jpg"
-            assert product_link == "https://shop.glacier.org/products/test-product"
+            assert product_link == "https://shop.glacier.org/test-product"
             assert desc == "Test product description"
 
-    def test_get_product_image_fetch_fails(self, mock_graphql_response, mock_env_vars):
+    def test_get_product_image_fetch_fails(
+        self, mock_product_response, mock_image_response, mock_env_vars
+    ):
         """Test that failed image fetch returns empty tuple."""
         mock_rng = MagicMock()
-        mock_rng.randrange.return_value = 0
+        mock_rng.randrange.return_value = 1
+        mock_rng.randint.return_value = 1
         with (
-            patch("requests.post") as mock_post,
+            patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image", return_value=False),
             patch("random.Random", return_value=mock_rng),
         ):
-            mock_post.return_value = Mock(
-                status_code=200,
-                text=json.dumps(mock_graphql_response),
-                raise_for_status=Mock(),
-            )
+            mock_get.side_effect = [
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_image_response)),
+            ]
             result = get_product()
             assert result == ("", "", "", "")
 
     def test_get_product_api_error(self, mock_env_vars):
         """Test handling of API error returns empty tuple."""
-        with patch("requests.post") as mock_post:
-            mock_post.return_value = Mock(
-                status_code=500,
-                raise_for_status=Mock(side_effect=requests.exceptions.HTTPError()),
-            )
+        with patch("requests.get") as mock_get:
+            mock_get.return_value = Mock(status_code=500)
             result = get_product()
             assert result == ("", "", "", "")
 
-    def test_get_product_skip_upload(self, mock_graphql_response, mock_env_vars):
+    def test_get_product_skip_upload(
+        self, mock_product_response, mock_image_response, mock_env_vars
+    ):
         """Test get_product with skip_upload=True returns None for image."""
         mock_rng = MagicMock()
-        mock_rng.randrange.return_value = 0
+        mock_rng.randrange.return_value = 1
+        mock_rng.randint.return_value = 1
         with (
-            patch("requests.post") as mock_post,
+            patch("requests.get") as mock_get,
             patch("product_otd.product.resize_image", return_value=True),
             patch("random.Random", return_value=mock_rng),
         ):
-            mock_post.return_value = Mock(
-                status_code=200,
-                text=json.dumps(mock_graphql_response),
-                raise_for_status=Mock(),
-            )
+            mock_get.side_effect = [
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_product_response)),
+                Mock(status_code=200, text=json.dumps(mock_image_response)),
+            ]
             title, image_url, product_link, _desc = get_product(skip_upload=True)
             assert title == "Test Product"
             assert image_url is None
-            assert product_link == "https://shop.glacier.org/products/test-product"
+            assert product_link == "https://shop.glacier.org/test-product"
 
 
 class TestPreparePotdUpload:
