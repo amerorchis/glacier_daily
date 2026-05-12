@@ -1,1 +1,1 @@
-"""Daily product showcase from BigCommerce."""
+"""Daily product showcase from Shopify."""
