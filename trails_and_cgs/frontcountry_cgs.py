@@ -67,10 +67,18 @@ def campground_alerts() -> CampgroundsResult:
     season_closures = []
     statuses = []
 
+    # The feed occasionally carries duplicate rows for a campground with
+    # conflicting status (a stale "closed" row left alongside the live "open"
+    # one). Treat a campground as open if any of its rows reports open, so a
+    # stale closure can't override a current opening.
+    open_names = {
+        i["name"].replace("  ", " ") for i in campgrounds if i["status"] != "closed"
+    }
+
     for i in campgrounds:
         name = i["name"].replace("  ", " ")
 
-        if i["status"] == "closed":
+        if i["status"] == "closed" and name not in open_names:
             if name in YEAR_ROUND_CAMPGROUNDS:
                 closures.append(f"{name} CG: currently closed.")
             elif (
