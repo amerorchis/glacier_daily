@@ -15,6 +15,7 @@ from shared.run_context import start_run
 from shared.run_report import (
     RunReport,
     build_report,
+    complete_run,
     upload_status_report,
 )
 from shared.timing import ModuleResult, get_timing
@@ -462,3 +463,40 @@ class TestUploadStatusReport:
             data = json.load(f)
         run_ids = {r["run_id"] for r in data["runs"]}
         assert len(run_ids) == 2 * n_per_thread
+
+
+class TestCompleteRun:
+    """Tests for the shared complete_run teardown helper."""
+
+    def test_returns_finalized_report(self):
+        start_run("web_update")
+        report = complete_run("development")
+        assert report.overall_status == "success"
+
+    def test_failed_flag_forces_failure(self):
+        start_run("web_update")
+        report = complete_run("development", failed=True)
+        assert report.overall_status == "failure"
+
+    def test_decorate_runs_before_finalize(self):
+        start_run("email")
+
+        def decorate(report):
+            report.subscriber_count = 42
+            report.email_delivery = {"sent": 40, "failed": 2}
+
+        report = complete_run("development", decorate=decorate)
+        assert report.subscriber_count == 42
+        # finalize_status saw the delivery data decorate added
+        assert report.overall_status == "partial"
+
+    def test_writes_status_file_only_in_production(self, tmp_path, monkeypatch):
+        status_file = str(tmp_path / "status.json")
+        monkeypatch.setattr("shared.run_report.STATUS_FILE", status_file)
+
+        start_run("web_update")
+        complete_run("development")
+        assert not os.path.exists(status_file)
+
+        complete_run("production")
+        assert os.path.exists(status_file)

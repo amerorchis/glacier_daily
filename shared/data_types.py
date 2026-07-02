@@ -19,7 +19,9 @@ class Event:
     name: str  # "Creekside Stroll"
     location: str  # "Apgar VC"
     link: str  # NPS event URL
-    sortable: datetime  # For sort ordering (excluded from JSON serialization)
+    # For sort ordering; excluded from JSON serialization, so events
+    # rebuilt from the LKG cache carry None (list order is already sorted)
+    sortable: datetime | None = None
 
 
 @dataclass(frozen=True)

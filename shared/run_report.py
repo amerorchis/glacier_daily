@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from typing import Any
@@ -189,3 +190,36 @@ def upload_status_report(report: RunReport) -> None:
 
     # status.json is served from the server/ directory via the public API endpoint
     logger.info("Status report written (%d runs in history)", len(runs))
+
+
+def complete_run(
+    environment: str,
+    *,
+    failed: bool = False,
+    decorate: Callable[[RunReport], None] | None = None,
+) -> RunReport:
+    """Build, finalize, and persist the run report at the end of a run.
+
+    Shared teardown for both entry points (main.py and
+    generate_and_upload.py). ``decorate`` mutates the report with
+    run-specific fields (subscriber count, email delivery, canary) before
+    the status is finalized. The report is only written to disk in
+    production.
+    """
+    report = build_report(environment=environment)
+    if decorate:
+        decorate(report)
+    if failed:
+        report.overall_status = "failure"
+    report.finalize_status()
+    # Log status before re-snapshotting so the line is captured in log_lines
+    logger.info("Run complete: %s", report.overall_status)
+    capture = get_log_capture()
+    if capture:
+        report.log_lines = list(capture.buffer)
+    if environment == "production":
+        try:
+            upload_status_report(report)
+        except Exception:
+            logger.exception("Failed to upload status report")
+    return report
