@@ -13,13 +13,35 @@ from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
 from shared.lock import acquire_lock, release_lock
-from shared.logging_config import get_log_capture, get_logger, setup_logging
+from shared.logging_config import get_logger, setup_logging
 from shared.run_context import start_run
-from shared.run_report import build_report, upload_status_report
+from shared.run_report import RunReport, complete_run
 from shared.settings import get_settings
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 
 logger = get_logger(__name__)
+
+
+def email_content_ok(data: dict) -> bool:
+    """Check the generated data has enough real content to be worth emailing.
+
+    Sending a hollow email (every core section empty) is worse than not
+    sending — wrong/empty info erodes trust more than a missed day. The
+    email is considered sendable if at least one core section (weather,
+    roads, trails) has substantive content. LKG fallbacks make an
+    all-empty result rare: it means every core module failed with no
+    good data from earlier in the day.
+    """
+    weather = data.get("weather")
+    if getattr(weather, "daylight_message", "") or getattr(weather, "forecasts", []):
+        return True
+    roads = data.get("roads")
+    if getattr(roads, "closures", []) or getattr(roads, "no_closures_message", ""):
+        return True
+    trails = data.get("trails")
+    return bool(
+        getattr(trails, "closures", []) or getattr(trails, "no_closures_message", "")
+    )
 
 
 def main(
@@ -61,8 +83,14 @@ def main(
                 raise RuntimeError("No subscribers retrieved — Drip API may be down")
 
             # Generate data and upload to website.
-            serve_api(force=force)
+            data = serve_api(force=force)
             api_complete = True
+
+            if not email_content_ok(data):
+                raise RuntimeError(
+                    "Email content check failed: weather, roads, and trails "
+                    "are all empty — not sending a hollow email"
+                )
 
             # Allow time for FTP-uploaded timelapse assets to propagate.
             _TIMELAPSE_PROPAGATION_WAIT = 0 if test else 10
@@ -79,36 +107,30 @@ def main(
             logger.exception("%s failed", phase)
             run_error = f"{phase} raised an exception (see logs)"
         finally:
-            report = build_report(environment=settings.ENVIRONMENT)
-            report.subscriber_count = len(subscribers)
-            if batch_result:
-                report.email_delivery = {
-                    "sent": batch_result.sent,
-                    "failed": batch_result.failed,
-                }
-            if run_error:
-                report.errors.append(run_error)
-                if not batch_result:
-                    report.email_delivery = {"sent": 0, "failed": 0}
-                report.overall_status = "failure"
-            if canary_result is not None:
-                report.email_delivery["canary_verified"] = canary_result.verified
-                report.email_delivery["canary_message"] = canary_result.message
-                report.email_delivery["canary_elapsed_seconds"] = (
-                    canary_result.elapsed_seconds
-                )
-            report.finalize_status()
-            # Log status before building the report so it's captured in log_lines
-            logger.info("Run complete: %s", report.overall_status)
-            # Re-snapshot log buffer to include the status line and any error tracebacks
-            capture = get_log_capture()
-            if capture:
-                report.log_lines = list(capture.buffer)
-            if settings.ENVIRONMENT == "production":
-                try:
-                    upload_status_report(report)
-                except Exception:
-                    logger.exception("Failed to upload status report")
+
+            def _decorate(report: RunReport) -> None:
+                report.subscriber_count = len(subscribers)
+                if batch_result:
+                    report.email_delivery = {
+                        "sent": batch_result.sent,
+                        "failed": batch_result.failed,
+                    }
+                if run_error:
+                    report.errors.append(run_error)
+                    if not batch_result:
+                        report.email_delivery = {"sent": 0, "failed": 0}
+                if canary_result is not None:
+                    report.email_delivery["canary_verified"] = canary_result.verified
+                    report.email_delivery["canary_message"] = canary_result.message
+                    report.email_delivery["canary_elapsed_seconds"] = (
+                        canary_result.elapsed_seconds
+                    )
+
+            complete_run(
+                settings.ENVIRONMENT,
+                failed=bool(run_error),
+                decorate=_decorate,
+            )
     finally:
         release_lock(lock_fd)
 

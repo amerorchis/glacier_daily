@@ -105,6 +105,17 @@ class Settings:
         return cls(**kwargs)
 
 
+def required_setting_names() -> list[str]:
+    """Names of ``Settings`` fields with no default — required at startup.
+
+    Single source of truth for startup validation, so the required list
+    can never drift from the dataclass definition.
+    """
+    return [
+        f.name for f in dataclasses.fields(Settings) if f.default is dataclasses.MISSING
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Singleton access
 # ---------------------------------------------------------------------------

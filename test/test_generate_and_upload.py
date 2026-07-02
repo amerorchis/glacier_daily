@@ -457,6 +457,39 @@ def test_gen_data_none_values_replaced(mock_all_data_sources, monkeypatch):
 # ============================================================================
 
 
+class TestModuleRegistryCachingContract:
+    """Each module's caching behavior is deliberate — lock it in.
+
+    Date-deterministic modules use LKG as a primary cache only (no failure
+    fallback), gnpc_events has no LKG fallback, and the remaining dynamic
+    modules fall back to LKG on failure.
+    """
+
+    def test_caching_flags_match_intended_behavior(self):
+        expected_fallback = {
+            "weather": False,  # special-cased after the pool drains
+            "trails": True,
+            "campgrounds": True,
+            "roads": True,
+            "hiker_biker": True,
+            "events": True,
+            "sunrise": True,
+            "notices": True,
+            "gnpc_events": False,
+            "image_otd": False,
+            "peak": False,
+            "product": False,
+        }
+        expected_deterministic = {"image_otd", "peak", "product"}
+
+        actual_fallback = {spec.name: spec.lkg_fallback for spec in gau.MODULES}
+        actual_deterministic = {
+            spec.name for spec in gau.MODULES if spec.date_deterministic
+        }
+        assert actual_fallback == expected_fallback
+        assert actual_deterministic == expected_deterministic
+
+
 class TestLKGSave:
     """Verify that successful module data is saved to LKG."""
 
@@ -593,6 +626,77 @@ class TestLKGFallback:
         assert result["sunrise_still"] == "s"
         assert result["sunrise_str"] == "d"
 
+    def test_lkg_fallback_returns_dataclass_not_json_string(self, monkeypatch):
+        """LKG fallback must return usable dataclasses, not raw JSON text.
+
+        Templates access attributes like trails.closures — a JSON string
+        would silently render as an empty section.
+        """
+        self._setup_all_mocks(monkeypatch)
+        gau.gen_data()  # Populate LKG
+
+        monkeypatch.setattr(
+            gau,
+            "get_closed_trails",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        assert isinstance(result["trails"], TrailsResult)
+        assert result["trails"].closures == ["trails"]
+
+    def test_weather_lkg_fallback_returns_weather_result(self, monkeypatch):
+        """Weather fallback reconstructs WeatherResult with nested fields."""
+        self._setup_all_mocks(monkeypatch)
+        gau.gen_data()  # Populate LKG with weather
+
+        monkeypatch.setattr(
+            gau,
+            "weather_data",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        weather = result["weather"]
+        assert isinstance(weather, WeatherResult)
+        assert weather.daylight_message == "Daylight info"
+        assert weather.forecasts == [("West Glacier", 75, 30, "Partly cloudy")]
+
+    def test_events_lkg_fallback_reconstructs_events(self, monkeypatch):
+        """Events fallback rebuilds Event objects (sortable is dropped)."""
+        from datetime import datetime
+
+        from shared.data_types import Event
+
+        self._setup_all_mocks(monkeypatch)
+        monkeypatch.setattr(
+            gau,
+            "events_today",
+            lambda: EventsResult(
+                events=[
+                    Event(
+                        start_time="8:30 am",
+                        end_time="10 am",
+                        name="Creekside Stroll",
+                        location="Apgar VC",
+                        link="https://nps.gov/event/1",
+                        sortable=datetime(2024, 5, 1, 8, 30),
+                    )
+                ]
+            ),
+        )
+        gau.gen_data()  # Populate LKG
+
+        monkeypatch.setattr(
+            gau,
+            "events_today",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        events = result["events"]
+        assert isinstance(events, EventsResult)
+        assert len(events.events) == 1
+        assert events.events[0].name == "Creekside Stroll"
+        assert events.events[0].sortable is None
+
 
 class TestLKGDateDeterministic:
     """Verify date-deterministic modules use LKG as primary cache."""
@@ -657,6 +761,106 @@ class TestLKGDateDeterministic:
 
         result, _ = gau.gen_data()
         assert result["peak"] == "pk"  # From the mocked peak function
+
+
+class TestHealthCheck:
+    """Tests for the run_health_check() deploy gate."""
+
+    def test_health_check_passes(self, mock_all_data_sources, monkeypatch):
+        monkeypatch.setattr(gau, "FTPSession", MockFTPSession)
+        assert gau.run_health_check() == 0
+
+    def test_health_check_propagates_gen_data_failure(self, monkeypatch):
+        monkeypatch.setattr(
+            gau, "gen_data", lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+        )
+        with pytest.raises(RuntimeError):
+            gau.run_health_check()
+
+    def test_health_check_propagates_ftp_failure(
+        self, mock_all_data_sources, monkeypatch
+    ):
+        class FailingFTP:
+            def __enter__(self):
+                raise ConnectionError("ftp down")
+
+            def __exit__(self, *args):
+                return False
+
+        monkeypatch.setattr(gau, "FTPSession", FailingFTP)
+        with pytest.raises(ConnectionError):
+            gau.run_health_check()
+
+
+class TestMainCLI:
+    """Tests for the main() CLI entry point."""
+
+    def _patch_common(self, monkeypatch, environment):
+        from types import SimpleNamespace
+
+        monkeypatch.setattr(
+            gau, "get_settings", lambda: SimpleNamespace(ENVIRONMENT=environment)
+        )
+        monkeypatch.setattr(gau, "setup_logging", lambda: None)
+
+    def test_check_flag_runs_health_check_only(self, monkeypatch):
+        self._patch_common(monkeypatch, "development")
+        calls = []
+        monkeypatch.setattr(gau, "run_health_check", lambda: calls.append("check") or 0)
+        monkeypatch.setattr(gau, "gen_data", lambda: calls.append("gen_data"))
+        monkeypatch.setattr(gau, "serve_api", lambda **kw: calls.append("serve_api"))
+
+        assert gau.main(["--check"]) == 0
+        assert calls == ["check"]
+
+    def test_development_runs_gen_data_not_serve_api(self, monkeypatch):
+        self._patch_common(monkeypatch, "development")
+        calls = []
+        monkeypatch.setattr(
+            gau, "gen_data", lambda: calls.append("gen_data") or ({}, [])
+        )
+        monkeypatch.setattr(gau, "serve_api", lambda **kw: calls.append("serve_api"))
+
+        assert gau.main([]) == 0
+        assert calls == ["gen_data"]
+
+    def test_production_runs_serve_api(self, monkeypatch):
+        self._patch_common(monkeypatch, "production")
+        calls = []
+        monkeypatch.setattr(gau, "serve_api", lambda **kw: calls.append("serve_api"))
+        monkeypatch.setattr(
+            gau, "complete_run", lambda env, **kw: calls.append("report")
+        )
+
+        assert gau.main([]) == 0
+        assert calls == ["serve_api", "report"]
+
+    def test_failure_is_caught_and_reported(self, monkeypatch):
+        self._patch_common(monkeypatch, "production")
+        reported = {}
+        monkeypatch.setattr(
+            gau,
+            "serve_api",
+            lambda **kw: (_ for _ in ()).throw(RuntimeError("upload died")),
+        )
+        monkeypatch.setattr(
+            gau,
+            "complete_run",
+            lambda env, failed=False, **kw: reported.update(env=env, failed=failed),
+        )
+
+        # Exception is caught; the failure is recorded in the run report
+        assert gau.main([]) == 0
+        assert reported == {"env": "production", "failed": True}
+
+    def test_force_flag_clears_cache(self, monkeypatch):
+        self._patch_common(monkeypatch, "development")
+        calls = []
+        monkeypatch.setattr(gau, "clear_cache", lambda: calls.append("clear"))
+        monkeypatch.setattr(gau, "gen_data", lambda: ({}, []))
+
+        assert gau.main(["--force"]) == 0
+        assert "clear" in calls
 
 
 class TestClearCache:

@@ -1,4 +1,14 @@
 import main
+from shared.data_types import RoadsResult, TrailsResult, WeatherResult
+
+
+def make_healthy_data():
+    """Minimal gen_data output that passes the email content check."""
+    return {
+        "weather": WeatherResult(daylight_message="Sunrise is at 6:14am."),
+        "roads": RoadsResult(no_closures_message="No closures today!"),
+        "trails": TrailsResult(closures=["Highline: snow"]),
+    }
 
 
 def _patch_main(monkeypatch, calls):
@@ -15,7 +25,11 @@ def _patch_main(monkeypatch, calls):
         "get_subs",
         lambda tag: calls.append(f"get_subs:{tag}") or ["test@example.com"],
     )
-    monkeypatch.setattr(main, "serve_api", lambda **kw: calls.append("serve_api"))
+    monkeypatch.setattr(
+        main,
+        "serve_api",
+        lambda **kw: calls.append("serve_api") or make_healthy_data(),
+    )
     monkeypatch.setattr(main, "sleep", lambda x: calls.append(f"sleep:{x}"))
     monkeypatch.setattr(
         main,
@@ -135,6 +149,53 @@ def test_main_catches_email_delivery_exception(monkeypatch):
     main.main(test=True)
     # serve_api should have completed
     assert "serve_api" in calls
+
+
+def test_main_skips_email_when_content_hollow(monkeypatch):
+    """All core sections empty → email must NOT be sent (hollow email)."""
+    calls = []
+    _patch_main(monkeypatch, calls)
+    monkeypatch.setattr(
+        main,
+        "serve_api",
+        lambda **kw: {
+            "weather": WeatherResult(),
+            "roads": RoadsResult(),
+            "trails": TrailsResult(),
+        },
+    )
+
+    # Should not raise — the gate's exception is caught and logged
+    main.main(test=True)
+    assert not any("bulk_workflow_trigger" in c for c in calls)
+
+
+def test_email_content_ok_accepts_any_core_section():
+    assert main.email_content_ok(
+        {"weather": WeatherResult(daylight_message="sunrise at 6")}
+    )
+    assert main.email_content_ok({"roads": RoadsResult(closures=["GTSR closed"])})
+    assert main.email_content_ok(
+        {"trails": TrailsResult(no_closures_message="No closures!")}
+    )
+
+
+def test_email_content_ok_rejects_all_empty():
+    assert not main.email_content_ok(
+        {
+            "weather": WeatherResult(),
+            "roads": RoadsResult(),
+            "trails": TrailsResult(),
+        }
+    )
+    # Error messages alone are not real content
+    assert not main.email_content_ok(
+        {
+            "weather": WeatherResult(),
+            "roads": RoadsResult(error_message="Roads page is down"),
+            "trails": TrailsResult(error_message="Trails page is down"),
+        }
+    )
 
 
 def test_main_fails_when_no_subscribers(monkeypatch):

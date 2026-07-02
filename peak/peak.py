@@ -34,7 +34,7 @@ def _get_peak_summary(name: str, lat: float, lon: float) -> str | None:
     return None
 
 
-def peak(test=False, skip_upload: bool = False):
+def peak(test: bool = False, skip_upload: bool = False) -> tuple[str, str | None, str]:
     """
     Select a random peak, and return the relevant information.
     """

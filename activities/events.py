@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 NPS_EVENTS_PAGE_SIZE = 10
 
 
-def time_sortable(time: str):
+def time_sortable(time: str) -> datetime:
     """
     Convert a time string to a datetime object that is sortable.
 
@@ -35,7 +35,7 @@ def time_sortable(time: str):
 
 
 @retry(3, (requests.exceptions.RequestException,), default=None, backoff=5)
-def fetch_events(endpoint, headers):
+def fetch_events(endpoint: str, headers: dict) -> tuple[list, int] | None:
     """Get events from endpoint."""
     response = requests.get(endpoint, headers=headers, timeout=15)
     response.raise_for_status()
