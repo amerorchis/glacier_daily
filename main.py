@@ -22,6 +22,28 @@ from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
 logger = get_logger(__name__)
 
 
+def email_content_ok(data: dict) -> bool:
+    """Check the generated data has enough real content to be worth emailing.
+
+    Sending a hollow email (every core section empty) is worse than not
+    sending — wrong/empty info erodes trust more than a missed day. The
+    email is considered sendable if at least one core section (weather,
+    roads, trails) has substantive content. LKG fallbacks make an
+    all-empty result rare: it means every core module failed with no
+    good data from earlier in the day.
+    """
+    weather = data.get("weather")
+    if getattr(weather, "daylight_message", "") or getattr(weather, "forecasts", []):
+        return True
+    roads = data.get("roads")
+    if getattr(roads, "closures", []) or getattr(roads, "no_closures_message", ""):
+        return True
+    trails = data.get("trails")
+    return bool(
+        getattr(trails, "closures", []) or getattr(trails, "no_closures_message", "")
+    )
+
+
 def main(
     tag: str = "Glacier Daily Update", test: bool = False, force: bool = False
 ) -> None:
@@ -61,8 +83,14 @@ def main(
                 raise RuntimeError("No subscribers retrieved — Drip API may be down")
 
             # Generate data and upload to website.
-            serve_api(force=force)
+            data = serve_api(force=force)
             api_complete = True
+
+            if not email_content_ok(data):
+                raise RuntimeError(
+                    "Email content check failed: weather, roads, and trails "
+                    "are all empty — not sending a hollow email"
+                )
 
             # Allow time for FTP-uploaded timelapse assets to propagate.
             _TIMELAPSE_PROPAGATION_WAIT = 0 if test else 10
