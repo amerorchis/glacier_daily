@@ -147,7 +147,7 @@ uv run python -W ignore -m peak.peak
 **Entry Points:**
 - `main.py` - Full pipeline: data collection, FTP upload, email delivery
 - `generate_and_upload.py` - Data collection and FTP upload only (used for web version updates)
-- `retry_check.py` - Cron-driven retry checker: retriggers `main.py` if today has no successful email run
+- `retry_check.py` - Cron-driven retry checker: retriggers `main.py` if today's email hasn't gone out (a partial run that already delivered emails does not retrigger)
 - `web_version.py` - Generates the web version of the daily update via Liquid-to-Jinja2 template rendering
 
 **Data Source Modules:**

@@ -34,7 +34,15 @@ PROJECT_DIR = Path(__file__).resolve().parent
 
 
 def has_successful_email_today() -> bool:
-    """Check if today has a successful email run in status.json."""
+    """Check if today's email has already gone out, per status.json.
+
+    A run counts if it finished with overall_status "success" OR if it
+    actually delivered to at least one subscriber (email_delivery.sent > 0).
+    The second condition matters: a run where one data module failed is
+    marked "partial" (or "failure" if a later step raised), but the email
+    still went out — relaunching main.py would send every subscriber a
+    duplicate email.
+    """
     if not STATUS_FILE.exists():
         return False
     try:
@@ -45,11 +53,13 @@ def has_successful_email_today() -> bool:
 
     today = now_mountain().strftime("%Y-%m-%d")
     for run in data.get("runs", []):
-        if (
-            run.get("run_type") == "email"
-            and run.get("overall_status") == "success"
-            and run.get("start_time", "").startswith(today)
-        ):
+        if run.get("run_type") != "email":
+            continue
+        if not run.get("start_time", "").startswith(today):
+            continue
+        if run.get("overall_status") == "success":
+            return True
+        if run.get("email_delivery", {}).get("sent", 0) > 0:
             return True
     return False
 

@@ -78,6 +78,75 @@ def test_wrong_status_returns_false(tmp_path, monkeypatch):
     assert retry_check.has_successful_email_today() is False
 
 
+def test_partial_run_with_emails_sent_returns_true(tmp_path, monkeypatch):
+    """A partial run (module failed) that still sent emails must not retrigger."""
+    monkeypatch.setattr(retry_check, "STATUS_FILE", tmp_path / "status.json")
+    _write_status(
+        tmp_path,
+        [
+            {
+                "run_type": "email",
+                "overall_status": "partial",
+                "start_time": f"{_today()}T07:30:00",
+                "email_delivery": {"sent": 2500, "failed": 0},
+                "errors": ["weather: ConnectionError"],
+            }
+        ],
+    )
+    assert retry_check.has_successful_email_today() is True
+
+
+def test_failure_run_with_emails_sent_returns_true(tmp_path, monkeypatch):
+    """Even a run marked failure (e.g. canary raised) counts if emails went out."""
+    monkeypatch.setattr(retry_check, "STATUS_FILE", tmp_path / "status.json")
+    _write_status(
+        tmp_path,
+        [
+            {
+                "run_type": "email",
+                "overall_status": "failure",
+                "start_time": f"{_today()}T07:30:00",
+                "email_delivery": {"sent": 2500, "failed": 0},
+            }
+        ],
+    )
+    assert retry_check.has_successful_email_today() is True
+
+
+def test_partial_run_with_no_emails_sent_returns_false(tmp_path, monkeypatch):
+    """A run that never delivered anything should still trigger a retry."""
+    monkeypatch.setattr(retry_check, "STATUS_FILE", tmp_path / "status.json")
+    _write_status(
+        tmp_path,
+        [
+            {
+                "run_type": "email",
+                "overall_status": "failure",
+                "start_time": f"{_today()}T07:30:00",
+                "email_delivery": {"sent": 0, "failed": 0},
+            }
+        ],
+    )
+    assert retry_check.has_successful_email_today() is False
+
+
+def test_partial_web_update_run_does_not_count(tmp_path, monkeypatch):
+    """web_update runs never block an email retry, even with delivery data."""
+    monkeypatch.setattr(retry_check, "STATUS_FILE", tmp_path / "status.json")
+    _write_status(
+        tmp_path,
+        [
+            {
+                "run_type": "web_update",
+                "overall_status": "partial",
+                "start_time": f"{_today()}T07:30:00",
+                "email_delivery": {"sent": 5, "failed": 0},
+            }
+        ],
+    )
+    assert retry_check.has_successful_email_today() is False
+
+
 def test_wrong_date_returns_false(tmp_path, monkeypatch):
     monkeypatch.setattr(retry_check, "STATUS_FILE", tmp_path / "status.json")
     _write_status(
