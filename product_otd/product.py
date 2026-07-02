@@ -53,7 +53,7 @@ def prepare_potd_upload() -> tuple[str, str, str]:
     return "product", filename, "email_images/today/product_otd.jpg"
 
 
-def upload_potd():
+def upload_potd() -> str:
     """
     Upload the product image to the glacier.org ftp server.
     """
@@ -139,7 +139,7 @@ def _build_product_data(node: dict) -> dict | None:
     }
 
 
-def get_product(skip_upload: bool = False):
+def get_product(skip_upload: bool = False) -> tuple[str, str | None, str, str]:
     """
     Grab a random product from the Shopify Storefront API.
     """

@@ -13,7 +13,7 @@ from shared.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def start(subs: list):
+def start(subs: list) -> None:
     """
     Start the daily updates for the given list of subscribers.
 
@@ -31,7 +31,7 @@ def start(subs: list):
         update_subscriber(updates)
 
 
-def end(subs: list):
+def end(subs: list) -> None:
     """
     End the daily updates for the given list of subscribers.
 
@@ -48,7 +48,7 @@ def end(subs: list):
         update_subscriber(updates)
 
 
-def update_scheduled_subs():
+def update_scheduled_subs() -> dict[str, list[str]]:
     """
     Update the scheduled subscribers by checking their start and end dates.
 

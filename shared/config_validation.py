@@ -9,7 +9,7 @@ cryptic failures mid-execution.
 import sys
 
 from shared.logging_config import get_logger
-from shared.settings import ConfigError, get_settings
+from shared.settings import ConfigError, get_settings, required_setting_names
 
 logger = get_logger(__name__)
 
@@ -32,18 +32,10 @@ def validate_config() -> None:
         logger.error(str(exc))
         sys.exit(1)
 
-    # Check that required fields are not empty strings
+    # Check that required fields (derived from the Settings dataclass)
+    # are not empty strings
     missing_required = [
-        name
-        for name in (
-            "NPS",
-            "DRIP_TOKEN",
-            "DRIP_ACCOUNT",
-            "FTP_USERNAME",
-            "FTP_PASSWORD",
-            "MAPBOX_TOKEN",
-        )
-        if not getattr(settings, name)
+        name for name in required_setting_names() if not getattr(settings, name)
     ]
 
     for var in OPTIONAL_VARS:
