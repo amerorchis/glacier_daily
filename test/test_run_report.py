@@ -3,7 +3,11 @@
 import json
 import logging
 import os
+import sys
+import threading
 from datetime import timedelta
+
+import pytest
 
 from shared.datetime_utils import now_mountain
 from shared.logging_config import get_logger, setup_logging
@@ -14,6 +18,10 @@ from shared.run_report import (
     upload_status_report,
 )
 from shared.timing import ModuleResult, get_timing
+
+_unix_only = pytest.mark.skipif(
+    sys.platform == "win32", reason="File locking requires Unix"
+)
 
 
 class TestRunReport:
@@ -383,3 +391,74 @@ class TestUploadStatusReport:
             data = json.load(f)
         assert len(data["runs"]) == 1
         assert data["runs"][0]["run_id"] == "fresh"
+
+    def test_no_tmp_file_left_behind(self, tmp_path, monkeypatch):
+        """The atomic-write temp file must be renamed away."""
+        status_file = str(tmp_path / "status.json")
+        monkeypatch.setattr("shared.run_report.STATUS_FILE", status_file)
+
+        report = RunReport(
+            run_id="r1", run_type="email", end_time=now_mountain().isoformat()
+        )
+        upload_status_report(report)
+
+        assert not os.path.exists(status_file + ".tmp")
+
+    @_unix_only
+    def test_lock_released_after_write(self, tmp_path, monkeypatch):
+        """The status lock must be free once upload_status_report returns."""
+        import fcntl
+
+        status_file = str(tmp_path / "status.json")
+        monkeypatch.setattr("shared.run_report.STATUS_FILE", status_file)
+
+        report = RunReport(
+            run_id="r1", run_type="email", end_time=now_mountain().isoformat()
+        )
+        upload_status_report(report)
+
+        # We can immediately take the lock ourselves without blocking
+        fd = os.open(status_file + ".lock", os.O_CREAT | os.O_WRONLY)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)  # raises if still held
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+
+    @_unix_only
+    def test_concurrent_writers_do_not_lose_entries(self, tmp_path, monkeypatch):
+        """Overlapping email and web_update writers must both keep their entries.
+
+        This is the duplicate-email regression: an unlocked read-modify-write
+        let the web_update run clobber the email run's success entry, which
+        made retry_check re-send the email.
+        """
+        status_file = str(tmp_path / "status.json")
+        monkeypatch.setattr("shared.run_report.STATUS_FILE", status_file)
+
+        end_time = now_mountain().isoformat()
+        n_per_thread = 10
+
+        def write_reports(run_type):
+            for i in range(n_per_thread):
+                upload_status_report(
+                    RunReport(
+                        run_id=f"{run_type}-{i}",
+                        run_type=run_type,
+                        end_time=end_time,
+                    )
+                )
+
+        threads = [
+            threading.Thread(target=write_reports, args=("email",)),
+            threading.Thread(target=write_reports, args=("web_update",)),
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        with open(status_file, encoding="utf-8") as f:
+            data = json.load(f)
+        run_ids = {r["run_id"] for r in data["runs"]}
+        assert len(run_ids) == 2 * n_per_thread

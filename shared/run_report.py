@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
+import sys
+import time
 from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from typing import Any
@@ -17,6 +20,11 @@ logger = get_logger(__name__)
 
 STATUS_FILE = "server/status.json"
 HISTORY_DAYS = 7
+_LOCK_TIMEOUT_SECS = 10
+
+_HAS_FCNTL = sys.platform != "win32"
+if _HAS_FCNTL:
+    import fcntl
 
 
 @dataclass
@@ -104,34 +112,80 @@ def build_report(environment: str = "") -> RunReport:
     return report
 
 
+def _acquire_status_lock() -> int | None:
+    """Serialize status-file writers across the email and web_update processes.
+
+    Returns a locked file descriptor, or None if locking is unavailable
+    (Windows) or the lock could not be acquired within the timeout. On
+    timeout we proceed unlocked: losing a concurrent writer's entry is
+    bad, but silently dropping this report is worse — a lost email-run
+    entry would make retry_check re-send the email.
+    """
+    if not _HAS_FCNTL:
+        return None
+    fd = os.open(STATUS_FILE + ".lock", os.O_CREAT | os.O_WRONLY)
+    deadline = time.monotonic() + _LOCK_TIMEOUT_SECS
+    while True:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return fd
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                logger.warning(
+                    "Status lock not acquired within %ds; writing anyway",
+                    _LOCK_TIMEOUT_SECS,
+                )
+                os.close(fd)
+                return None
+            time.sleep(0.1)
+
+
+def _release_status_lock(fd: int | None) -> None:
+    """Release the status-file lock acquired by _acquire_status_lock."""
+    if fd is None:
+        return
+    with contextlib.suppress(OSError):
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
 def upload_status_report(report: RunReport) -> None:
     """Write the run report to a rolling status file and upload via FTP.
 
     Maintains a local JSON file with the last HISTORY_DAYS days of runs.
-    Both cron jobs (email + web_update) contribute to the same history.
+    Both cron jobs (email + web_update) contribute to the same history,
+    so the read-modify-write is guarded by an flock and the file is
+    replaced atomically — a concurrent writer can never clobber an entry
+    or leave a half-written file for readers like retry_check.
     """
-    # Load existing history from local file
-    runs: list[dict] = []
-    if os.path.exists(STATUS_FILE):
-        try:
-            with open(STATUS_FILE, encoding="utf-8") as f:
-                data = json.load(f)
-            runs = data.get("runs", [])
-        except (json.JSONDecodeError, OSError):
-            runs = []
-
-    # Append current run
-    runs.append(report.to_dict())
-
-    # Trim entries older than HISTORY_DAYS
-    cutoff = (now_mountain() - timedelta(days=HISTORY_DAYS)).isoformat()
-    runs = [r for r in runs if r.get("end_time", "") >= cutoff]
-
-    # Write and upload
-    status_data = {"runs": runs}
     os.makedirs(os.path.dirname(STATUS_FILE) or ".", exist_ok=True)
-    with open(STATUS_FILE, "w", encoding="utf-8") as f:
-        json.dump(status_data, f, indent=2, default=str)
+    lock_fd = _acquire_status_lock()
+    try:
+        # Load existing history from local file
+        runs: list[dict] = []
+        if os.path.exists(STATUS_FILE):
+            try:
+                with open(STATUS_FILE, encoding="utf-8") as f:
+                    data = json.load(f)
+                runs = data.get("runs", [])
+            except (json.JSONDecodeError, OSError):
+                runs = []
+
+        # Append current run
+        runs.append(report.to_dict())
+
+        # Trim entries older than HISTORY_DAYS
+        cutoff = (now_mountain() - timedelta(days=HISTORY_DAYS)).isoformat()
+        runs = [r for r in runs if r.get("end_time", "") >= cutoff]
+
+        # Atomic replace so readers never see a partial file
+        status_data = {"runs": runs}
+        tmp_file = STATUS_FILE + ".tmp"
+        with open(tmp_file, "w", encoding="utf-8") as f:
+            json.dump(status_data, f, indent=2, default=str)
+        os.replace(tmp_file, STATUS_FILE)
+    finally:
+        _release_status_lock(lock_fd)
 
     # status.json is served from the server/ directory via the public API endpoint
     logger.info("Status report written (%d runs in history)", len(runs))
