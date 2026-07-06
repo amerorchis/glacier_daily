@@ -273,7 +273,7 @@ def test_sunset_template_renders_video(sample_data):
         )
         with open(out_file, encoding="utf-8") as f:
             content = f.read()
-        assert "Tonight's Sunset at Glacier" in content
+        assert "Tonight's Glacier Sunset" in content
         assert 'href="https://glacier.org/webcam-timelapse/?type=daily&id=x"' in content
         assert 'src="https://glacier.org/daily/sunrise_still/x_sunset.jpg"' in content
         assert "Click to watch the timelapse" in content
