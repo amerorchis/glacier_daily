@@ -278,6 +278,7 @@ def test_sunset_template_renders_video(sample_data):
         assert 'src="https://glacier.org/daily/sunrise_still/x_sunset.jpg"' in content
         assert "Click to watch the timelapse" in content
         assert "isn't available" not in content
+        assert "http://api.glacier.org/dripactions?action=stopsunset&email=" in content
 
 
 def test_sunset_template_fallback_when_blank(sample_data):
