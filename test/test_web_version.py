@@ -91,6 +91,9 @@ def sample_data():
         "sunrise_vid": "",
         "sunrise_still": "",
         "sunrise_str": "",
+        "sunset_vid": "",
+        "sunset_still": "",
+        "sunset_str": "",
     }
 
 
@@ -258,9 +261,45 @@ def test_wifi_renders_structured_data(sample_data):
         assert "Red Bus Hiking Stick Medallion" not in content
 
 
+def test_sunset_template_renders_video(sample_data):
+    """Sunset template shows the linked thumbnail when tonight's video exists."""
+    sample_data["sunset_vid"] = "https://glacier.org/webcam-timelapse/?type=daily&id=x"
+    sample_data["sunset_still"] = "https://glacier.org/daily/sunrise_still/x_sunset.jpg"
+    sample_data["sunset_str"] = "Tonight's"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_file = os.path.join(tmpdir, "sunset.html")
+        web_version(
+            sample_data, file_name=out_file, template_path="sunset_template.html"
+        )
+        with open(out_file, encoding="utf-8") as f:
+            content = f.read()
+        assert "Tonight's Sunset at Glacier" in content
+        assert 'href="https://glacier.org/webcam-timelapse/?type=daily&id=x"' in content
+        assert 'src="https://glacier.org/daily/sunrise_still/x_sunset.jpg"' in content
+        assert "Click to watch the timelapse" in content
+        assert "isn't available" not in content
+
+
+def test_sunset_template_fallback_when_blank(sample_data):
+    """Sunset template shows the fallback message when fields are blank."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_file = os.path.join(tmpdir, "sunset.html")
+        web_version(
+            sample_data, file_name=out_file, template_path="sunset_template.html"
+        )
+        with open(out_file, encoding="utf-8") as f:
+            content = f.read()
+        assert "isn't available" in content
+        assert "Click to watch the timelapse" not in content
+
+
 @pytest.mark.parametrize(
     "template",
-    ["email_html/email_template.html", "email_html/wifi_email.html"],
+    [
+        "email_html/email_template.html",
+        "email_html/wifi_email.html",
+        "email_html/sunset_template.html",
+    ],
 )
 def test_email_template_no_bare_truthiness(template):
     """Liquid treats empty strings as truthy, unlike Jinja2.

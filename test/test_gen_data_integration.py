@@ -38,6 +38,9 @@ EXPECTED_KEYS = {
     "sunrise_vid",
     "sunrise_still",
     "sunrise_str",
+    "sunset_vid",
+    "sunset_still",
+    "sunset_str",
     "gnpc-events",
 }
 

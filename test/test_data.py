@@ -61,6 +61,10 @@ def generated_data():
             "generate_and_upload.process_video", return_value=("vid", "still", "str")
         ),
         patch(
+            "generate_and_upload.process_sunset_video",
+            return_value=("s_vid", "s_still", "s_str"),
+        ),
+        patch(
             "generate_and_upload.get_campground_status",
             return_value=CampgroundsResult(statuses=["campground status"]),
         ),
@@ -98,6 +102,9 @@ def expected_keys():
         "image_otd_link",
         "sunrise_vid",
         "sunrise_still",
+        "sunset_vid",
+        "sunset_still",
+        "sunset_str",
     }
 
 

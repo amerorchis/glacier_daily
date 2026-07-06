@@ -90,7 +90,7 @@ Tables queried:
 - Module: `drip/drip_actions.py`, `drip/subscriber_list.py`, `drip/update_subscriber.py`
 - Endpoints used:
   - `events` — Record single subscriber events
-  - `events/batches` — Bulk workflow triggers for email delivery
+  - `events/batches` — Bulk workflow triggers for email delivery (event actions: "Glacier Daily Update trigger" for the morning email, "Sunset Timelapse trigger" for the sunset email; defined in `shared/constants.py`)
   - `workflows/{campaign_id}/subscribers` — Send to campaign
   - `subscribers` — List and update subscribers
 - Authentication: Bearer token (`DRIP_TOKEN`)
@@ -134,8 +134,8 @@ Tables queried:
 - Endpoints:
   - `http://timelapse.glacierconservancy.org/daily_timelapse_data.json`
   - `http://timelapse.glacierconservancy.org/sunrise_thumbnails.json`
-- Module: `sunrise_timelapse/get_timelapse.py`
-- Purpose: Timelapse video data and thumbnail images
+- Modules: `sunrise_timelapse/get_timelapse.py`, `sunset_timelapse/get_timelapse.py`
+- Purpose: Timelapse video data and thumbnail images. Both feeds carry sunrise and sunset entries; sunset entries use ids like `{M}_{D}_{YYYY}_sunset_timelapse` (plus a rolling `latest_sunset`) and thumbnails named `{M}_{D}_{YYYY}_sunset.jpg`
 - Authentication: None
 
 ### Cache Refresh Endpoint

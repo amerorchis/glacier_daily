@@ -4,7 +4,7 @@ This module provides a function to retrieve a list of subscribers from the Drip 
 
 import requests
 
-from shared.constants import DRIP_BATCH_SIZE
+from shared.constants import DRIP_BATCH_SIZE, EMAIL_LIST_TAGS
 from shared.logging_config import get_logger
 from shared.retry import retry
 from shared.settings import get_settings
@@ -56,7 +56,7 @@ def subscriber_list(tag="Glacier Daily Update") -> list:
         subs.extend(data["subscribers"])
 
     # If we're getting a list of people to send to just grab emails, else send all of their data.
-    if tag in ["Glacier Daily Update", "Test Glacier Daily Update"]:
+    if tag in EMAIL_LIST_TAGS:
         subs = [i["email"] for i in subs]
 
     return subs

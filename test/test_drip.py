@@ -123,6 +123,63 @@ def test_bulk_workflow_trigger(monkeypatch, mock_required_settings):
     assert "url" in called
 
 
+def test_bulk_workflow_trigger_default_event(monkeypatch, mock_required_settings):
+    """Without an event argument, the daily update trigger action is sent."""
+    import json as json_lib
+
+    captured = {}
+
+    def fake_post(url, headers, data, timeout):
+        captured["data"] = data
+
+        class R:
+            status_code = 201
+
+            def json(self):
+                return {}
+
+        return R()
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    _set_drip_env(monkeypatch)
+    drip_actions.bulk_workflow_trigger(["a@example.com"])
+    payload = json_lib.loads(captured["data"])
+    events = payload["batches"][0]["events"]
+    assert events == [
+        {"email": "a@example.com", "action": "Glacier Daily Update trigger"}
+    ]
+
+
+def test_bulk_workflow_trigger_custom_event(monkeypatch, mock_required_settings):
+    """A custom event argument (e.g. the sunset trigger) is sent to Drip."""
+    import json as json_lib
+
+    from shared.constants import SUNSET_TIMELAPSE_EVENT_ACTION
+
+    captured = {}
+
+    def fake_post(url, headers, data, timeout):
+        captured["data"] = data
+
+        class R:
+            status_code = 201
+
+            def json(self):
+                return {}
+
+        return R()
+
+    monkeypatch.setattr(drip_actions, "requests", types.SimpleNamespace(post=fake_post))
+    _set_drip_env(monkeypatch)
+    result = drip_actions.bulk_workflow_trigger(
+        ["a@example.com"], event=SUNSET_TIMELAPSE_EVENT_ACTION
+    )
+    payload = json_lib.loads(captured["data"])
+    events = payload["batches"][0]["events"]
+    assert events == [{"email": "a@example.com", "action": "Sunset Timelapse trigger"}]
+    assert result.sent == 1
+
+
 def test_bulk_workflow_trigger_chunking(monkeypatch, mock_required_settings):
     """Verify >1000 subscribers are chunked into batches of 1000."""
     post_calls = []
@@ -272,6 +329,31 @@ def test_subscriber_list_returns_full_objects(monkeypatch, mock_required_setting
     result = subscriber_list.subscriber_list(tag="Daily Start Set")
     assert isinstance(result[0], dict)
     assert result[0]["email"] == "a@example.com"
+
+
+def test_subscriber_list_sunset_tag_returns_emails(monkeypatch, mock_required_settings):
+    """Sunset send-list tags return bare email addresses, like the daily tags."""
+
+    class FakeResponse:
+        def json(self):
+            return {
+                "subscribers": [
+                    {"email": "a@example.com", "tags": ["Sunset Timelapse"]}
+                ],
+                "meta": {"total_pages": 1},
+            }
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(
+        subscriber_list,
+        "requests",
+        types.SimpleNamespace(get=lambda *a, **k: FakeResponse()),
+    )
+    _set_drip_env(monkeypatch)
+    result = subscriber_list.subscriber_list(tag="Sunset Timelapse")
+    assert result == ["a@example.com"]
 
 
 def test_subscriber_list_failure(monkeypatch, mock_required_settings):

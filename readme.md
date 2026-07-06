@@ -13,6 +13,7 @@ An automated system that generates and distributes daily email updates about con
 - Trail and road status tracking
 - Daily featured peak with satellite imagery
 - Sunrise timelapse videos
+- Evening sunset timelapse email
 - Ranger-led activity schedules
 - Featured product and image of the day
 - Aurora forecast
@@ -48,6 +49,13 @@ uv run python main.py --tag "Test Glacier Daily Update"
 
 # Force re-fetch all data (clear cache)
 uv run python main.py --force
+
+# Send the sunset timelapse email (invoked by the timelapse system each
+# evening after it uploads the sunset video — not run by cron here)
+uv run python main.py --sunset
+
+# Sunset test mode (test subscribers only)
+uv run python main.py --sunset --tag "Test Sunset Timelapse"
 
 # Generate and upload data only (no email sending)
 uv run python generate_and_upload.py
@@ -146,6 +154,7 @@ uv run python -W ignore -m peak.peak
 
 **Entry Points:**
 - `main.py` - Full pipeline: data collection, FTP upload, email delivery
+- `main.py --sunset` - Sunset email pipeline: regenerates/uploads email.json and fires the "Sunset Timelapse trigger" Drip event to subscribers tagged "Sunset Timelapse". Invoked by the separate timelapse system each evening after the sunset video uploads. Today-or-nothing: if tonight's sunset video isn't in the timelapse feed, no email is sent. Tag and event names live in `shared/constants.py`; the Drip workflow email uses `email_html/sunset_template.html`
 - `generate_and_upload.py` - Data collection and FTP upload only (used for web version updates)
 - `retry_check.py` - Cron-driven retry checker: retriggers `main.py` if today's email hasn't gone out (a partial run that already delivered emails does not retrigger)
 - `web_version.py` - Generates the web version of the daily update via Liquid-to-Jinja2 template rendering
@@ -159,6 +168,7 @@ uv run python -W ignore -m peak.peak
 - `image_otd/` - Daily image selection from Flickr
 - `product_otd/` - Featured product from Shopify
 - `sunrise_timelapse/` - Video processing and timelapse compilation
+- `sunset_timelapse/` - Tonight's sunset video/thumbnail selection for the sunset email
 - `notices/` - Administrative notices from Google Sheets
 
 **Infrastructure:**

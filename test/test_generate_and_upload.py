@@ -69,6 +69,9 @@ def mock_all_data_sources(monkeypatch):
     monkeypatch.setattr(gau, "peak", lambda **kw: ("peak", "peak_img", "peak_map"))
     monkeypatch.setattr(gau, "process_video", lambda: ("vid", "still", "descriptor"))
     monkeypatch.setattr(
+        gau, "process_sunset_video", lambda: ("s_vid", "s_still", "s_descriptor")
+    )
+    monkeypatch.setattr(
         gau,
         "get_product",
         lambda **kw: ("prod_title", "prod_img", "prod_link", "prod_desc"),
@@ -108,6 +111,9 @@ def test_gen_data_keys_present(mock_all_data_sources):
         "sunrise_vid",
         "sunrise_still",
         "sunrise_str",
+        "sunset_vid",
+        "sunset_still",
+        "sunset_str",
         "gnpc-events",
     ]
 
@@ -145,6 +151,9 @@ def test_gen_data_string_fields_are_strings(mock_all_data_sources):
         "sunrise_vid",
         "sunrise_still",
         "sunrise_str",
+        "sunset_vid",
+        "sunset_still",
+        "sunset_str",
         "weather_image",
         "peak_map",
     ]
@@ -474,6 +483,7 @@ class TestModuleRegistryCachingContract:
             "hiker_biker": True,
             "events": True,
             "sunrise": True,
+            "sunset": True,
             "notices": True,
             "gnpc_events": False,
             "image_otd": False,
@@ -530,6 +540,7 @@ class TestLKGSave:
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "pk_map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
+        monkeypatch.setattr(gau, "process_sunset_video", lambda: ("sv", "ss", "sd"))
         monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
         monkeypatch.setattr(
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
@@ -574,6 +585,7 @@ class TestLKGFallback:
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
+        monkeypatch.setattr(gau, "process_sunset_video", lambda: ("sv", "ss", "sd"))
         monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
         monkeypatch.setattr(
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
@@ -625,6 +637,22 @@ class TestLKGFallback:
         assert result["sunrise_vid"] == "v"
         assert result["sunrise_still"] == "s"
         assert result["sunrise_str"] == "d"
+
+    def test_sunset_lkg_fallback(self, monkeypatch):
+        """Sunset tuple is reconstructed from LKG on failure."""
+        self._setup_all_mocks(monkeypatch)
+        gau.gen_data()  # Populate LKG
+
+        # Simulate sunset failure
+        monkeypatch.setattr(
+            gau,
+            "process_sunset_video",
+            lambda: (_ for _ in ()).throw(ConnectionError("down")),
+        )
+        result, _ = gau.gen_data()
+        assert result["sunset_vid"] == "sv"
+        assert result["sunset_still"] == "ss"
+        assert result["sunset_str"] == "sd"
 
     def test_lkg_fallback_returns_dataclass_not_json_string(self, monkeypatch):
         """LKG fallback must return usable dataclasses, not raw JSON text.
@@ -721,6 +749,7 @@ class TestLKGDateDeterministic:
         monkeypatch.setattr(gau, "get_image_otd", lambda **kw: ("img", "title", "link"))
         monkeypatch.setattr(gau, "peak", lambda **kw: ("pk", "pk_img", "map"))
         monkeypatch.setattr(gau, "process_video", lambda: ("v", "s", "d"))
+        monkeypatch.setattr(gau, "process_sunset_video", lambda: ("sv", "ss", "sd"))
         monkeypatch.setattr(gau, "get_product", lambda **kw: ("t", "i", "l", "d"))
         monkeypatch.setattr(
             gau, "get_notices", lambda: NoticesResult(fallback_message="No notices")
