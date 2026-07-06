@@ -9,7 +9,7 @@ import requests
 
 from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
-from shared.constants import DRIP_BATCH_SIZE
+from shared.constants import DAILY_UPDATE_EVENT_ACTION, DRIP_BATCH_SIZE
 from shared.logging_config import get_logger
 from shared.retry import retry
 from shared.settings import get_settings
@@ -56,12 +56,16 @@ def _post_drip_batch(url: str, headers: dict, data: dict) -> requests.Response |
     return requests.post(url, headers=headers, data=json.dumps(data), timeout=15)
 
 
-def bulk_workflow_trigger(sub_list: list) -> BatchResult:
+def bulk_workflow_trigger(
+    sub_list: list, event: str = DAILY_UPDATE_EVENT_ACTION
+) -> BatchResult:
     """
     Trigger a Drip bulk event batch to send at higher throughput than individual API calls.
 
     Args:
         sub_list (list): A list of subscriber emails.
+        event (str): The Drip event action to record for each subscriber.
+            Defaults to the daily update trigger.
 
     Returns:
         BatchResult: Counts of sent and failed subscribers.
@@ -75,8 +79,6 @@ def bulk_workflow_trigger(sub_list: list) -> BatchResult:
         "Content-Type": "application/vnd.api+json",
         "User-Agent": "Glacier Daily API (glacier.org)",
     }
-
-    event = "Glacier Daily Update trigger"
 
     chunks = [
         sub_list[i : i + DRIP_BATCH_SIZE]

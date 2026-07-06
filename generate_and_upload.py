@@ -50,6 +50,7 @@ from shared.run_report import complete_run
 from shared.settings import get_settings
 from shared.timing import timed
 from sunrise_timelapse.get_timelapse import process_video
+from sunset_timelapse.get_timelapse import process_sunset_video
 from trails_and_cgs.frontcountry_cgs import get_campground_status
 from trails_and_cgs.trails import get_closed_trails
 from weather.weather import weather_data
@@ -107,6 +108,14 @@ MODULES: tuple[ModuleSpec, ...] = (
         "sunrise",
         process_video,
         ("sunrise_vid", "sunrise_still", "sunrise_str"),
+        lambda: ("", "", ""),
+    ),
+    # Sunset fields are blank until the timelapse system publishes
+    # tonight's video (evenings) — template guards hide the section
+    ModuleSpec(
+        "sunset",
+        process_sunset_video,
+        ("sunset_vid", "sunset_still", "sunset_str"),
         lambda: ("", "", ""),
     ),
     ModuleSpec("notices", get_notices, ("notices",), NoticesResult),

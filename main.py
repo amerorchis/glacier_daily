@@ -12,12 +12,14 @@ from drip.canary_check import CanaryResult, check_canary_delivery
 from drip.drip_actions import bulk_workflow_trigger, get_subs
 from generate_and_upload import serve_api
 from shared.config_validation import validate_config
+from shared.constants import SUNSET_TIMELAPSE_EVENT_ACTION, SUNSET_TIMELAPSE_TAG
 from shared.lock import acquire_lock, release_lock
 from shared.logging_config import get_logger, setup_logging
 from shared.run_context import start_run
 from shared.run_report import RunReport, complete_run
 from shared.settings import get_settings
 from sunrise_timelapse.sleep_to_sunrise import sleep_time as sleep_to_sunrise
+from sunset_timelapse.get_timelapse import TONIGHT_DESCRIPTOR
 
 logger = get_logger(__name__)
 
@@ -42,6 +44,114 @@ def email_content_ok(data: dict) -> bool:
     return bool(
         getattr(trails, "closures", []) or getattr(trails, "no_closures_message", "")
     )
+
+
+def sunset_content_ok(data: dict) -> bool:
+    """Check the generated data contains tonight's sunset timelapse.
+
+    The sunset email is today-or-nothing: it exists to say "here is
+    tonight's sunset", so sending a stale video is worse than not
+    sending. The fields are blank when the timelapse system hasn't
+    published today's entry, and the descriptor is "Latest" when only
+    the stale latest_sunset fallback was available (kept for the web
+    version / email.json).
+    """
+    return bool(
+        data.get("sunset_vid")
+        and data.get("sunset_still")
+        and data.get("sunset_str") == TONIGHT_DESCRIPTOR
+    )
+
+
+def sunset_main(
+    tag: str = SUNSET_TIMELAPSE_TAG, test: bool = False, force: bool = False
+) -> None:
+    """
+    Send the evening sunset timelapse email.
+
+    Invoked via ``main.py --sunset`` by the timelapse system after it
+    finishes uploading the sunset timelapse. Regenerates and uploads
+    email.json (so my.daily_update.sunset_vid / sunset_still are fresh),
+    then fires the sunset Drip workflow trigger — unless tonight's video
+    is missing, in which case no email is sent.
+
+    The canary delivery check is skipped: it isn't email-type-aware
+    (any same-day email from the sender would verify), so it can't
+    distinguish the sunset email from the morning daily update.
+
+    Args:
+        tag (str): Tag to filter subscribers. Defaults to 'Sunset Timelapse'.
+        test (bool): Whether running in test mode (skips sleep delays).
+        force (bool): Clear cached data and re-fetch everything fresh.
+    """
+    settings = get_settings()  # Load email.env so ENVIRONMENT is available
+    run = start_run("sunset_email")
+    setup_logging()
+    logger.info("Starting run %s (type=%s)", run.run_id, run.run_type)
+    validate_config()
+
+    lock_fd = acquire_lock()
+    if lock_fd is None:
+        logger.error("Another instance is already running. Exiting.")
+        return
+
+    subscribers: list[str] = []
+    try:
+        batch_result = None
+        run_error: str | None = None
+        api_complete = False
+        try:
+            # Retrieve subscribers from Drip.
+            subscribers = get_subs(tag)
+            logger.info("Sunset subscribers found: %d", len(subscribers))
+
+            if not subscribers:
+                raise RuntimeError("No subscribers retrieved — Drip API may be down")
+
+            # Regenerate data and upload email.json to the website.
+            data = serve_api(force=force)
+            api_complete = True
+
+            if not sunset_content_ok(data):
+                raise RuntimeError(
+                    "Sunset content check failed: tonight's sunset timelapse "
+                    "is not available (the timelapse upload presumably "
+                    "failed) — not sending the sunset email"
+                )
+
+            # Allow time for FTP-uploaded timelapse assets to propagate.
+            _TIMELAPSE_PROPAGATION_WAIT = 0 if test else 10
+            sleep(_TIMELAPSE_PROPAGATION_WAIT)
+
+            # Send the email to each subscriber using Drip API.
+            batch_result = bulk_workflow_trigger(
+                subscribers, event=SUNSET_TIMELAPSE_EVENT_ACTION
+            )
+        except Exception:
+            phase = "data generation/upload" if not api_complete else "email delivery"
+            logger.exception("%s failed", phase)
+            run_error = f"{phase} raised an exception (see logs)"
+        finally:
+
+            def _decorate(report: RunReport) -> None:
+                report.subscriber_count = len(subscribers)
+                if batch_result:
+                    report.email_delivery = {
+                        "sent": batch_result.sent,
+                        "failed": batch_result.failed,
+                    }
+                if run_error:
+                    report.errors.append(run_error)
+                    if not batch_result:
+                        report.email_delivery = {"sent": 0, "failed": 0}
+
+            complete_run(
+                settings.ENVIRONMENT,
+                failed=bool(run_error),
+                decorate=_decorate,
+            )
+    finally:
+        release_lock(lock_fd)
 
 
 def main(
@@ -148,7 +258,19 @@ if __name__ == "__main__":  # pragma: no cover
         action="store_true",
         help="Clear cached data and re-fetch everything fresh",
     )
+    parser.add_argument(
+        "--sunset",
+        action="store_true",
+        help="Send the sunset timelapse email instead of the daily update "
+        "(invoked by the timelapse system after the sunset video uploads)",
+    )
     args = parser.parse_args()
 
-    test_mode = args.tag != "Glacier Daily Update"
-    main(args.tag, test=test_mode, force=args.force)
+    if args.sunset:
+        # --tag still selects the daily default here; swap in the sunset tag
+        # unless the caller overrode it (e.g. 'Test Sunset Timelapse')
+        tag = SUNSET_TIMELAPSE_TAG if args.tag == "Glacier Daily Update" else args.tag
+        sunset_main(tag, test=tag != SUNSET_TIMELAPSE_TAG, force=args.force)
+    else:
+        test_mode = args.tag != "Glacier Daily Update"
+        main(args.tag, test=test_mode, force=args.force)

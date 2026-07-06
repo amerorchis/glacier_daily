@@ -94,9 +94,11 @@ def select_video(
                 id_ = entry.get("vid_src").split("/")[-1].rsplit("_", 2)[0]
                 return id_, entry.get("url"), "Latest"
 
-        # If no latest found, return the first valid entry
-        if video_entries:
-            return video_entries[0].get("id"), video_entries[0].get("url"), "Latest"
+        # If no latest found, return the first sunrise entry
+        # (the feed also carries sunset entries)
+        for entry in video_entries:
+            if "sunrise" in entry.get("id", ""):
+                return entry.get("id"), entry.get("url"), "Latest"
 
         return None, None, None
 

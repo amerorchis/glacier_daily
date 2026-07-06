@@ -209,3 +209,129 @@ def test_main_fails_when_no_subscribers(monkeypatch):
     # Data generation and email sending should not have been attempted
     assert "serve_api" not in calls
     assert not any("bulk_workflow_trigger" in c for c in calls)
+
+
+# ============================================================================
+# Sunset email flow (main.py --sunset)
+# ============================================================================
+
+
+def make_sunset_data(descriptor="Tonight's", vid="vid_url", still="still_url"):
+    """Minimal serve_api output for the sunset content gate."""
+    return {
+        "sunset_vid": vid,
+        "sunset_still": still,
+        "sunset_str": descriptor,
+    }
+
+
+def _patch_sunset_main(monkeypatch, calls):
+    """Apply standard monkeypatches for sunset_main tests."""
+    monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main, "validate_config", lambda: None)
+    monkeypatch.setattr(main, "acquire_lock", lambda: 999)
+    monkeypatch.setattr(main, "release_lock", lambda fd: None)
+    monkeypatch.setattr(
+        main,
+        "get_subs",
+        lambda tag: calls.append(f"get_subs:{tag}") or ["test@example.com"],
+    )
+    monkeypatch.setattr(
+        main,
+        "serve_api",
+        lambda **kw: calls.append("serve_api") or make_sunset_data(),
+    )
+    monkeypatch.setattr(main, "sleep", lambda x: calls.append(f"sleep:{x}"))
+    monkeypatch.setattr(
+        main,
+        "bulk_workflow_trigger",
+        lambda subs, event=None: calls.append(f"bulk_workflow_trigger:{subs}:{event}"),
+    )
+
+
+def test_sunset_main_runs_all_steps(monkeypatch):
+    calls = []
+    _patch_sunset_main(monkeypatch, calls)
+
+    main.sunset_main(test=True)
+    assert calls == [
+        "get_subs:Sunset Timelapse",
+        "serve_api",
+        "sleep:0",
+        "bulk_workflow_trigger:['test@example.com']:Sunset Timelapse trigger",
+    ]
+
+
+def test_sunset_main_fails_when_no_subscribers(monkeypatch):
+    """When get_subs returns empty list, nothing is generated or sent."""
+    calls = []
+    _patch_sunset_main(monkeypatch, calls)
+    monkeypatch.setattr(main, "get_subs", lambda tag: [])
+
+    main.sunset_main(test=True)
+    assert "serve_api" not in calls
+    assert not any("bulk_workflow_trigger" in c for c in calls)
+
+
+def test_sunset_main_skips_email_when_video_missing(monkeypatch):
+    """Blank sunset fields (timelapse failed) → no trigger fired."""
+    calls = []
+    _patch_sunset_main(monkeypatch, calls)
+    monkeypatch.setattr(
+        main,
+        "serve_api",
+        lambda **kw: (
+            calls.append("serve_api")
+            or make_sunset_data(descriptor="", vid="", still="")
+        ),
+    )
+
+    # Should not raise — the gate's exception is caught and logged
+    main.sunset_main(test=True)
+    assert "serve_api" in calls
+    assert not any("bulk_workflow_trigger" in c for c in calls)
+
+
+def test_sunset_main_skips_email_when_only_stale_video(monkeypatch):
+    """A 'Latest' (stale) fallback video must not trigger the email."""
+    calls = []
+    _patch_sunset_main(monkeypatch, calls)
+    monkeypatch.setattr(
+        main,
+        "serve_api",
+        lambda **kw: calls.append("serve_api") or make_sunset_data(descriptor="Latest"),
+    )
+
+    main.sunset_main(test=True)
+    assert not any("bulk_workflow_trigger" in c for c in calls)
+
+
+def test_sunset_main_exits_when_locked(monkeypatch):
+    calls = []
+    _patch_sunset_main(monkeypatch, calls)
+    monkeypatch.setattr(main, "acquire_lock", lambda: None)
+
+    main.sunset_main(test=True)
+    assert not calls
+
+
+def test_sunset_main_catches_email_delivery_exception(monkeypatch):
+    """When bulk_workflow_trigger raises, sunset_main logs instead of propagating."""
+    calls = []
+    _patch_sunset_main(monkeypatch, calls)
+
+    def raise_on_trigger(subs, event=None):
+        raise RuntimeError("Drip API exploded")
+
+    monkeypatch.setattr(main, "bulk_workflow_trigger", raise_on_trigger)
+
+    main.sunset_main(test=True)
+    assert "serve_api" in calls
+
+
+def test_sunset_content_ok_requires_tonight_descriptor():
+    assert main.sunset_content_ok(make_sunset_data())
+    assert not main.sunset_content_ok(make_sunset_data(descriptor="Latest"))
+    assert not main.sunset_content_ok(make_sunset_data(vid=""))
+    assert not main.sunset_content_ok(make_sunset_data(still=""))
+    assert not main.sunset_content_ok({})
