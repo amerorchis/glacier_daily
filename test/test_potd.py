@@ -83,6 +83,41 @@ class TestGetProduct:
             assert product_link == "https://shop.glacier.org/products/test-product"
             assert desc == "Test product description"
 
+    def test_get_product_skips_tickets(self, mock_graphql_response, mock_env_vars):
+        """Ticket products are never selected as product of the day."""
+        ticket_node = {
+            "handle": "july-15th-singers-dancers-ticket",
+            "title": "July 15th: Singers & Dancers Ticket",
+            "tags": ["exclude-from-sold-out", "s&d-ticket", "scheduled"],
+            "description": "Event ticket",
+            "totalInventory": 100,
+            "tracksInventory": True,
+            "seo": {"description": "Event ticket"},
+            "featuredImage": {"url": "https://example.com/ticket.jpg"},
+        }
+        edges = mock_graphql_response["data"]["products"]["edges"]
+        edges.insert(0, {"node": ticket_node})
+
+        mock_rng = MagicMock()
+        mock_rng.randrange.side_effect = [0, 1]
+        with (
+            patch("requests.post") as mock_post,
+            patch("product_otd.product.resize_image", return_value=True),
+            patch("product_otd.product.upload_potd") as mock_upload,
+            patch("random.Random", return_value=mock_rng),
+        ):
+            mock_post.return_value = Mock(
+                status_code=200,
+                text=json.dumps(mock_graphql_response),
+                raise_for_status=Mock(),
+            )
+            mock_upload.return_value = "https://example.com/uploaded.jpg"
+
+            title, _image_url, product_link, _desc = get_product()
+
+            assert title == "Test Product"
+            assert product_link == "https://shop.glacier.org/products/test-product"
+
     def test_get_product_image_fetch_fails(self, mock_graphql_response, mock_env_vars):
         """Test that failed image fetch returns empty tuple."""
         mock_rng = MagicMock()

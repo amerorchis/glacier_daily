@@ -33,6 +33,7 @@ query Products($cursor: String) {{
       node {{
         handle
         title
+        tags
         description
         totalInventory
         tracksInventory
@@ -115,12 +116,22 @@ def _fetch_eligible_products(endpoint: str, headers: dict) -> list[dict]:
     return products
 
 
+def _is_ticket(node: dict) -> bool:
+    """Event tickets (e.g. Singers & Dancers) shouldn't be featured as products."""
+    searchable = [node.get("title") or "", *(node.get("tags") or [])]
+    return any("ticket" in text.lower() for text in searchable)
+
+
 def _build_product_data(node: dict) -> dict | None:
     """Convert a Shopify product node into our internal dict.
 
-    Returns None if the product is missing an image or is out of stock.
-    Products that don't track inventory are treated as always available.
+    Returns None if the product is a ticket, is missing an image,
+    or is out of stock. Products that don't track inventory are
+    treated as always available.
     """
+    if _is_ticket(node):
+        return None
+
     featured = node.get("featuredImage")
     if not featured or not featured.get("url"):
         return None
