@@ -81,10 +81,6 @@ def get_air_quality() -> int | str:
 
         return ""
 
-    except requests.exceptions.JSONDecodeError:
-        logger.error("AQI JSON decoding error")
-        return ""
-
     except (KeyError, IndexError, TypeError) as e:
         logger.error("Unexpected AQI response structure: %s", e)
         return ""
