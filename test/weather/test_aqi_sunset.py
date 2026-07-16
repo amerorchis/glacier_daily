@@ -132,8 +132,8 @@ def test_get_air_quality_no_data():
 
 
 def test_get_air_quality_json_error():
-    """Test handling of JSON decoding error"""
-    with patch("requests.get") as mock_get:
+    """Test that a JSON decoding error is retried, then returns the default"""
+    with patch("requests.get") as mock_get, patch("shared.retry.sleep"):
         mock_get.return_value.json.side_effect = requests.exceptions.JSONDecodeError(
             "Invalid JSON", "", 0
         )
@@ -141,6 +141,7 @@ def test_get_air_quality_json_error():
         aqi = get_air_quality()
 
         assert aqi == ""
+        assert mock_get.call_count == 3
 
 
 def test_get_air_quality_request_error():
