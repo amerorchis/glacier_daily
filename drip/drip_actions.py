@@ -9,7 +9,12 @@ import requests
 
 from drip.scheduled_subs import update_scheduled_subs
 from drip.subscriber_list import subscriber_list
-from shared.constants import DAILY_UPDATE_EVENT_ACTION, DRIP_BATCH_SIZE
+from shared.constants import (
+    DAILY_UPDATE_EVENT_ACTION,
+    DAILY_UPDATE_TAG,
+    DRIP_BATCH_SIZE,
+    TEST_DAILY_UPDATE_TAG,
+)
 from shared.logging_config import get_logger
 from shared.retry import retry
 from shared.settings import get_settings
@@ -38,14 +43,17 @@ def get_subs(tag: str) -> list:
     updates = update_scheduled_subs()
     subs = subscriber_list(tag)
 
-    # Update subscriber list based on changes today (drip updates aren't fast enough)
-    for i in updates["start"]:
-        if i not in subs:
-            subs.append(i)
+    # Scheduled starts/ends only affect the daily update list; merging them
+    # here works around Drip's tag indexing lagging behind same-day changes.
+    # Other lists (e.g. sunset) must not inherit daily-only subscribers.
+    if tag in (DAILY_UPDATE_TAG, TEST_DAILY_UPDATE_TAG):
+        for i in updates["start"]:
+            if i not in subs:
+                subs.append(i)
 
-    for i in updates["end"]:
-        if i in subs:
-            subs.remove(i)
+        for i in updates["end"]:
+            if i in subs:
+                subs.remove(i)
 
     return subs
 
