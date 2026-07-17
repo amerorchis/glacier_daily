@@ -94,12 +94,34 @@ def test_update_subscriber_failure(monkeypatch, mock_required_settings):
 
 
 def test_get_subs_merges(monkeypatch):
+    from shared.constants import DAILY_UPDATE_TAG
+
     monkeypatch.setattr(
         drip_actions, "update_scheduled_subs", lambda: {"start": ["a"], "end": ["b"]}
     )
     monkeypatch.setattr(drip_actions, "subscriber_list", lambda tag: ["b", "c"])
-    result = drip_actions.get_subs("tag")
+    result = drip_actions.get_subs(DAILY_UPDATE_TAG)
     assert set(result) == {"a", "c"}
+
+
+def test_get_subs_sunset_ignores_scheduled_daily_changes(monkeypatch):
+    """Regression: scheduled daily starts/ends must not leak into the sunset
+    send list — daily-only signups were getting the sunset email on the day
+    their daily subscription began."""
+    from shared.constants import SUNSET_TIMELAPSE_TAG
+
+    monkeypatch.setattr(
+        drip_actions,
+        "update_scheduled_subs",
+        lambda: {"start": ["daily-only@example.com"], "end": ["ending@example.com"]},
+    )
+    monkeypatch.setattr(
+        drip_actions,
+        "subscriber_list",
+        lambda tag: ["sunset@example.com", "ending@example.com"],
+    )
+    result = drip_actions.get_subs(SUNSET_TIMELAPSE_TAG)
+    assert result == ["sunset@example.com", "ending@example.com"]
 
 
 def test_bulk_workflow_trigger(monkeypatch, mock_required_settings):
