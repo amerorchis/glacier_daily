@@ -15,7 +15,13 @@ logger = get_logger(__name__)
 
 SCRIPT_DIR = Path(__file__).parent
 WIKIPEDIA_JSON = SCRIPT_DIR / "peaks_wikipedia.json"
+PEAKS_CSV = SCRIPT_DIR / "PeaksCSV.csv"
 PEAK_COORD_MATCH_TOLERANCE = 0.001
+
+# Anchor for the peak rotation. Peaks are shuffled into a new random order every
+# len(peaks) days and then handed out one per day, so every peak appears exactly
+# once per cycle. Changing this date reshuffles which peak lands on which day.
+PEAK_CYCLE_EPOCH = date(2026, 1, 1)
 
 
 def _get_peak_summary(name: str, lat: float, lon: float) -> str | None:
@@ -34,6 +40,21 @@ def _get_peak_summary(name: str, lat: float, lon: float) -> str | None:
     return None
 
 
+def select_peak(peaks: list[dict], day: date) -> dict:
+    """
+    Pick the peak for a given day.
+
+    Each cycle of len(peaks) days gets its own seeded shuffle of the full list,
+    and the day's position within that cycle indexes into it. Every peak is used
+    exactly once per cycle, so coverage is even instead of the long droughts and
+    clustered repeats that come from drawing at random each day.
+    """
+    cycle, offset = divmod((day - PEAK_CYCLE_EPOCH).days, len(peaks))
+    order = list(peaks)
+    random.Random(f"peaks-{cycle}").shuffle(order)  # noqa: S311
+    return order[offset]
+
+
 def peak(test: bool = False, skip_upload: bool = False) -> tuple[str, str | None, str]:
     """
     Select a random peak, and return the relevant information.
@@ -41,12 +62,10 @@ def peak(test: bool = False, skip_upload: bool = False) -> tuple[str, str | None
     if test:
         logger.debug("Test mode.")
 
-    with open("peak/PeaksCSV.csv", encoding="utf-8") as p:
+    with open(PEAKS_CSV, encoding="utf-8") as p:
         peaks = list(csv.DictReader(p))
 
-    # Select a random one with current date as seed
-    rng = random.Random(date.today().strftime("%Y%m%d"))  # noqa: S311
-    today = rng.choice(peaks)
+    today = select_peak(peaks, date.today())
 
     peak_img = peak_sat(today, skip_upload=skip_upload) if not test else None
 

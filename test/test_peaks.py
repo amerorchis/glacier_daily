@@ -1,12 +1,21 @@
+import csv
 import io
-from datetime import date
+import json
+import re
+from datetime import date, timedelta
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import requests
 from PIL import Image
 
-from peak.peak import _get_peak_summary, peak
+from peak.peak import (
+    PEAKS_CSV,
+    SCRIPT_DIR,
+    _get_peak_summary,
+    peak,
+    select_peak,
+)
 from peak.sat import peak_sat, prepare_peak_upload, upload_peak
 
 
@@ -46,23 +55,25 @@ def sample_image():
 
 
 def test_peak_selection(mock_env_vars):
-    """Test random peak selection"""
-    mock_rng = MagicMock()
-    mock_rng.choice = MagicMock(
-        side_effect=lambda peaks: peaks[0]  # Always pick the first peak
-    )
-    with patch("random.Random", return_value=mock_rng) as mock_random_cls:
-        result = peak(test=True)
+    """Test peak selection returns a correctly formatted result"""
+    result = peak(test=True)
 
-        # Check that Random was instantiated with today's date as seed
-        mock_random_cls.assert_called_once_with(date.today().strftime("%Y%m%d"))
+    peak_name, peak_img, peak_map = result
+    assert isinstance(peak_name, str)
+    assert "ft." in peak_name
+    assert peak_map.startswith("https://www.google.com/maps/place/")
+    assert peak_img is None  # Should be None in test mode
 
-        # Verify result format
-        peak_name, peak_img, peak_map = result
-        assert isinstance(peak_name, str)
-        assert "ft." in peak_name
-        assert peak_map.startswith("https://www.google.com/maps/place/")
-        assert peak_img is None  # Should be None in test mode
+
+def test_peak_selection_uses_todays_date(mock_env_vars):
+    """Test that the peak shown matches the one selected for today's date"""
+    with open(PEAKS_CSV, encoding="utf-8") as f:
+        peaks = list(csv.DictReader(f))
+
+    expected = select_peak(peaks, date.today())
+    peak_name, _, _ = peak(test=True)
+
+    assert peak_name.startswith(f"{expected['name']} - {expected['elevation']} ft.")
 
 
 def test_peak_sat_image_generation(mock_env_vars, sample_peak_data):
@@ -176,6 +187,134 @@ def test_peak_csv_read():
     assert " - " in peak_name  # Should contain name and elevation
     assert "ft." in peak_name
     assert "@" in peak_map  # Should contain coordinates
+
+
+class TestSelectPeak:
+    """Tests for the date-seeded peak rotation"""
+
+    @pytest.fixture
+    def peaks(self):
+        return [{"name": f"Peak {i}", "elevation": str(i)} for i in range(10)]
+
+    def test_deterministic_for_a_given_day(self, peaks):
+        """The same date always yields the same peak"""
+        day = date(2026, 7, 27)
+        assert select_peak(peaks, day) == select_peak(peaks, day)
+
+    def test_every_peak_used_exactly_once_per_cycle(self, peaks):
+        """A full cycle of len(peaks) days covers the whole list with no repeats"""
+        start = date(2026, 1, 1)
+        picked = [
+            select_peak(peaks, start + timedelta(days=i)) for i in range(len(peaks))
+        ]
+
+        names = [p["name"] for p in picked]
+        assert sorted(names) == sorted(p["name"] for p in peaks)
+        assert len(set(names)) == len(peaks)
+
+    def test_consecutive_cycles_use_different_orders(self, peaks):
+        """Each cycle reshuffles rather than repeating the same sequence"""
+        start = date(2026, 1, 1)
+        n = len(peaks)
+        first = [
+            select_peak(peaks, start + timedelta(days=i))["name"] for i in range(n)
+        ]
+        second = [
+            select_peak(peaks, start + timedelta(days=n + i))["name"] for i in range(n)
+        ]
+
+        assert sorted(first) == sorted(second)  # same peaks
+        assert first != second  # different order
+
+    def test_handles_dates_before_the_epoch(self, peaks):
+        """Dates before the cycle epoch still index inside the list"""
+        from peak.peak import PEAK_CYCLE_EPOCH
+
+        for i in range(1, 40):
+            selected = select_peak(peaks, PEAK_CYCLE_EPOCH - timedelta(days=i))
+            assert selected in peaks
+
+    def test_real_peak_list_has_no_duplicates(self):
+        """The shipped CSV should not list the same peak twice"""
+        with open(PEAKS_CSV, encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+
+        names = [r["name"] for r in rows]
+        assert len(names) == len(set(names)), "duplicate peak names in PeaksCSV.csv"
+
+    def test_works_from_any_working_directory(
+        self, mock_env_vars, tmp_path, monkeypatch
+    ):
+        """Data files are resolved relative to the module, not the cwd"""
+        monkeypatch.chdir(tmp_path)
+        peak_name, _, _ = peak(test=True)
+        assert "ft." in peak_name
+
+
+class TestPeakDataFiles:
+    """Consistency checks across the shipped peak data files"""
+
+    @pytest.fixture
+    def rows(self):
+        with open(PEAKS_CSV, encoding="utf-8") as f:
+            return list(csv.DictReader(f))
+
+    @pytest.fixture
+    def wiki(self):
+        with open(SCRIPT_DIR / "peaks_wikipedia.json", encoding="utf-8") as f:
+            return json.load(f)
+
+    def test_csv_and_wikipedia_json_agree(self, rows, wiki):
+        """
+        The JSON must carry the same names and coords as the CSV, in order.
+
+        _get_peak_summary matches on exact name plus coordinates, so a name that
+        drifts between the two files silently drops that peak's summary.
+        """
+        csv_keys = [(r["name"], round(float(r["lat"]), 5)) for r in rows]
+        json_keys = [(p["name"], round(p["lat"], 5)) for p in wiki["peaks"]]
+        assert csv_keys == json_keys
+
+    def test_every_summary_is_reachable(self, wiki):
+        """Each summary in the JSON can actually be looked up by peak.py"""
+        for p in wiki["peaks"]:
+            if p.get("summary"):
+                assert _get_peak_summary(p["name"], p["lat"], p["lon"]) == p["summary"]
+
+    def test_no_wikipedia_csv_matches_has_article_flags(self, wiki):
+        """peaks_no_wikipedia.csv lists exactly the peaks with no article"""
+        with open(SCRIPT_DIR / "peaks_no_wikipedia.csv", encoding="utf-8") as f:
+            listed = {r["name"] for r in csv.DictReader(f)}
+
+        assert listed == {p["name"] for p in wiki["peaks"] if not p["has_article"]}
+
+    def test_metadata_counts_are_current(self, wiki):
+        """The metadata block reflects the actual contents"""
+        peaks = wiki["peaks"]
+        with_article = sum(1 for p in peaks if p["has_article"])
+        assert wiki["metadata"]["total_peaks"] == len(peaks)
+        assert wiki["metadata"]["peaks_with_articles"] == with_article
+        assert wiki["metadata"]["peaks_without_articles"] == len(peaks) - with_article
+
+    def test_no_disambiguation_pages_stored(self, wiki):
+        """Stored article text should be a real article, not a disambiguation page"""
+        pattern = re.compile(r"\b(may refer to|can refer to|could be)\b", re.IGNORECASE)
+        bad = [
+            p["name"]
+            for p in wiki["peaks"]
+            if pattern.search((p["wikipedia_text"] or "")[:200])
+        ]
+        assert not bad, f"disambiguation pages stored for: {bad}"
+
+    def test_article_links_are_consistent_with_flags(self, wiki):
+        """has_article must agree with whether a url and text are present"""
+        for p in wiki["peaks"]:
+            if p["has_article"]:
+                assert p["wikipedia_url"] and p["wikipedia_text"], p["name"]
+            else:
+                assert p["wikipedia_url"] is None and p["wikipedia_text"] is None, p[
+                    "name"
+                ]
 
 
 class TestGetPeakSummary:

@@ -174,7 +174,14 @@ def get_page_content(
 def verify_article(
     article_text: str, peak_lat: float, peak_lon: float, article_coords: list | None
 ) -> bool:
-    """Verify that an article is about a peak in Glacier National Park."""
+    """
+    Verify that an article is about this specific peak.
+
+    Nearly every Glacier peak article mentions Montana, so a text mention alone
+    cannot tell one peak from its neighbours -- it only rules out articles about
+    somewhere else entirely. When the article carries coordinates those decide
+    the match; the text check is just a fallback for articles that have none.
+    """
     text_lower = article_text.lower()
 
     # Check for GNP or Montana mentions
@@ -185,17 +192,14 @@ def verify_article(
         or "livingston range" in text_lower
     )
 
-    # Check coordinates if available
-    coords_match = False
     if article_coords:
-        for coord in article_coords:
-            lat_diff = abs(coord.get("lat", 0) - peak_lat)
-            lon_diff = abs(coord.get("lon", 0) - peak_lon)
-            if lat_diff < WIKI_COORD_TOLERANCE and lon_diff < WIKI_COORD_TOLERANCE:
-                coords_match = True
-                break
+        return any(
+            abs(coord.get("lat", 0) - peak_lat) < WIKI_COORD_TOLERANCE
+            and abs(coord.get("lon", 0) - peak_lon) < WIKI_COORD_TOLERANCE
+            for coord in article_coords
+        )
 
-    return gnp_mentions or coords_match
+    return gnp_mentions
 
 
 def find_wikipedia_article(
