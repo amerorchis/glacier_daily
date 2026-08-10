@@ -1,0 +1,5 @@
+# Custom labels for the self-hosted runner on the Raspberry Pi. Without this,
+# actionlint rejects `runs-on: [self-hosted, gnpic]` as an unknown label.
+self-hosted-runner:
+  labels:
+    - gnpic

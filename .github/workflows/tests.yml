@@ -4,6 +4,31 @@ on:
   pull_request:
     branches: [ main ]
 
+# Empty values so modules exercise their graceful-degradation paths in CI.
+env:
+  NPS: ""
+  DRIP_TOKEN: ""
+  DRIP_ACCOUNT: ""
+  FTP_PASSWORD: ""
+  FTP_USERNAME: ""
+  FTP_SERVER: ""
+  ALERTS_PWD: ""
+  BC_TOKEN: ""
+  BC_STORE_HASH: ""
+  FLICKR_KEY: ""
+  FLICKR_SECRET: ""
+  GLACIERNPS_UID: ""
+  webcam_ftp_user: ""
+  webcam_ftp_pword: ""
+  timelapse_server: ""
+  MAPBOX_TOKEN: ""
+  MAPBOX_ACCOUNT: ""
+  MAPBOX_STYLE: ""
+  SUNSETHUE_KEY: ""
+  GOOGLE_APPLICATION_CREDENTIALS: ""
+  NOTICES_SPREADSHEET_ID: ""
+  ENVIRONMENT: "development"
+
 jobs:
   code-quality:
     runs-on: ubuntu-latest
@@ -29,34 +54,18 @@ jobs:
   unit-and-integration-test:
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            shell: bash
-          - os: windows-latest
-            shell: pwsh
-          - os: macos-latest
-            shell: bash
-          - os: [self-hosted, gnpic]
-            shell: bash
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install uv (Unix)
-        if: runner.os != 'Windows' && !contains(matrix.os, 'self-hosted')
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.8.10"
-
-      - name: Install uv (Windows)
-        if: runner.os == 'Windows'
+      - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.8.10"
 
       - name: Install Python 3.11
-        if: "!contains(matrix.os, 'self-hosted')"
         run: uv python install 3.11
 
       - name: Install dependencies
@@ -75,29 +84,6 @@ jobs:
           New-Item -ItemType Directory -Force -Path email_images/today/
 
       - name: Run tests
-        env:
-          NPS: ""
-          DRIP_TOKEN: ""
-          DRIP_ACCOUNT: ""
-          FTP_PASSWORD: ""
-          FTP_USERNAME: ""
-          FTP_SERVER: ""
-          ALERTS_PWD: ""
-          BC_TOKEN: ""
-          BC_STORE_HASH: ""
-          FLICKR_KEY: ""
-          FLICKR_SECRET: ""
-          GLACIERNPS_UID: ""
-          webcam_ftp_user: ""
-          webcam_ftp_pword: ""
-          timelapse_server: ""
-          MAPBOX_TOKEN: ""
-          MAPBOX_ACCOUNT: ""
-          MAPBOX_STYLE: ""
-          SUNSETHUE_KEY: ""
-          GOOGLE_APPLICATION_CREDENTIALS: ""
-          NOTICES_SPREADSHEET_ID: ""
-          ENVIRONMENT: "development"
         run: |
           echo "Running test suite with coverage on ${{ matrix.os }}..."
           uv run pytest test/ --cov=. --cov-report xml --tb=short
@@ -108,3 +94,32 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: amerorchis/glacier_daily
+
+  # Runs on the production Raspberry Pi, which holds decrypted secrets and sits
+  # on the tailnet. `uv sync` and pytest both execute code from the PR head, so
+  # this job must never run for a pull request opened from a fork.
+  arm-test:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, gnpic]
+    timeout-minutes: 10
+    env:
+      # python-build-standalone's armv7 3.11 segfaults on this Pi, so uv must
+      # never fetch one. The interpreter to use instead comes from UV_PYTHON in
+      # the runner's own .env on the box.
+      UV_PYTHON_DOWNLOADS: "never"
+    steps:
+      - uses: actions/checkout@v4
+
+      # uv and Python 3.11 are preinstalled on the Pi.
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev
+
+      - name: Create directory
+        run: |
+          mkdir -p email_images/today/
+
+      - name: Run tests
+        run: |
+          echo "Running test suite with coverage on self-hosted ARM..."
+          uv run pytest test/ --cov=. --cov-report xml --tb=short
