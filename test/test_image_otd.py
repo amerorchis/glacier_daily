@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 from urllib.error import URLError
@@ -5,7 +6,12 @@ from urllib.error import URLError
 import pytest
 from PIL import Image
 
-from image_otd.flickr import FlickrAPIError, FlickrImage, _best_image_url, get_flickr
+from image_otd.flickr import (
+    FlickrAPIError,
+    FlickrImage,
+    _best_image_url,
+    get_flickr,
+)
 from image_otd.image_otd import (
     ImageProcessingError,
     get_image_otd,
@@ -40,6 +46,14 @@ def mock_flickr_response():
             ],
         }
     }
+
+
+@pytest.fixture
+def jpeg_bytes():
+    """Real JPEG bytes — downloads are PIL-verified before being saved."""
+    buffer = BytesIO()
+    Image.new("RGB", (1600, 900), color="blue").save(buffer, format="JPEG")
+    return buffer.getvalue()
 
 
 @pytest.fixture
@@ -97,6 +111,49 @@ class TestBestImageUrl:
         result = _best_image_url(mock_api, "123")
         assert result == "https://flickr.com/800.jpg"
 
+    def test_skips_video_sizes(self):
+        """Video player entries must never be chosen — they aren't images."""
+        mock_api = Mock()
+        mock_api.photos.getSizes.return_value = {
+            "sizes": {
+                "size": [
+                    {
+                        "width": "1024",
+                        "source": "https://flickr.com/1024.jpg",
+                        "media": "photo",
+                    },
+                    {
+                        "width": "1280",
+                        "source": "https://flickr.com/play/720p/",
+                        "media": "video",
+                    },
+                    {
+                        "width": "1600",
+                        "source": "https://flickr.com/1600.jpg",
+                        "media": "photo",
+                    },
+                ]
+            }
+        }
+        result = _best_image_url(mock_api, "123")
+        assert result == "https://flickr.com/1600.jpg"
+
+    def test_raises_when_only_video_sizes(self):
+        mock_api = Mock()
+        mock_api.photos.getSizes.return_value = {
+            "sizes": {
+                "size": [
+                    {
+                        "width": "1280",
+                        "source": "https://flickr.com/play/720p/",
+                        "media": "video",
+                    }
+                ]
+            }
+        }
+        with pytest.raises(FlickrAPIError, match="No image sizes"):
+            _best_image_url(mock_api, "123")
+
     def test_exact_threshold_match(self):
         """A size exactly at 1040px should be picked."""
         mock_api = Mock()
@@ -112,7 +169,9 @@ class TestBestImageUrl:
         assert result == "https://flickr.com/1040.jpg"
 
 
-def test_get_flickr_success(mock_env_vars, mock_flickr_response, mock_sizes_response):
+def test_get_flickr_success(
+    mock_env_vars, mock_flickr_response, mock_sizes_response, jpeg_bytes
+):
     with (
         patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
         patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
@@ -127,7 +186,8 @@ def test_get_flickr_success(mock_env_vars, mock_flickr_response, mock_sizes_resp
         # Setup mock urlopen
         mock_response = Mock()
         mock_response.status = 200
-        mock_response.read.return_value = b"fake image data"
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+        mock_response.read.return_value = jpeg_bytes
         mock_urlopen.return_value.__enter__.return_value = mock_response
 
         # Setup mock open
@@ -181,6 +241,103 @@ def test_get_flickr_download_error(
 
         with pytest.raises(FlickrAPIError, match="Failed to download image"):
             get_flickr()
+
+
+def test_get_flickr_redraws_past_a_video(
+    mock_env_vars, mock_sizes_response, jpeg_bytes
+):
+    """A video (no image sizes) should cost one draw, not the whole day."""
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+        patch("builtins.open", create=True) as mock_open,
+    ):
+
+        def photo(photo_id, title):
+            return {
+                "photos": {"total": "100", "photo": [{"id": photo_id, "title": title}]}
+            }
+
+        mock_api = Mock()
+        mock_api.photos.search.side_effect = [
+            photo("total", "ignored"),  # per_page=1 total query
+            photo("video_id", "A video"),  # first draw — video only
+            photo("photo_id", "A photo"),  # redraw — usable
+        ]
+        video_sizes = {
+            "sizes": {
+                "size": [
+                    {
+                        "width": "1280",
+                        "source": "https://flickr.com/play/720p/",
+                        "media": "video",
+                    }
+                ]
+            }
+        }
+        mock_api.photos.getSizes.side_effect = [video_sizes, mock_sizes_response]
+        MockFlickrAPI.return_value = mock_api
+
+        mock_response = Mock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+        mock_response.read.return_value = jpeg_bytes
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+        mock_open.return_value.__enter__.return_value = Mock()
+
+        result = get_flickr()
+
+        assert result.title == "A photo"
+        assert result.link == "https://flickr.com/photos/glaciernps/photo_id"
+
+
+def test_get_flickr_gives_up_after_max_attempts(
+    mock_env_vars, mock_flickr_response, mock_sizes_response
+):
+    """Every candidate failing raises, rather than looping forever."""
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+    ):
+        mock_api = Mock()
+        mock_api.photos.search.return_value = mock_flickr_response
+        mock_api.photos.getSizes.return_value = mock_sizes_response
+        MockFlickrAPI.return_value = mock_api
+
+        mock_response = Mock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+        mock_response.read.return_value = b"not really a jpeg"
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        with pytest.raises(FlickrAPIError, match="No usable photo after 5 attempts"):
+            get_flickr()
+
+
+def test_get_flickr_rejects_non_image_download(
+    mock_env_vars, mock_flickr_response, mock_sizes_response
+):
+    """A non-image response (e.g. video, error page) must not be saved."""
+    with (
+        patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
+        patch("image_otd.flickr.urllib.request.urlopen") as mock_urlopen,
+        patch("builtins.open", create=True) as mock_open,
+    ):
+        mock_api = Mock()
+        mock_api.photos.search.return_value = mock_flickr_response
+        mock_api.photos.getSizes.return_value = mock_sizes_response
+        MockFlickrAPI.return_value = mock_api
+
+        mock_response = Mock()
+        mock_response.status = 200
+        mock_response.headers = {"Content-Type": "video/mp4"}
+        mock_response.read.return_value = b"\x00\x00\x00\x1cftypM4V "
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        with pytest.raises(FlickrAPIError, match="not an image"):
+            get_flickr()
+
+        assert not [c for c in mock_open.call_args_list if "wb" in c.args]
 
 
 @pytest.fixture
@@ -356,7 +513,7 @@ def test_get_flickr_url_error_429_retry(
         assert mock_sleep.call_count == 1
 
 
-def test_get_flickr_no_photos_found(mock_env_vars, mock_sizes_response):
+def test_get_flickr_no_photos_found(mock_env_vars, mock_sizes_response, jpeg_bytes):
     """Test retry loop when initial search returns no photos."""
     with (
         patch("image_otd.flickr.FlickrAPI") as MockFlickrAPI,
@@ -387,7 +544,8 @@ def test_get_flickr_no_photos_found(mock_env_vars, mock_sizes_response):
 
         mock_response = Mock()
         mock_response.status = 200
-        mock_response.read.return_value = b"data"
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+        mock_response.read.return_value = jpeg_bytes
         mock_urlopen.return_value.__enter__ = Mock(return_value=mock_response)
         mock_urlopen.return_value.__exit__ = Mock(return_value=False)
 
