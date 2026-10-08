@@ -39,10 +39,14 @@ def hiker_biker(road_closures: dict | None = None) -> HikerBikerResult:
         gtsr = closures.get("Going-to-the-Sun Road", "")
 
         urls = [
-            "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="
-            "SELECT%20*%20FROM%20glac_hiker_biker_closures%20WHERE%20status%20=%20%27active%27",
-            "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="
-            "SELECT%20*%20FROM%20winter_rec_closure%20WHERE%20status%20=%20%27active%27",
+            (
+                "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="
+                "SELECT%20*%20FROM%20glac_hiker_biker_closures%20WHERE%20status%20=%20%27active%27"
+            ),
+            (
+                "https://carto.nps.gov/user/glaclive/api/v2/sql?format=GeoJSON&q="
+                "SELECT%20*%20FROM%20winter_rec_closure%20WHERE%20status%20=%20%27active%27"
+            ),
         ]
 
         data = []
