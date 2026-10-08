@@ -103,14 +103,19 @@ jobs:
     runs-on: [self-hosted, gnpic]
     timeout-minutes: 10
     env:
-      # The runner's own .env on the Pi still exports UV_PYTHON as an absolute
-      # path from the old 32-bit install. Ask for a version instead so uv uses
-      # whatever 3.11 is on PATH, or fetches an aarch64 build if none is.
+      # The runner's own .env on the Pi still carries the 32-bit settings:
+      # UV_PYTHON as an absolute path that no longer exists, and
+      # UV_PYTHON_DOWNLOADS=never from the armv7 segfault. Override both so
+      # uv installs an aarch64 3.11 like the hosted jobs do.
       UV_PYTHON: "3.11"
+      UV_PYTHON_DOWNLOADS: "automatic"
     steps:
       - uses: actions/checkout@v7
 
       # uv is preinstalled on the Pi.
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
       - name: Install dependencies
         run: |
           uv sync --extra dev
