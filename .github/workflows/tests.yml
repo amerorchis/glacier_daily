@@ -102,10 +102,15 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, gnpic]
     timeout-minutes: 10
+    env:
+      # The runner's own .env on the Pi still exports UV_PYTHON as an absolute
+      # path from the old 32-bit install. Ask for a version instead so uv uses
+      # whatever 3.11 is on PATH, or fetches an aarch64 build if none is.
+      UV_PYTHON: "3.11"
     steps:
       - uses: actions/checkout@v7
 
-      # uv and Python 3.11 are preinstalled on the Pi.
+      # uv is preinstalled on the Pi.
       - name: Install dependencies
         run: |
           uv sync --extra dev
