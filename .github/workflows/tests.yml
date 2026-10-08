@@ -33,7 +33,7 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -58,7 +58,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -103,30 +103,19 @@ jobs:
     runs-on: [self-hosted, gnpic]
     timeout-minutes: 10
     env:
-      # python-build-standalone's armv7 3.11 segfaults on this Pi, so uv must
-      # never fetch one. The interpreter to use instead comes from UV_PYTHON in
-      # the runner's own .env on the box.
-      UV_PYTHON_DOWNLOADS: "never"
+      # The runner's own .env on the Pi still carries the 32-bit settings:
+      # UV_PYTHON as an absolute path that no longer exists, and
+      # UV_PYTHON_DOWNLOADS=never from the armv7 segfault. Override both so
+      # uv installs an aarch64 3.11 like the hosted jobs do.
+      UV_PYTHON: "3.11"
+      UV_PYTHON_DOWNLOADS: "automatic"
     steps:
-      # actions/checkout is a Node action, and since the Node 20 removal
-      # (2026-09-23) the runner refuses Node actions on 32-bit ARM ("Linux ARM32
-      # runners are no longer supported"): Node 24 has no ARM32 build. Shell
-      # steps still run, so check out with git. Keep this job free of
-      # `uses:` steps.
-      - name: Check out
-        shell: bash
-        env:
-          TOKEN: ${{ github.token }}
-        run: |
-          git init -q .
-          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
-          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $auth"
-          git fetch -q --depth 1 --no-tags "https://github.com/${{ github.repository }}" "${{ github.sha }}"
-          git checkout -q --force FETCH_HEAD
-          # Like actions/checkout's clean, but keep .venv so uv sync stays fast.
-          git clean -ffdxq -e .venv
+      - uses: actions/checkout@v7
 
-      # uv and Python 3.11 are preinstalled on the Pi.
+      # uv is preinstalled on the Pi.
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
       - name: Install dependencies
         run: |
           uv sync --extra dev
@@ -139,8 +128,3 @@ jobs:
         run: |
           echo "Running test suite with coverage on self-hosted ARM..."
           uv run pytest test/ --cov=. --cov-report xml --tb=short
-
-      - name: Remove checkout credentials
-        if: always()
-        shell: bash
-        run: git config --local --unset-all http.https://github.com/.extraheader || true
