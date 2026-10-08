@@ -1,0 +1,11 @@
+.*
+!.gitignore
+!.github/
+!.pre-commit-config.yaml
+!.sops.yaml
+*.env
+__pycache__/
+server/
+email_images/today/
+logs/
+notices/sheets-api.json
