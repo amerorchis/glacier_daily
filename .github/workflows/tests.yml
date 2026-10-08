@@ -97,9 +97,13 @@ jobs:
 
   # Runs on the production Raspberry Pi, which holds decrypted secrets and sits
   # on the tailnet. `uv sync` and pytest both execute code from the PR head, so
-  # this job must never run for a pull request opened from a fork.
+  # this job must never run for a pull request opened from a fork. It also
+  # skips log-watch PRs (logwatch/* branches), which are written by an agent
+  # that reads untrusted log text; those reach the Pi only after review.
   arm-test:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && !startsWith(github.head_ref, 'logwatch/')
     runs-on: [self-hosted, gnpic]
     timeout-minutes: 10
     env:
